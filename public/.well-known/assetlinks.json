@@ -1,0 +1,10 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.webstormers.alokha_user",
+    "sha256_cert_fingerprints": [
+      "9E:DA:E6:6D:5A:24:0F:D6:D6:38:B9:45:F4:3C:49:74:12:04:1C:3D:49:E9:02:EC:ED:F1:7B:2C:03:03:AB:82"
+    ]
+  }
+}]
