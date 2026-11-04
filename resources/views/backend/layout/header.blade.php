@@ -1,42 +1,75 @@
-<div class="navbar-custom nav-bar-color">
-    <ul class="list-unstyled topnav-menu float-end mb-0">
-        <li class="dropdown d-inline-block d-lg-none">
-            <a class="nav-link dropdown-toggle arrow-none waves-effect waves-light" data-bs-toggle="dropdown"
-                href="#" role="button" aria-haspopup="false" aria-expanded="false">
-                <i class="fe-search noti-icon"></i>
-            </a>
-            <div class="dropdown-menu dropdown-lg dropdown-menu-end p-0">
-                <form class="p-3">
-                    <input type="text" class="form-control" placeholder="Search ..."
-                        aria-label="Recipient's username">
-                </form>
+<div class="navbar-custom">
+    <!-- Left Logo Brand Box -->
+    <div class="logo-box">
+        <a href="{{ url('/admin/dashboard') }}" class="res-logo-brand">
+            <div class="res-logo-icon">
+                <i class="fas fa-hotel"></i>
             </div>
+            <div class="res-logo-details d-none d-lg-flex">
+                <span class="res-logo-title">SRM RESIDENCE</span>
+                <span class="res-logo-subtitle">Student & Living Hub</span>
+            </div>
+        </a>
+    </div>
+
+    <!-- Left Controls (Mobile Menu Toggle & Status Pills) -->
+    <ul class="list-unstyled topnav-menu topnav-menu-left mb-0 d-flex align-items-center">
+        <li>
+            <button class="button-menu-mobile disable-btn waves-effect">
+                <i class="fe-menu"></i>
+            </button>
+        </li>
+        <li class="d-none d-md-flex align-items-center ms-2">
+            <span class="res-topbar-pill">
+                <span class="res-pulsing-dot me-2"></span>
+                <span>Academic Year 2026-27</span>
+            </span>
+        </li>
+        <li class="d-none d-xl-flex align-items-center ms-3">
+            <span class="text-muted font-13 fw-medium">
+                <i class="far fa-calendar-alt text-primary me-1"></i> {{ date('l, d M Y') }}
+            </span>
+        </li>
+    </ul>
+
+    <!-- Right Controls -->
+    <ul class="list-unstyled topnav-menu float-end mb-0 d-flex align-items-center">
+        <!-- Quick Action Shortcut: View Rooms -->
+        <li class="d-none d-sm-inline-block me-2">
+            <a href="{{ url('/admin/rooms') }}" class="btn btn-sm btn-outline-primary py-1 px-2 font-12">
+                <i class="fas fa-door-open me-1"></i> 23 Rooms
+            </a>
         </li>
 
-        <!-- Add this notification dropdown before the user dropdown -->
+        <!-- User Profile Dropdown -->
         <li class="dropdown notification-list topbar-dropdown">
-            <a class="nav-link dropdown-toggle nav-user me-0 waves-effect waves-light user-name"
+            <a class="nav-link dropdown-toggle nav-user me-0 waves-effect waves-light"
                 data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="false" aria-expanded="false">
-                <img src="{{ url('img/avatar.jpg') }}" alt="user-image" class="rounded-circle">
-                <span class="pro-user-name ms-1 text-dark">
-                    {{ auth()->user()->name }} <i class="mdi mdi-chevron-down"></i>
-                </span>
+                <div class="res-avatar-wrapper">
+                    <img src="{{ url('img/avatar.jpg') }}" alt="user-avatar" class="rounded-circle">
+                    <span class="res-avatar-online"></span>
+                </div>
+                <div class="res-user-meta d-none d-md-flex">
+                    <span class="res-user-name">{{ auth()->user()->name }}</span>
+                    <span class="res-user-role">Administrator</span>
+                </div>
+                <i class="mdi mdi-chevron-down ms-1 text-muted"></i>
             </a>
-            <div class="dropdown-menu dropdown-menu-end profile-dropdown ">
-                <div class="dropdown-header noti-title">
-                    <h6 class="text-overflow m-0">Welcome !</h6>
+
+            <div class="dropdown-menu dropdown-menu-end profile-dropdown">
+                <div class="dropdown-header noti-title px-3 py-2 border-bottom mb-1">
+                    <div class="font-13 fw-bold text-dark">{{ auth()->user()->name }}</div>
+                    <div class="font-11 text-muted">{{ auth()->user()->email ?? 'admin@srmresidence.in' }}</div>
                 </div>
 
                 @php
-                    $profileUrl =
-                        auth()->user()->type == \App\Enums\UserType::SUPERADMIN
-                            ? url('/admin/profile')
-                            : url('/shop-admin/profile');
+                    $profileUrl = auth()->user()->type == \App\Enums\UserType::SUPERADMIN
+                        ? url('/admin/profile')
+                        : url('/shop-admin/profile');
 
-                    $passwordUrl =
-                        auth()->user()->type == \App\Enums\UserType::SUPERADMIN
-                            ? url('/admin/password')
-                            : url('/shop-admin/password');
+                    $passwordUrl = auth()->user()->type == \App\Enums\UserType::SUPERADMIN
+                        ? url('/admin/password')
+                        : url('/shop-admin/password');
                 @endphp
 
                 <a href="{{ $profileUrl }}" class="dropdown-item notify-item">
@@ -44,13 +77,19 @@
                     <span>My Profile</span>
                 </a>
                 <a href="{{ $passwordUrl }}" class="dropdown-item notify-item">
-                    <i class="fe-eye"></i>
+                    <i class="fe-lock"></i>
                     <span>Change Password</span>
                 </a>
-                <div class="dropdown-divider"></div>
-                <a class="dropdown-item notify-item" href="{{ route('logout') }}"onclick="event.preventDefault();
-                                                                     document.getElementById('logout-form').submit();">
-                    <i class="fe-log-out"></i> <span>Logout</span>
+                <a href="{{ url('/admin/settings') }}" class="dropdown-item notify-item">
+                    <i class="fe-settings"></i>
+                    <span>System Settings</span>
+                </a>
+
+                <div class="dropdown-divider my-1"></div>
+
+                <a class="dropdown-item notify-item text-danger" href="{{ route('logout') }}"
+                   onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                    <i class="fe-log-out text-danger"></i> <span>Logout</span>
                 </a>
 
                 <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
@@ -60,41 +99,5 @@
         </li>
     </ul>
 
-    <div class="logo-box nav-bar-color d-flex align-items-center justify-content-center">
-        <a href="#" class="logo logo-dark text-center">
-            <span class="logo-sm">
-                <img src="{{ url('img/logo-white-small.png') }}" alt="" class="logo-header" width="50px">
-            </span>
-            <span class="logo-lg">
-                <img src="{{ url('img/logo-white.png') }}" alt="" class="logo-header" width="130">
-            </span>
-        </a>
-    </div>
-
-    <ul class="list-unstyled topnav-menu topnav-menu-left mb-0">
-        <li>
-            <button class="button-menu-mobile disable-btn waves-effect">
-                <i class="fe-menu"></i>
-            </button>
-        </li>
-    </ul>
-
     <div class="clearfix"></div>
 </div>
-
-@push('footer_content')
-    <script>
-        $(document).ready(function() {
-            $('.mark-as-read').click(function(e) {
-                e.preventDefault();
-                const url = $(this).attr('href');
-
-                $.post(url, {
-                    _token: "{{ csrf_token() }}"
-                }, function() {
-                    window.location.href = url;
-                });
-            });
-        });
-    </script>
-@endpush
