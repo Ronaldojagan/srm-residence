@@ -151,7 +151,7 @@
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form id="addRoomForm">
+                <form id="addRoomForm" action="{{ url('/admin/rooms') }}" method="POST">
                     @csrf
                     <div class="modal-body p-4">
                         <div id="addRoomErrors" class="alert alert-danger d-none"></div>
@@ -313,7 +313,7 @@
         </div>
     </div>
 
-    @push('foot_content')
+    @push('footer_content')
         <script src="https://cdn.datatables.net/1.11.4/js/jquery.dataTables.min.js"></script>
         <script src="https://cdn.datatables.net/1.11.4/js/dataTables.bootstrap5.min.js"></script>
         <script src="{{ url('assets/libs/sweetalert2/sweetalert2.min.js') }}"></script>

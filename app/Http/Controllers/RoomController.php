@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Room;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Yajra\DataTables\Facades\DataTables;
 
 class RoomController extends Controller
@@ -104,7 +105,7 @@ class RoomController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'room_number' => 'required|string|max:50|unique:rooms,room_number',
+            'room_number' => ['required', 'string', 'max:50', Rule::unique('rooms', 'room_number')->whereNull('deleted_at')],
             'floor' => 'required|string|max:50',
             'room_type' => 'required|string|max:100',
             'capacity' => 'required|integer|min:1|max:10',
@@ -141,7 +142,7 @@ class RoomController extends Controller
     public function update(Request $request, Room $room)
     {
         $validated = $request->validate([
-            'room_number' => 'required|string|max:50|unique:rooms,room_number,' . $room->id,
+            'room_number' => ['required', 'string', 'max:50', Rule::unique('rooms', 'room_number')->ignore($room->id)->whereNull('deleted_at')],
             'floor' => 'required|string|max:50',
             'room_type' => 'required|string|max:100',
             'capacity' => 'required|integer|min:1|max:10',
