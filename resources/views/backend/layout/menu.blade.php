@@ -27,6 +27,13 @@
                     </a>
                 </li>
                 <li>
+                    <a href="{{ url('/admin/rooms') }}">
+                        <i class="mdi mdi-door-closed font-18 text-warning"></i>
+                        <span class="badge bg-primary rounded-pill float-end">23</span>
+                        <span class="ms-1"> Rooms </span>
+                    </a>
+                </li>
+                <li>
                     <a href="{{ url('/admin/reports') }}">
                         {{-- <img src="{{url('img/report-menu.png')}}"> --}}
                         <svg class="svg-icons">

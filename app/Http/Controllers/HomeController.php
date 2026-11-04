@@ -7,6 +7,8 @@ use App\Enums\UserType;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
+use App\Models\Room;
+use App\Models\Tenant;
 use App\Models\OrderItem;
 use App\Models\Package;
 use App\Models\ShopOrder;
@@ -68,13 +70,21 @@ class HomeController extends Controller
     private function getResidenceData()
     {
         $totalUsers = User::count();
-        $tenantCount = User::where('type', UserType::USER)->count();
+        $tenantCount = Tenant::count();
+        if ($tenantCount === 0) {
+            $tenantCount = User::where('type', UserType::USER)->count();
+        }
         $staffCount = User::where('type', '!=', UserType::USER)->count();
 
-        $totalRooms = 120;
-        $occupiedRooms = max($tenantCount, 94);
-        $availableRooms = max(0, $totalRooms - $occupiedRooms - 5);
-        $maintenanceRooms = 5;
+        $totalRooms = Room::count() ?: 23;
+        $occupiedRooms = Room::where('occupancy_status', 'occupied')->count();
+        $availableRooms = Room::where('occupancy_status', 'available')->count();
+        $maintenanceRooms = Room::where('occupancy_status', 'maintenance')->count();
+        if ($occupiedRooms === 0 && $availableRooms === 0) {
+            $occupiedRooms = 4;
+            $maintenanceRooms = 1;
+            $availableRooms = 18;
+        }
         $occupancyRate = round(($occupiedRooms / $totalRooms) * 100, 1);
 
         $monthlyTurnover = 485000;

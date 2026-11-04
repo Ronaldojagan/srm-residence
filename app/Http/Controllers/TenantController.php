@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Tenant;
+use App\Models\Room;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -63,7 +64,9 @@ class TenantController extends Controller
             'occupiedRooms' => Tenant::where('status', 1)->distinct('room_number')->count('room_number'),
         ];
 
-        return view('backend.tenants.index', compact('stats'));
+        $rooms = Room::orderBy('room_number')->get();
+
+        return view('backend.tenants.index', compact('stats', 'rooms'));
     }
 
     public function store(Request $request)

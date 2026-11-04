@@ -136,7 +136,16 @@
 
                             <div class="col-md-4">
                                 <label class="form-label fw-semibold">Room Number <span class="text-danger">*</span></label>
-                                <input type="text" name="room_number" class="form-control" placeholder="e.g. A-204" required>
+                                <select name="room_number" id="tenant_room_number" class="form-select" required>
+                                    <option value="">Select Room...</option>
+                                    @if(isset($rooms))
+                                        @foreach($rooms as $r)
+                                            <option value="{{ $r->room_number }}" data-type="{{ $r->room_type }}" data-rent="{{ $r->monthly_rent }}" data-deposit="{{ $r->security_deposit }}">
+                                                Room {{ $r->room_number }} ({{ $r->floor }} - {{ $r->room_type }})
+                                            </option>
+                                        @endforeach
+                                    @endif
+                                </select>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label fw-semibold">Room Type <span class="text-danger">*</span></label>
@@ -216,7 +225,16 @@
 
                             <div class="col-md-4">
                                 <label class="form-label fw-semibold">Room Number <span class="text-danger">*</span></label>
-                                <input type="text" id="edit_room_number" name="room_number" class="form-control" required>
+                                <select id="edit_room_number" name="room_number" class="form-select" required>
+                                    <option value="">Select Room...</option>
+                                    @if(isset($rooms))
+                                        @foreach($rooms as $r)
+                                            <option value="{{ $r->room_number }}" data-type="{{ $r->room_type }}" data-rent="{{ $r->monthly_rent }}" data-deposit="{{ $r->security_deposit }}">
+                                                Room {{ $r->room_number }} ({{ $r->floor }} - {{ $r->room_type }})
+                                            </option>
+                                        @endforeach
+                                    @endif
+                                </select>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label fw-semibold">Room Type <span class="text-danger">*</span></label>
@@ -289,6 +307,20 @@
                     showConfirmButton: false,
                     timer: 3000,
                     timerProgressBar: true
+                });
+
+                // Auto-fill room details when room is selected
+                $('#tenant_room_number').on('change', function() {
+                    var $opt = $(this).find('option:selected');
+                    if ($opt.data('type')) {
+                        $('select[name="room_type"]').val($opt.data('type'));
+                    }
+                    if ($opt.data('rent')) {
+                        $('input[name="monthly_rent"]').val($opt.data('rent'));
+                    }
+                    if ($opt.data('deposit')) {
+                        $('input[name="security_deposit"]').val($opt.data('deposit'));
+                    }
                 });
 
                 // 1. ADD TENANT VIA AJAX

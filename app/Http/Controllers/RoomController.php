@@ -1,0 +1,195 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Room;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Yajra\DataTables\Facades\DataTables;
+
+class RoomController extends Controller
+{
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
+    public function index(Request $request)
+    {
+        if ($request->ajax()) {
+            $query = Room::query();
+
+            if ($request->filled('floor')) {
+                $query->where('floor', $request->floor);
+            }
+            if ($request->filled('occupancy_status')) {
+                $query->where('occupancy_status', $request->occupancy_status);
+            }
+            if ($request->filled('room_type')) {
+                $query->where('room_type', $request->room_type);
+            }
+
+            return DataTables::of($query)
+                ->addIndexColumn()
+                ->addColumn('room_badge', function ($row) {
+                    return '<div class="d-flex align-items-center">
+                        <span class="badge bg-primary text-white fw-bold px-2 py-1 fs-6 me-2">
+                            <i class="mdi mdi-door-closed me-1"></i> ' . e($row->room_number) . '
+                        </span>
+                        <div>
+                            <span class="small fw-semibold text-secondary d-block">' . e($row->floor) . '</span>
+                        </div>
+                    </div>';
+                })
+                ->addColumn('type_capacity', function ($row) {
+                    return '<div>
+                        <span class="fw-bold text-dark d-block">' . e($row->room_type) . '</span>
+                        <small class="text-muted"><i class="fas fa-users me-1"></i> Capacity: ' . $row->capacity . ' ' . Str::plural('bed', $row->capacity) . '</small>
+                    </div>';
+                })
+                ->addColumn('rent_display', function ($row) {
+                    return '<div>
+                        <span class="fw-bold text-dark">₹' . number_format($row->monthly_rent) . '</span>
+                        <small class="text-muted d-block">Deposit: ₹' . number_format($row->security_deposit) . '</small>
+                    </div>';
+                })
+                ->addColumn('occupancy_badge', function ($row) {
+                    if ($row->occupancy_status === 'available') {
+                        return '<span class="badge bg-success-subtle text-success border border-success px-2 py-1"><i class="fas fa-check-circle me-1"></i> Available</span>';
+                    } elseif ($row->occupancy_status === 'occupied') {
+                        return '<span class="badge bg-danger-subtle text-danger border border-danger px-2 py-1"><i class="fas fa-user-lock me-1"></i> Occupied</span>';
+                    } else {
+                        return '<span class="badge bg-warning-subtle text-warning border border-warning px-2 py-1"><i class="fas fa-tools me-1"></i> Maintenance</span>';
+                    }
+                })
+                ->addColumn('amenities_display', function ($row) {
+                    return '<small class="text-muted text-wrap d-inline-block" style="max-width: 200px;">' . e($row->amenities ?? 'Standard amenities') . '</small>';
+                })
+                ->addColumn('status_toggle', function ($row) {
+                    $checked = $row->status ? 'checked' : '';
+                    return '<div class="form-check form-switch mb-0">
+                        <input class="form-check-input room-status-toggle" type="checkbox" ' . $checked . ' data-id="' . $row->id . '" style="cursor:pointer; width: 36px; height: 18px;">
+                    </div>';
+                })
+                ->addColumn('action', function ($row) {
+                    $btn = '<div class="btn-group btn-group-sm" role="group">';
+                    $btn .= '<button type="button" class="btn btn-outline-primary btn-edit-room" data-id="' . $row->id . '" title="Edit Room"><i class="fas fa-edit"></i></button>';
+                    $btn .= '<button type="button" class="btn btn-outline-danger btn-delete-room" data-id="' . $row->id . '" data-number="' . e($row->room_number) . '" title="Delete Room"><i class="fas fa-trash-alt"></i></button>';
+                    $btn .= '</div>';
+                    return $btn;
+                })
+                ->rawColumns(['room_badge', 'type_capacity', 'rent_display', 'occupancy_badge', 'amenities_display', 'status_toggle', 'action'])
+                ->make(true);
+        }
+
+        $stats = [
+            'totalRooms' => Room::count(),
+            'availableRooms' => Room::where('occupancy_status', 'available')->count(),
+            'occupiedRooms' => Room::where('occupancy_status', 'occupied')->count(),
+            'maintenanceRooms' => Room::where('occupancy_status', 'maintenance')->count(),
+        ];
+
+        return view('backend.rooms.index', compact('stats'));
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'room_number' => 'required|string|max:50|unique:rooms,room_number',
+            'floor' => 'required|string|max:50',
+            'room_type' => 'required|string|max:100',
+            'capacity' => 'required|integer|min:1|max:10',
+            'monthly_rent' => 'required|numeric|min:0',
+            'security_deposit' => 'nullable|numeric|min:0',
+            'occupancy_status' => 'required|in:available,occupied,maintenance',
+            'amenities' => 'nullable|string',
+        ]);
+
+        $validated['security_deposit'] = $validated['security_deposit'] ?? 0;
+        $validated['status'] = 1;
+
+        Room::create($validated);
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Room created successfully!'
+            ]);
+        }
+
+        return redirect('/admin/rooms')->with('success', 'Room created successfully!');
+    }
+
+    public function getData(Room $room)
+    {
+        return response()->json([
+            'success' => true,
+            'room' => $room
+        ]);
+    }
+
+    public function update(Request $request, Room $room)
+    {
+        $validated = $request->validate([
+            'room_number' => 'required|string|max:50|unique:rooms,room_number,' . $room->id,
+            'floor' => 'required|string|max:50',
+            'room_type' => 'required|string|max:100',
+            'capacity' => 'required|integer|min:1|max:10',
+            'monthly_rent' => 'required|numeric|min:0',
+            'security_deposit' => 'nullable|numeric|min:0',
+            'occupancy_status' => 'required|in:available,occupied,maintenance',
+            'amenities' => 'nullable|string',
+        ]);
+
+        $room->update($validated);
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Room updated successfully!'
+            ]);
+        }
+
+        return redirect('/admin/rooms')->with('success', 'Room updated successfully!');
+    }
+
+    public function destroy(Room $room)
+    {
+        $room->delete();
+
+        return response()->json([
+            'success' => true,
+            'status' => '1',
+            'message' => 'Room removed successfully!'
+        ]);
+    }
+
+    public function updateStatus(Request $request)
+    {
+        $room = Room::findOrFail($request->id);
+        $room->status = $request->status;
+        $room->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Room status updated successfully.'
+        ]);
+    }
+
+    public function updateOccupancy(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|exists:rooms,id',
+            'occupancy_status' => 'required|in:available,occupied,maintenance'
+        ]);
+
+        $room = Room::findOrFail($request->id);
+        $room->occupancy_status = $request->occupancy_status;
+        $room->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Room occupancy updated successfully.'
+        ]);
+    }
+}
