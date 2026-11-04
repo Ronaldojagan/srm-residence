@@ -28,6 +28,7 @@ use App\Http\Controllers\UserAccountReasonController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\TenantController;
 use App\Http\Controllers\RoomController;
+use App\Http\Controllers\ExpenseController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MissingBottleController;
@@ -232,6 +233,15 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'user-access:' . Use
         Route::delete('/{room}', 'destroy')->name('destroy');
         Route::post('/status', 'updateStatus')->name('status');
         Route::post('/occupancy', 'updateOccupancy')->name('occupancy');
+    });
+
+    Route::controller(ExpenseController::class)->prefix('expenses')->name('expenses.')->group(function () {
+        Route::get('/rooms', 'roomExpenses')->name('rooms');
+        Route::get('/personal', 'personalExpenses')->name('personal');
+        Route::post('/', 'store')->name('store');
+        Route::get('/{expense}/data', 'getData')->name('data');
+        Route::post('/{expense}/update', 'update')->name('update');
+        Route::delete('/{expense}', 'destroy')->name('destroy');
     });
 
     Route::controller(ProductController::class)->prefix('products')->name('products.')->group(function () {

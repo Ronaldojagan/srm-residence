@@ -127,6 +127,33 @@ body {
   border-radius: 20px;
 }
 
+.nav-second-level {
+  padding-left: 20px;
+  list-style: none;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  margin: 4px 10px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+.nav-second-level li a {
+  padding: 8px 14px !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+  display: block;
+  font-size: 0.86rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.nav-second-level li a:hover,
+.nav-second-level li a.active {
+  color: #fff !important;
+  background: rgba(229, 67, 4, 0.9) !important;
+  font-weight: 600;
+  padding-left: 18px !important;
+}
+
 .pro-user-name i {
   margin-left: 10px !important;
 }

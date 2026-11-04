@@ -34,6 +34,27 @@
                     </a>
                 </li>
                 <li>
+                    <a href="#sidebarExpenses" data-bs-toggle="collapse" class="{{ request()->is('admin/expenses*') ? '' : 'collapsed' }}" aria-expanded="{{ request()->is('admin/expenses*') ? 'true' : 'false' }}">
+                        <i class="mdi mdi-cash-multiple font-18 text-warning"></i>
+                        <span class="ms-1"> Expenses </span>
+                        <span class="menu-arrow"></span>
+                    </a>
+                    <div class="collapse {{ request()->is('admin/expenses*') ? 'show' : '' }}" id="sidebarExpenses">
+                        <ul class="nav-second-level">
+                            <li class="{{ request()->is('admin/expenses/rooms*') ? 'menuitem-active' : '' }}">
+                                <a href="{{ url('/admin/expenses/rooms') }}" class="{{ request()->is('admin/expenses/rooms*') ? 'active' : '' }}">
+                                    <i class="mdi mdi-door-closed font-14 me-1"></i> Room Expenses
+                                </a>
+                            </li>
+                            <li class="{{ request()->is('admin/expenses/personal*') ? 'menuitem-active' : '' }}">
+                                <a href="{{ url('/admin/expenses/personal') }}" class="{{ request()->is('admin/expenses/personal*') ? 'active' : '' }}">
+                                    <i class="mdi mdi-account-cash font-14 me-1"></i> Personal Expenses
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
+                <li>
                     <a href="{{ url('/admin/reports') }}">
                         {{-- <img src="{{url('img/report-menu.png')}}"> --}}
                         <svg class="svg-icons">
