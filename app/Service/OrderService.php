@@ -330,12 +330,12 @@ class OrderService
             }
 
             $company = [
-                'name' => config('app.name', 'Alokha'),
+                'name' => config('app.name', 'SRM RESIDENCE'),
                 'address' => 'Tirunelveli, Tamil Nadu',
                 'phone' => '+91 9876543210',
-                'email' => 'support@alokha.com',
+                'email' => 'support@srmresidence.com',
                 'gstin' => 'GSTIN1234567890',
-                'website' => 'www.alokha.com',
+                'website' => 'www.srmresidence.com',
             ];
 
             $seller = null;

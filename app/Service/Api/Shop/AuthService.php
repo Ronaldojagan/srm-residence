@@ -257,7 +257,7 @@ class AuthService
 
     protected function getOtpMessage($otp)
     {
-        return "Alokha : {$otp} is your OTP for mobile number verification. Valid for 15 min. Alokha. chennaiepc";
+        return "SRM RESIDENCE : {$otp} is your OTP for mobile number verification. Valid for 15 min. SRM RESIDENCE.";
     }
 
 }

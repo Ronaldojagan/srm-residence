@@ -4,7 +4,7 @@
             <div class="col-md-12 text-center">
                 <script>
                     document.write(new Date().getFullYear())
-                </script> &copy; Talmid by <a target="_blank" href="https://webstormers.in/">Webstormers</a>
+                </script> &copy; SRM RESIDENCE
             </div>
         </div>
     </div>

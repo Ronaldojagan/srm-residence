@@ -150,12 +150,12 @@ class OrderController extends Controller
             }
 
             $company = [
-                'name' => config('app.name', 'Nan Naadu Naturals Beverages'),
+                'name' => config('app.name', 'SRM RESIDENCE'),
                 'address' => 'Tirunelveli, Tamil Nadu',
                 'phone' => '+91 9876543210',
-                'email' => 'support@namnaadu.com',
+                'email' => 'support@srmresidence.com',
                 'gstin' => 'GSTIN1234567890',
-                'website' => 'www.namnaadu.com',
+                'website' => 'www.srmresidence.com',
             ];
 
             $seller = null;
@@ -255,7 +255,7 @@ class OrderController extends Controller
 
             $shopDetails = [
                 'id' => $shop->id,
-                'name' => $shop->name ?? config('app.name', 'Alokha'),
+                'name' => $shop->name ?? config('app.name', 'SRM RESIDENCE'),
                 'business_name' => $shop->business_name ?? $shop->name,
                 'address' => $shop->address ?? 'Tirunelveli, Tamil Nadu',
                 'city' => $shop->city ?? 'Tirunelveli',
@@ -266,16 +266,16 @@ class OrderController extends Controller
                 'gst_number' => $shop->user->gst_no ?? null,
                 'pan_number' => $shop->user->pan_no ?? 'ABCDE1234F',
                 'logo' => $shop->logo ?? null,
-                'website' => $shop->website ?? 'www.alokha.com',
+                'website' => $shop->website ?? 'www.srmresidence.com',
             ];
 
             $company = [
-                'name' => config('app.name', 'Alokha Marketplace'),
+                'name' => config('app.name', 'SRM RESIDENCE'),
                 'address' => 'Tirunelveli, Tamil Nadu',
                 'phone' => '+91 9876543210',
-                'email' => 'support@alokha.com',
+                'email' => 'support@srmresidence.com',
                 'gstin' => 'GSTIN1234567890',
-                'website' => 'www.alokha.com',
+                'website' => 'www.srmresidence.com',
             ];
 
             $shopSubtotal = $shopOrderItems->sum('total_amount');

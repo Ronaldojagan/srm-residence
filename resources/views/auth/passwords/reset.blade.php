@@ -7,7 +7,7 @@
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'Alokha') }}</title>
+    <title>{{ config('app.name', 'SRM RESIDENCE') }}</title>
     <link rel="shortcut icon" href="{{url('img/fev.png')}}">
     <!-- Fonts -->
     <link rel="dns-prefetch" href="//fonts.bunny.net">

@@ -4,8 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alokha</title>
-    <meta name="description" content="Request removal of your personal data from Alokha">
+    <title>SRM RESIDENCE</title>
+    <meta name="description" content="Request removal of your personal data from SRM RESIDENCE">
 
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ url('img/fev.png') }}">
@@ -668,7 +668,7 @@
                     </div>
                 </div>
                 <h2>Data Removal Request</h2>
-                <p>Request removal of your personal data from Alokha</p>
+                <p>Request removal of your personal data from SRM RESIDENCE</p>
             </div>
 
             <div class="form-content">

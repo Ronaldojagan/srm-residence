@@ -7,7 +7,7 @@
     <!-- CSRF Token -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'Alokha') }}</title>
+    <title>{{ config('app.name', 'SRM RESIDENCE') }}</title>
     <link rel="shortcut icon" href="{{url('img/fev.png')}}">
     <!-- Fonts -->
     <link rel="dns-prefetch" href="//fonts.bunny.net">
@@ -41,7 +41,7 @@
                         <img src="{{ url('img/logo.png') }}" alt="" class="logo-header" width="250">
                     </h3>
                     {{-- <h3 class="text-center mb-4 text-dark">
-                        Alokha
+                        SRM RESIDENCE
                     </h3> --}}
 
                     <form method="POST" action="{{ route('password.email') }}" class="login-page">
