@@ -222,9 +222,9 @@
                 </p>
             </div>
             <div class="mt-3 mt-md-0 d-flex flex-wrap gap-2">
-                <button type="button" class="btn btn-light res-btn-action text-dark" onclick="alert('Add Tenant form ready')">
-                    <i class="fas fa-user-plus text-primary"></i> Add Tenant
-                </button>
+                <a href="{{ url('admin/tenants') }}" class="btn btn-light res-btn-action text-dark">
+                    <i class="fas fa-user-plus text-primary"></i> Create Tenant
+                </a>
                 <button type="button" class="btn btn-light res-btn-action text-dark" onclick="alert('Room Allocation dialog')">
                     <i class="fas fa-door-open text-info"></i> Allocate Room
                 </button>
@@ -479,7 +479,7 @@
                                 <tr>
                                     <th>Tenant</th>
                                     <th>Room & Type</th>
-                                    <th>Check-in Date</th>
+                                    <th>Commence Date</th>
                                     <th>Monthly Rent</th>
                                     <th>Rent Status</th>
                                     <th class="text-end">Action</th>

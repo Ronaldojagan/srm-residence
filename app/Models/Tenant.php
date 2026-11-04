@@ -18,7 +18,7 @@ class Tenant extends Model
         'room_type',
         'monthly_rent',
         'security_deposit',
-        'check_in_date',
+        'commence_date',
         'emergency_contact',
         'address',
         'status',
@@ -27,7 +27,8 @@ class Tenant extends Model
     protected $casts = [
         'monthly_rent' => 'float',
         'security_deposit' => 'float',
-        'check_in_date' => 'date',
+        'commence_date' => 'date',
         'status' => 'boolean',
     ];
 }
+

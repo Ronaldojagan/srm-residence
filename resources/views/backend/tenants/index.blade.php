@@ -33,7 +33,7 @@
         </div>
         <div class="col-md-6 text-end">
             <button type="button" class="btn add-btn waves-effect waves-light button-color text-white" data-bs-toggle="modal" data-bs-target="#addTenantModal">
-                <i class="mdi mdi-account-plus me-1"></i> Register New Tenant
+                <i class="mdi mdi-account-plus me-1"></i> Create Tenant
             </button>
         </div>
     </div>
@@ -86,7 +86,7 @@
                                     <th>Phone</th>
                                     <th>Room & Type</th>
                                     <th>Monthly Rent</th>
-                                    <th>Check-in Date</th>
+                                    <th>Commence Date</th>
                                     <th>Status</th>
                                     <th width="12%" class="text-center">Action</th>
                                 </tr>
@@ -106,7 +106,7 @@
             <div class="modal-content">
                 <div class="modal-header button-color text-white">
                     <h5 class="modal-title text-white" id="addTenantModalLabel">
-                        <i class="mdi mdi-account-plus me-1"></i> Register New Tenant
+                        <i class="mdi mdi-account-plus me-1"></i> Create Tenant
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
@@ -148,8 +148,8 @@
                                 </select>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label fw-semibold">Check-in Date <span class="text-danger">*</span></label>
-                                <input type="date" name="check_in_date" class="form-control" value="{{ date('Y-m-d') }}" required>
+                                <label class="form-label fw-semibold">Commence Date <span class="text-danger">*</span></label>
+                                <input type="date" name="commence_date" class="form-control" value="{{ date('Y-m-d') }}" required>
                             </div>
 
                             <div class="col-md-6">
@@ -171,7 +171,7 @@
                         <button type="button" class="btn btn-secondary waves-effect" data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" class="btn button-color text-white waves-effect waves-light" id="btnSaveTenant">
                             <span class="spinner-border spinner-border-sm d-none me-1" id="saveTenantSpinner"></span>
-                            Register Tenant
+                            Create Tenant
                         </button>
                     </div>
                 </form>
@@ -228,8 +228,8 @@
                                 </select>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label fw-semibold">Check-in Date</label>
-                                <input type="date" id="edit_check_in_date" name="check_in_date" class="form-control">
+                                <label class="form-label fw-semibold">Commence Date</label>
+                                <input type="date" id="edit_commence_date" name="commence_date" class="form-control">
                             </div>
 
                             <div class="col-md-6">
@@ -277,7 +277,7 @@
                         { data: 'phone', name: 'phone' },
                         { data: 'room_badge', name: 'room_number' },
                         { data: 'rent_display', name: 'monthly_rent' },
-                        { data: 'check_in', name: 'check_in_date' },
+                        { data: 'commence_date_formatted', name: 'commence_date' },
                         { data: 'status_toggle', name: 'status', orderable: false, searchable: false },
                         { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-center' },
                     ]
@@ -356,8 +356,8 @@
                                 $('#edit_emergency_contact').val(tenant.emergency_contact);
                                 $('#edit_room_number').val(tenant.room_number);
                                 $('#edit_room_type').val(tenant.room_type);
-                                if (tenant.check_in_date) {
-                                    $('#edit_check_in_date').val(tenant.check_in_date.substring(0, 10));
+                                if (tenant.commence_date) {
+                                    $('#edit_commence_date').val(tenant.commence_date.substring(0, 10));
                                 }
                                 $('#edit_monthly_rent').val(tenant.monthly_rent);
                                 $('#edit_security_deposit').val(tenant.security_deposit);
@@ -494,3 +494,4 @@
         </script>
     @endpush
 @endsection
+

@@ -36,8 +36,8 @@ class TenantController extends Controller
                         <small class="text-muted d-block">Dep: ₹' . number_format($row->security_deposit) . '</small>
                     </div>';
                 })
-                ->addColumn('check_in', function ($row) {
-                    return $row->check_in_date ? $row->check_in_date->format('d M Y') : '-';
+                ->addColumn('commence_date_formatted', function ($row) {
+                    return $row->commence_date ? $row->commence_date->format('d M Y') : '-';
                 })
                 ->addColumn('status_toggle', function ($row) {
                     $checked = $row->status ? 'checked' : '';
@@ -52,7 +52,7 @@ class TenantController extends Controller
                     $btn .= '</div>';
                     return $btn;
                 })
-                ->rawColumns(['name_email', 'room_badge', 'rent_display', 'check_in', 'status_toggle', 'action'])
+                ->rawColumns(['name_email', 'room_badge', 'rent_display', 'commence_date_formatted', 'status_toggle', 'action'])
                 ->make(true);
         }
 
@@ -76,7 +76,7 @@ class TenantController extends Controller
             'room_type' => 'required|string|max:100',
             'monthly_rent' => 'required|numeric|min:0',
             'security_deposit' => 'nullable|numeric|min:0',
-            'check_in_date' => 'nullable|date',
+            'commence_date' => 'nullable|date',
             'emergency_contact' => 'nullable|string|max:20',
             'address' => 'nullable|string',
         ]);
@@ -113,7 +113,7 @@ class TenantController extends Controller
             'room_type' => 'required|string|max:100',
             'monthly_rent' => 'required|numeric|min:0',
             'security_deposit' => 'nullable|numeric|min:0',
-            'check_in_date' => 'nullable|date',
+            'commence_date' => 'nullable|date',
             'emergency_contact' => 'nullable|string|max:20',
             'address' => 'nullable|string',
         ]);
@@ -153,3 +153,4 @@ class TenantController extends Controller
         ]);
     }
 }
+
