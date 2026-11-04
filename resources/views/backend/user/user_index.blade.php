@@ -3,79 +3,55 @@
     @push('head_content')
         <link href="{{ url('assets/libs/sweetalert2/sweetalert2.min.css') }}" rel="stylesheet" type="text/css" />
         <link href="https://cdn.datatables.net/1.11.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
         <style>
-            .user-card {
-                background: #ffffff;
-                border-radius: 16px;
-                border: 1px solid #e2e8f0;
-                box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+            .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+                background: #0ea1b1 !important;
+                color: #fff !important;
+                border-color: #0ea1b1 !important;
+                border-radius: 5px;
             }
-            .user-table thead th {
-                background: linear-gradient(135deg, #0ea1b1, #087582);
-                color: #ffffff;
-                font-weight: 600;
-                font-size: 0.85rem;
-                text-transform: uppercase;
-                letter-spacing: 0.04em;
-                border: none;
-                padding: 12px 16px;
-            }
-            .user-table tbody td {
-                padding: 14px 16px;
+            .data-table thead th {
                 vertical-align: middle;
             }
-            .modal-content {
-                border-radius: 18px;
-                border: none;
-                box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-            }
-            .modal-header {
-                background: linear-gradient(135deg, #0ea1b1, #087582);
-                color: #ffffff;
-                border-top-left-radius: 18px;
-                border-top-right-radius: 18px;
-                padding: 1.25rem 1.5rem;
-            }
-            .modal-header .btn-close {
-                filter: brightness(0) invert(1);
+            .action-btn-group .btn {
+                padding: 4px 8px;
+                font-size: 13px;
+                margin: 0 2px;
+                border-radius: 4px;
             }
         </style>
     @endpush
 
-    <div class="row align-items-center justify-content-between mt-3 mb-3">
+    <div class="row justify-content-between align-items-center mt-3">
         <div class="col-md-6">
-            <h4 class="page-title-main page mb-1">
-                <i class="fas fa-users text-primary me-2"></i> User & Tenant Management
-            </h4>
-            <p class="text-muted small mb-0">Manage resident tenants, staff, and administrative users with instant AJAX actions.</p>
+            <h4 class="page-title-main page">Users & Tenants</h4>
         </div>
-        <div class="col-md-6 text-md-end mt-3 mt-md-0">
-            <button type="button" class="btn btn-primary px-3 py-2 rounded-pill fw-semibold shadow-sm" data-bs-toggle="modal" data-bs-target="#addUserModal">
-                <i class="fas fa-user-plus me-1"></i> Add New User
+        <div class="col-md-6 text-end">
+            <button type="button" class="btn add-btn waves-effect waves-light button-color text-white" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                <i class="mdi mdi-plus-circle me-1"></i> Add New User
             </button>
         </div>
     </div>
 
-    <!-- Data Table Card -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card user-card">
-                <div class="card-body p-4">
-                    <div class="table-responsive">
-                        <table class="table table-hover user-table data-table w-100">
-                            <thead>
+    <div class="row mt-2">
+        <div class="col-lg-12">
+            <div class="card card-shadow">
+                <div class="card-body">
+                    <div class="table-responsive table-border">
+                        <table class="table table-striped data-table job-table w-100">
+                            <thead class="table-theme text-white">
                                 <tr>
-                                    <th width="5%">#</th>
+                                    <th width="5%">S.No</th>
                                     <th width="8%">Avatar</th>
-                                    <th width="28%">User & Email</th>
-                                    <th width="18%">Phone</th>
-                                    <th width="15%">Role</th>
-                                    <th width="12%">Status</th>
-                                    <th width="14%" class="text-center">Actions</th>
+                                    <th>Name & Email</th>
+                                    <th>Phone</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                                    <th width="15%" class="text-center">Action</th>
                                 </tr>
                             </thead>
-                            <tbody></tbody>
+                            <tbody>
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -87,11 +63,11 @@
     <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold" id="addUserModalLabel">
-                        <i class="fas fa-user-plus me-2"></i> Add New User
+                <div class="modal-header button-color text-white">
+                    <h5 class="modal-title text-white" id="addUserModalLabel">
+                        <i class="mdi mdi-account-plus me-1"></i> Add New User
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form id="addUserForm">
                     @csrf
@@ -99,38 +75,38 @@
                         <div id="addFormErrors" class="alert alert-danger d-none py-2 px-3 small"></div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Full Name <span class="text-danger">*</span></label>
-                            <input type="text" name="name" class="form-control" placeholder="e.g. John Doe" required>
+                            <label class="form-label">Full Name <span class="text-danger">*</span></label>
+                            <input type="text" name="name" class="form-control" placeholder="Enter full name" required>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Email Address <span class="text-danger">*</span></label>
+                            <label class="form-label">Email Address <span class="text-danger">*</span></label>
                             <input type="email" name="email" class="form-control" placeholder="user@srmresidence.com" required>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Phone Number</label>
-                            <input type="tel" name="phone" class="form-control" placeholder="+91 98765 43210">
+                            <label class="form-label">Phone Number</label>
+                            <input type="tel" name="phone" class="form-control" placeholder="+91 9876543210">
                         </div>
 
-                        <div class="row g-2 mb-3">
+                        <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold">Role / Type <span class="text-danger">*</span></label>
+                                <label class="form-label">Role <span class="text-danger">*</span></label>
                                 <select name="type" class="form-select" required>
                                     <option value="customer" selected>Tenant / Customer</option>
                                     <option value="Admin">Admin</option>
-                                    <option value="delivery">Staff / Staff Delivery</option>
+                                    <option value="delivery">Staff</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold">Password <span class="text-danger">*</span></label>
+                                <label class="form-label">Password <span class="text-danger">*</span></label>
                                 <input type="password" name="password" class="form-control" placeholder="Min 6 characters" required>
                             </div>
                         </div>
                     </div>
-                    <div class="modal-footer bg-light px-4 py-3">
-                        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary rounded-pill px-4" id="btnSaveUser">
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary waves-effect" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn button-color text-white waves-effect waves-light" id="btnSaveUser">
                             <span class="spinner-border spinner-border-sm d-none me-1" id="saveSpinner"></span>
                             Save User
                         </button>
@@ -144,11 +120,11 @@
     <div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold" id="editUserModalLabel">
-                        <i class="fas fa-user-edit me-2"></i> Edit User
+                <div class="modal-header button-color text-white">
+                    <h5 class="modal-title text-white" id="editUserModalLabel">
+                        <i class="mdi mdi-account-edit me-1"></i> Edit User
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form id="editUserForm">
                     @csrf
@@ -157,38 +133,38 @@
                         <div id="editFormErrors" class="alert alert-danger d-none py-2 px-3 small"></div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Full Name <span class="text-danger">*</span></label>
+                            <label class="form-label">Full Name <span class="text-danger">*</span></label>
                             <input type="text" id="edit_name" name="name" class="form-control" required>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Email Address <span class="text-danger">*</span></label>
+                            <label class="form-label">Email Address <span class="text-danger">*</span></label>
                             <input type="email" id="edit_email" name="email" class="form-control" required>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Phone Number</label>
+                            <label class="form-label">Phone Number</label>
                             <input type="tel" id="edit_phone" name="phone" class="form-control">
                         </div>
 
-                        <div class="row g-2 mb-3">
+                        <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold">Role / Type <span class="text-danger">*</span></label>
+                                <label class="form-label">Role <span class="text-danger">*</span></label>
                                 <select id="edit_type" name="type" class="form-select" required>
                                     <option value="customer">Tenant / Customer</option>
                                     <option value="Admin">Admin</option>
-                                    <option value="delivery">Staff / Staff Delivery</option>
+                                    <option value="delivery">Staff</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold">New Password (Optional)</label>
+                                <label class="form-label">New Password (Optional)</label>
                                 <input type="password" name="password" class="form-control" placeholder="Leave blank to keep">
                             </div>
                         </div>
                     </div>
-                    <div class="modal-footer bg-light px-4 py-3">
-                        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary rounded-pill px-4" id="btnUpdateUser">
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary waves-effect" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn button-color text-white waves-effect waves-light" id="btnUpdateUser">
                             <span class="spinner-border spinner-border-sm d-none me-1" id="updateSpinner"></span>
                             Update User
                         </button>
@@ -199,14 +175,12 @@
     </div>
 
     @push('footer_content')
-        <script src="https://code.jquery.com/jquery-3.6.1.min.js"></script>
         <script src="https://cdn.datatables.net/1.11.4/js/jquery.dataTables.min.js"></script>
         <script src="https://cdn.datatables.net/1.11.4/js/dataTables.bootstrap5.min.js"></script>
         <script src="{{ url('assets/libs/sweetalert2/sweetalert2.all.min.js') }}"></script>
 
         <script type="text/javascript">
             $(function() {
-                // Initialize DataTable
                 var table = $('.data-table').DataTable({
                     processing: true,
                     serverSide: true,
@@ -220,14 +194,9 @@
                         { data: 'type', name: 'type' },
                         { data: 'status', name: 'status', orderable: false, searchable: false },
                         { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-center' },
-                    ],
-                    language: {
-                        search: "_INPUT_",
-                        searchPlaceholder: "Search users..."
-                    }
+                    ]
                 });
 
-                // Toast Helper
                 const Toast = Swal.mixin({
                     toast: true,
                     position: 'top-end',
@@ -236,7 +205,7 @@
                     timerProgressBar: true
                 });
 
-                // 1. CREATE USER VIA AJAX
+                // 1. ADD USER VIA AJAX
                 $('#addUserForm').on('submit', function(e) {
                     e.preventDefault();
                     var $form = $(this);
@@ -361,13 +330,13 @@
                     var userName = $(this).data('name') || 'this user';
 
                     Swal.fire({
-                        title: "Delete User?",
-                        text: "Are you sure you want to delete " + userName + "? This action can be undone from trash.",
+                        title: "Are you sure?",
+                        text: "Delete " + userName + "?",
                         icon: "warning",
                         showCancelButton: true,
-                        confirmButtonColor: "#ef4444",
-                        cancelButtonColor: "#64748b",
-                        confirmButtonText: "Yes, delete"
+                        confirmButtonColor: "#28bb4b",
+                        cancelButtonColor: "#f34e4e",
+                        confirmButtonText: "Yes, delete it!"
                     }).then(function(result) {
                         if (result.isConfirmed) {
                             $.ajax({
@@ -392,9 +361,6 @@
                                             title: 'Failed to delete user'
                                         });
                                     }
-                                },
-                                error: function() {
-                                    Toast.fire({ icon: 'error', title: 'Error deleting user' });
                                 }
                             });
                         }
