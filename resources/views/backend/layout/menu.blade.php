@@ -6,11 +6,17 @@
                 <li>
                     <a href="{{ url('/admin/dashboard') }}">
                         <img src="{{url('img/dashboard-menu.png')}}">
-                        {{-- <svg class="svg-icons">
-                            <use href="#dashboard-icon"></use>
-                        </svg> --}}
                         <span class="badge bg-success rounded-pill float-end"></span>
                         <span class="ms-1"> Dashboard </span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url('/admin/users') }}">
+                        <svg class="svg-icons">
+                            <use href="#user-icon"></use>
+                        </svg>
+                        <span class="badge bg-primary rounded-pill float-end"></span>
+                        <span class="ms-1"> Users </span>
                     </a>
                 </li>
                 <li>
@@ -43,16 +49,7 @@
                         <span class="ms-1"> Delivery Points </span>
                     </a>
                 </li>
-                <li>
-                    <a href="{{ url('/admin/users') }}">
-                        {{-- <img src="{{url('img/user-menu.png')}}"> --}}
-                        <svg class="svg-icons">
-                            <use href="#user-icon"></use>
-                        </svg>
-                        <span class="badge bg-success rounded-pill float-end"></span>
-                        <span class="ms-1"> Users </span>
-                    </a>
-                </li>
+
                 <li>
                     <a href="{{ url('/admin/delivery-mans') }}">
                         <img src="{{url('img/delivery-man-menu.png')}}">

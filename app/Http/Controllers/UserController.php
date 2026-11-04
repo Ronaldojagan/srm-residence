@@ -25,19 +25,92 @@ class UserController extends Controller
     {
         return $this->userService->index($request);
     }
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'phone' => 'nullable|string|max:20',
+            'password' => 'required|string|min:6',
+            'type' => 'required|string',
+            'status' => 'nullable'
+        ]);
+
+        $user = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'] ?? null,
+            'password' => \Illuminate\Support\Facades\Hash::make($validated['password']),
+            'type' => $validated['type'],
+            'status' => $request->has('status') ? 1 : 1,
+            'image' => 'avatar.jpg',
+        ]);
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'User created successfully!',
+                'user' => $user
+            ]);
+        }
+
+        return redirect('/admin/users')->with('success', 'User created successfully!');
+    }
+
+    public function getUserData(User $user)
+    {
+        return response()->json([
+            'success' => true,
+            'user' => $user,
+            'encrypted_id' => Crypt::encrypt($user->id)
+        ]);
+    }
+
     public function edit(User $user)
     {
         return view('backend.user.user', [
             'edit' => $user,
         ]);
     }
-    public function update(UpdateUserRequest $request, User $user)
+    public function update(Request $request, User $user)
     {
-        return $this->userService->update($request->validated(), $user);
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $user->id,
+            'phone' => 'nullable|string|max:20',
+            'password' => 'nullable|string|min:6',
+            'type' => 'required|string',
+        ]);
+
+        $user->name = $validated['name'];
+        $user->email = $validated['email'];
+        $user->phone = $validated['phone'] ?? $user->phone;
+        $user->type = $validated['type'];
+
+        if (!empty($validated['password'])) {
+            $user->password = \Illuminate\Support\Facades\Hash::make($validated['password']);
+        }
+
+        $user->save();
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'User updated successfully!'
+            ]);
+        }
+
+        session()->flash("success", "User has been successfully updated!");
+        return redirect('/admin/users');
     }
     public function destroy(User $user)
     {
-        return $this->userService->destroy($user);
+        $user->delete();
+        return response()->json([
+            'status' => '1',
+            'success' => true,
+            'message' => 'User deleted successfully!'
+        ]);
     }
     public function view(User $user)
     {

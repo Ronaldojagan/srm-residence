@@ -23,42 +23,44 @@ class UserService
                     return $btn;
                 })
                 ->addColumn('name', function ($row) {
-                    return $row->name ?? '-';
+                    return '<div class="d-flex align-items-center">
+                        <div>
+                            <span class="fw-bold text-dark d-block">' . e($row->name) . '</span>
+                            <small class="text-muted">' . e($row->email) . '</small>
+                        </div>
+                    </div>';
                 })
                 ->addColumn('image', function ($row) {
                     $imagePath = $row->image == 'avatar.jpg' ? url('img/avatar.jpg') : url('storage/user/'. $row->image);
-                    $userDetailLink = '<a href="' . url('/admin/users/' . Crypt::encrypt($row->id) . '/view') . '">' . '</a>';
-                    $btn = '<img src="' . $imagePath . '" data-url="' . $imagePath . '" data-toggle="modal" data-target="#image-view" alt="user-img" width="35px" height="35px" class="rounded-circle data-table-image edit open-image-model">' . $userDetailLink;
-                    return $btn;
+                    return '<img src="' . $imagePath . '" alt="user" width="38px" height="38px" class="rounded-circle shadow-sm">';
                 })
                 ->addColumn('phone', function ($row) {
-                    if($row->phone){
-                        $btn = '<a href="tel:' .$row->phone . '">' . $row->phone . '</a>' ?? '-';
-                    }else{
-                        $btn = $row->phone ?? '-';
-                    }
-                    return $btn;
+                    return $row->phone ? '<a href="tel:' . $row->phone . '" class="text-primary fw-semibold">' . $row->phone . '</a>' : '<span class="text-muted">-</span>';
+                })
+                ->addColumn('type', function ($row) {
+                    $badge = $row->type == 'Admin' ? 'bg-purple text-white' : ($row->type == 'delivery' ? 'bg-info text-white' : 'bg-primary text-white');
+                    $label = $row->type == 'customer' ? 'Tenant / User' : ucfirst($row->type);
+                    return '<span class="badge rounded-pill ' . $badge . ' px-2 py-1">' . $label . '</span>';
                 })
                 ->addColumn('status', function ($row) {
                     $checked = $row->status == 1 ? 'checked' : '';
-                    return '<div class="form-check form-switch">
-                        <input class="form-check-input status-toggle" type="checkbox" '.$checked.' data-id="'.Crypt::encrypt($row->id).'">
+                    return '<div class="form-check form-switch mb-0">
+                        <input class="form-check-input status-toggle" type="checkbox" '.$checked.' data-id="'.Crypt::encrypt($row->id).'" style="cursor:pointer; width: 36px; height: 18px;">
                     </div>';
                 })
                ->addColumn('action', function ($row) {
-                    $viewUrl = url('/admin/users/' . Crypt::encrypt($row['id']) . '/view');
-                    $editUrl = url('/admin/users/' . Crypt::encrypt($row['id']) . '/edit');
+                    $encId = Crypt::encrypt($row['id']);
+                    $viewUrl = url('/admin/users/' . $encId . '/view');
 
-                    $btn = '<a href="' . $viewUrl . '" class="me-2" title="View">
-                                <img src="' . url('img/eye-icon.png') . '" alt="View" width="30">
-                            </a>';
-                    $btn .= '<a href="' . $editUrl . '" class="me-2" title="Edit">
-                                <img src="' . url('img/edit-icon.png') . '" alt="Edit" width="30">
-                            </a>';
+                    $btn = '<div class="btn-group btn-group-sm" role="group">';
+                    $btn .= '<a href="' . $viewUrl . '" class="btn btn-outline-info" title="View Profile"><i class="fas fa-eye"></i></a>';
+                    $btn .= '<button type="button" class="btn btn-outline-primary btn-edit-user" data-id="' . $encId . '" title="Edit User"><i class="fas fa-edit"></i></button>';
+                    $btn .= '<button type="button" class="btn btn-outline-danger btn-delete-user" data-id="' . $encId . '" data-name="' . e($row->name) . '" title="Delete User"><i class="fas fa-trash-alt"></i></button>';
+                    $btn .= '</div>';
 
                     return $btn;
                 })
-                ->rawColumns(['name','image','phone', 'status', 'action',])
+                ->rawColumns(['name','image','phone','type', 'status', 'action'])
                 ->make(true);
         }
         return view('backend.user.user_index');

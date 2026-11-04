@@ -201,8 +201,11 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'user-access:' . Use
 
     Route::controller(UserController::class)->prefix('users')->name('users.')->group(function () {
         Route::get('/', 'index');
+        Route::post('/', 'store');
+        Route::get('/{user}/data', 'getUserData');
         Route::get('/{user}/edit', 'edit');
         Route::put('/{user}', 'update');
+        Route::post('/{user}/update', 'update');
         Route::delete('/{user}', 'destroy');
         Route::get('/{user}/view', 'view');
         Route::get('/orders/{user}', 'getUserOrders');
