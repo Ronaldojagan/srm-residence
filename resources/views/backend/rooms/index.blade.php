@@ -35,7 +35,7 @@
     <div class="row justify-content-between align-items-center mt-3">
         <div class="col-md-6">
             <h4 class="page-title-main page">Rooms Management</h4>
-            <p class="text-muted small mb-0">Manage 23 residence rooms, floor allocations, occupancies, and rental rates.</p>
+            <p class="text-muted small mb-0">Manage residence rooms, floor allocations, occupancies, and rental rates dynamically.</p>
         </div>
         <div class="col-md-6 text-end">
             <button type="button" class="btn add-btn waves-effect waves-light button-color text-white" data-bs-toggle="modal" data-bs-target="#addRoomModal">
@@ -49,28 +49,28 @@
         <div class="col-md-3">
             <div class="room-stat-card border-start border-4 border-primary">
                 <div class="text-muted small text-uppercase fw-bold">Total Rooms</div>
-                <h3 class="fw-bold my-1 text-primary">{{ $stats['totalRooms'] }}</h3>
+                <h3 class="fw-bold my-1 text-primary" id="statTotalRooms">{{ $stats['totalRooms'] }}</h3>
                 <small class="text-muted">Total inventory units</small>
             </div>
         </div>
         <div class="col-md-3">
             <div class="room-stat-card border-start border-4 border-success">
                 <div class="text-muted small text-uppercase fw-bold">Available Rooms</div>
-                <h3 class="fw-bold my-1 text-success">{{ $stats['availableRooms'] }}</h3>
+                <h3 class="fw-bold my-1 text-success" id="statAvailableRooms">{{ $stats['availableRooms'] }}</h3>
                 <small class="text-muted">Ready for lease</small>
             </div>
         </div>
         <div class="col-md-3">
             <div class="room-stat-card border-start border-4 border-danger">
                 <div class="text-muted small text-uppercase fw-bold">Occupied Units</div>
-                <h3 class="fw-bold my-1 text-danger">{{ $stats['occupiedRooms'] }}</h3>
+                <h3 class="fw-bold my-1 text-danger" id="statOccupiedRooms">{{ $stats['occupiedRooms'] }}</h3>
                 <small class="text-muted">Currently tenanted</small>
             </div>
         </div>
         <div class="col-md-3">
             <div class="room-stat-card border-start border-4 border-warning">
                 <div class="text-muted small text-uppercase fw-bold">Under Maintenance</div>
-                <h3 class="fw-bold my-1 text-warning">{{ $stats['maintenanceRooms'] }}</h3>
+                <h3 class="fw-bold my-1 text-warning" id="statMaintenanceRooms">{{ $stats['maintenanceRooms'] }}</h3>
                 <small class="text-muted">Temporarily blocked</small>
             </div>
         </div>
@@ -165,20 +165,25 @@
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Floor <span class="text-danger">*</span></label>
                                 <select name="floor" class="form-select" required>
-                                    <option value="1st Floor">1st Floor</option>
+                                    <option value="Ground Floor">Ground Floor</option>
+                                    <option value="1st Floor" selected>1st Floor</option>
                                     <option value="2nd Floor">2nd Floor</option>
                                     <option value="3rd Floor">3rd Floor</option>
-                                    <option value="Ground Floor">Ground Floor</option>
+                                    <option value="4th Floor">4th Floor</option>
+                                    <option value="5th Floor">5th Floor</option>
+                                    <option value="Penthouse">Penthouse</option>
                                 </select>
                             </div>
 
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Room Type <span class="text-danger">*</span></label>
                                 <select name="room_type" class="form-select" required>
-                                    <option value="Single Deluxe">Single Deluxe</option>
+                                    <option value="Single Deluxe" selected>Single Deluxe</option>
                                     <option value="Double Sharing">Double Sharing</option>
                                     <option value="Triple Sharing">Triple Sharing</option>
+                                    <option value="Four Sharing">Four Sharing</option>
                                     <option value="Executive Suite">Executive Suite</option>
+                                    <option value="Studio Apartment">Studio Apartment</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
@@ -246,10 +251,13 @@
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Floor <span class="text-danger">*</span></label>
                                 <select id="edit_floor" name="floor" class="form-select" required>
+                                    <option value="Ground Floor">Ground Floor</option>
                                     <option value="1st Floor">1st Floor</option>
                                     <option value="2nd Floor">2nd Floor</option>
                                     <option value="3rd Floor">3rd Floor</option>
-                                    <option value="Ground Floor">Ground Floor</option>
+                                    <option value="4th Floor">4th Floor</option>
+                                    <option value="5th Floor">5th Floor</option>
+                                    <option value="Penthouse">Penthouse</option>
                                 </select>
                             </div>
 
@@ -259,7 +267,9 @@
                                     <option value="Single Deluxe">Single Deluxe</option>
                                     <option value="Double Sharing">Double Sharing</option>
                                     <option value="Triple Sharing">Triple Sharing</option>
+                                    <option value="Four Sharing">Four Sharing</option>
                                     <option value="Executive Suite">Executive Suite</option>
+                                    <option value="Studio Apartment">Studio Apartment</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
@@ -317,6 +327,15 @@
                     timer: 3000,
                     timerProgressBar: true
                 });
+
+                function updateStatCards(stats) {
+                    if (stats) {
+                        $('#statTotalRooms').text(stats.totalRooms);
+                        $('#statAvailableRooms').text(stats.availableRooms);
+                        $('#statOccupiedRooms').text(stats.occupiedRooms);
+                        $('#statMaintenanceRooms').text(stats.maintenanceRooms);
+                    }
+                }
 
                 // Initialize DataTable
                 var table = $('#roomsTable').DataTable({
@@ -390,6 +409,7 @@
                                 $('#addRoomModal').modal('hide');
                                 $form[0].reset();
                                 table.ajax.reload(null, false);
+                                updateStatCards(response.stats);
                                 Toast.fire({
                                     icon: 'success',
                                     title: response.message || 'Room created successfully!'
@@ -467,6 +487,7 @@
                             if (response.success) {
                                 $('#editRoomModal').modal('hide');
                                 table.ajax.reload(null, false);
+                                updateStatCards(response.stats);
                                 Toast.fire({
                                     icon: 'success',
                                     title: response.message || 'Room updated successfully!'
@@ -514,6 +535,7 @@
                                 success: function(data) {
                                     if (data.status == 1 || data.success) {
                                         table.ajax.reload(null, false);
+                                        updateStatCards(data.stats);
                                         Toast.fire({
                                             icon: 'success',
                                             title: 'Room removed successfully!'
@@ -546,6 +568,7 @@
                         },
                         success: function(data) {
                             if (data.success) {
+                                updateStatCards(data.stats);
                                 Toast.fire({ icon: 'success', title: 'Room status updated!' });
                             } else {
                                 $this.prop('checked', !$this.prop('checked'));

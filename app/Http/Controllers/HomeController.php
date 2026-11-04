@@ -76,16 +76,11 @@ class HomeController extends Controller
         }
         $staffCount = User::where('type', '!=', UserType::USER)->count();
 
-        $totalRooms = Room::count() ?: 23;
+        $totalRooms = Room::count();
         $occupiedRooms = Room::where('occupancy_status', 'occupied')->count();
         $availableRooms = Room::where('occupancy_status', 'available')->count();
         $maintenanceRooms = Room::where('occupancy_status', 'maintenance')->count();
-        if ($occupiedRooms === 0 && $availableRooms === 0) {
-            $occupiedRooms = 4;
-            $maintenanceRooms = 1;
-            $availableRooms = 18;
-        }
-        $occupancyRate = round(($occupiedRooms / $totalRooms) * 100, 1);
+        $occupancyRate = $totalRooms > 0 ? round(($occupiedRooms / $totalRooms) * 100, 1) : 0;
 
         $monthlyTurnover = 485000;
         $monthlyExpenses = 162500;

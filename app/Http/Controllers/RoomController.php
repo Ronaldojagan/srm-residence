@@ -86,14 +86,19 @@ class RoomController extends Controller
                 ->make(true);
         }
 
-        $stats = [
+        $stats = $this->getStats();
+
+        return view('backend.rooms.index', compact('stats'));
+    }
+
+    private function getStats()
+    {
+        return [
             'totalRooms' => Room::count(),
             'availableRooms' => Room::where('occupancy_status', 'available')->count(),
             'occupiedRooms' => Room::where('occupancy_status', 'occupied')->count(),
             'maintenanceRooms' => Room::where('occupancy_status', 'maintenance')->count(),
         ];
-
-        return view('backend.rooms.index', compact('stats'));
     }
 
     public function store(Request $request)
@@ -117,7 +122,8 @@ class RoomController extends Controller
         if ($request->ajax()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Room created successfully!'
+                'message' => 'Room created successfully!',
+                'stats' => $this->getStats()
             ]);
         }
 
@@ -150,7 +156,8 @@ class RoomController extends Controller
         if ($request->ajax()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Room updated successfully!'
+                'message' => 'Room updated successfully!',
+                'stats' => $this->getStats()
             ]);
         }
 
@@ -164,7 +171,8 @@ class RoomController extends Controller
         return response()->json([
             'success' => true,
             'status' => '1',
-            'message' => 'Room removed successfully!'
+            'message' => 'Room removed successfully!',
+            'stats' => $this->getStats()
         ]);
     }
 
@@ -176,7 +184,8 @@ class RoomController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Room status updated successfully.'
+            'message' => 'Room status updated successfully.',
+            'stats' => $this->getStats()
         ]);
     }
 
@@ -193,7 +202,8 @@ class RoomController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Room occupancy updated successfully.'
+            'message' => 'Room occupancy updated successfully.',
+            'stats' => $this->getStats()
         ]);
     }
 }

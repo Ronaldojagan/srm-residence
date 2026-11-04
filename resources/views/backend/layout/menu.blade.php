@@ -29,7 +29,7 @@
                 <li>
                     <a href="{{ url('/admin/rooms') }}">
                         <i class="mdi mdi-door-closed font-18 text-warning"></i>
-                        <span class="badge bg-primary rounded-pill float-end">23</span>
+                        <span class="badge bg-primary rounded-pill float-end"></span>
                         <span class="ms-1"> Rooms </span>
                     </a>
                 </li>
