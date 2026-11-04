@@ -31,6 +31,12 @@ class Room extends Model
 
     public function tenants()
     {
-        return $this->hasMany(Tenant::class, 'room_number', 'room_number');
+        return $this->hasMany(Tenant::class, 'room_id');
+    }
+
+    public function currentTenant()
+    {
+        return $this->hasOne(Tenant::class, 'room_id')->where('status', 1)->latestOfMany();
     }
 }
+

@@ -17,7 +17,7 @@ class TenantController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = Tenant::latest();
+            $data = Tenant::with('room')->latest();
 
             return DataTables::of($data)
                 ->addIndexColumn()
@@ -28,8 +28,10 @@ class TenantController extends Controller
                     </div>';
                 })
                 ->addColumn('room_badge', function ($row) {
-                    return '<span class="badge bg-primary text-white fw-bold px-2 py-1">' . e($row->room_number) . '</span>
-                            <div class="small text-muted mt-1">' . e($row->room_type) . '</div>';
+                    $roomNum = $row->room ? $row->room->room_number : $row->room_number;
+                    $floor = $row->room ? $row->room->floor : '';
+                    return '<span class="badge bg-primary text-white fw-bold px-2 py-1"><i class="mdi mdi-door-closed me-1"></i> Room ' . e($roomNum) . '</span>
+                            <div class="small text-muted mt-1">' . e($row->room_type) . ($floor ? ' (' . e($floor) . ')' : '') . '</div>';
                 })
                 ->addColumn('rent_display', function ($row) {
                     return '<div>
@@ -61,7 +63,7 @@ class TenantController extends Controller
             'totalTenants' => Tenant::count(),
             'activeTenants' => Tenant::where('status', 1)->count(),
             'totalRent' => Tenant::where('status', 1)->sum('monthly_rent'),
-            'occupiedRooms' => Tenant::where('status', 1)->distinct('room_number')->count('room_number'),
+            'occupiedRooms' => Tenant::where('status', 1)->whereNotNull('room_id')->distinct('room_id')->count('room_id'),
         ];
 
         $rooms = Room::orderBy('room_number')->get();
@@ -72,10 +74,11 @@ class TenantController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'room_id' => 'required|exists:rooms,id',
             'name' => 'required|string|max:255',
             'email' => 'nullable|email|max:255',
             'phone' => 'required|string|max:20',
-            'room_number' => 'required|string|max:50',
+            'room_number' => 'nullable|string|max:50',
             'room_type' => 'required|string|max:100',
             'monthly_rent' => 'required|numeric|min:0',
             'security_deposit' => 'nullable|numeric|min:0',
@@ -84,13 +87,19 @@ class TenantController extends Controller
             'address' => 'nullable|string',
         ]);
 
+        $room = Room::findOrFail($validated['room_id']);
+        $validated['room_number'] = $room->room_number;
         $validated['status'] = 1;
+
         $tenant = Tenant::create($validated);
+
+        // Mark room as occupied
+        $room->update(['occupancy_status' => 'occupied']);
 
         if ($request->ajax()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Tenant registered successfully!',
+                'message' => 'Tenant registered and room occupied successfully!',
                 'tenant' => $tenant
             ]);
         }
@@ -102,17 +111,18 @@ class TenantController extends Controller
     {
         return response()->json([
             'success' => true,
-            'tenant' => $tenant
+            'tenant' => $tenant->load('room')
         ]);
     }
 
     public function update(Request $request, Tenant $tenant)
     {
         $validated = $request->validate([
+            'room_id' => 'required|exists:rooms,id',
             'name' => 'required|string|max:255',
             'email' => 'nullable|email|max:255',
             'phone' => 'required|string|max:20',
-            'room_number' => 'required|string|max:50',
+            'room_number' => 'nullable|string|max:50',
             'room_type' => 'required|string|max:100',
             'monthly_rent' => 'required|numeric|min:0',
             'security_deposit' => 'nullable|numeric|min:0',
@@ -121,12 +131,33 @@ class TenantController extends Controller
             'address' => 'nullable|string',
         ]);
 
+        $oldRoomId = $tenant->room_id;
+        $newRoomId = $validated['room_id'];
+
+        $newRoom = Room::findOrFail($newRoomId);
+        $validated['room_number'] = $newRoom->room_number;
+
         $tenant->update($validated);
+
+        // If room changed, handle occupancy update for both rooms
+        if ($oldRoomId && $oldRoomId != $newRoomId) {
+            $hasOtherActive = Tenant::where('room_id', $oldRoomId)
+                ->where('id', '!=', $tenant->id)
+                ->where('status', 1)
+                ->exists();
+
+            if (!$hasOtherActive) {
+                Room::where('id', $oldRoomId)->update(['occupancy_status' => 'available']);
+            }
+        }
+
+        // Mark new room as occupied
+        $newRoom->update(['occupancy_status' => 'occupied']);
 
         if ($request->ajax()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Tenant updated successfully!'
+                'message' => 'Tenant and room allocation updated successfully!'
             ]);
         }
 
@@ -135,12 +166,23 @@ class TenantController extends Controller
 
     public function destroy(Tenant $tenant)
     {
+        $roomId = $tenant->room_id;
         $tenant->delete();
+
+        if ($roomId) {
+            $hasOtherActive = Tenant::where('room_id', $roomId)
+                ->where('status', 1)
+                ->exists();
+
+            if (!$hasOtherActive) {
+                Room::where('id', $roomId)->update(['occupancy_status' => 'available']);
+            }
+        }
 
         return response()->json([
             'success' => true,
             'status' => '1',
-            'message' => 'Tenant removed successfully!'
+            'message' => 'Tenant removed and room occupancy updated!'
         ]);
     }
 
@@ -150,10 +192,24 @@ class TenantController extends Controller
         $tenant->status = $request->status;
         $tenant->save();
 
+        if ($tenant->room_id) {
+            if ($tenant->status == 1) {
+                Room::where('id', $tenant->room_id)->update(['occupancy_status' => 'occupied']);
+            } else {
+                $hasOtherActive = Tenant::where('room_id', $tenant->room_id)
+                    ->where('id', '!=', $tenant->id)
+                    ->where('status', 1)
+                    ->exists();
+
+                if (!$hasOtherActive) {
+                    Room::where('id', $tenant->room_id)->update(['occupancy_status' => 'available']);
+                }
+            }
+        }
+
         return response()->json([
             'success' => true,
-            'message' => 'Tenant status updated successfully.'
+            'message' => 'Tenant status and room occupancy updated successfully.'
         ]);
     }
 }
-

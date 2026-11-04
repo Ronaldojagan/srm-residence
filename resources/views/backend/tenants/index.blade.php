@@ -135,17 +135,18 @@
                             </div>
 
                             <div class="col-md-4">
-                                <label class="form-label fw-semibold">Room Number <span class="text-danger">*</span></label>
-                                <select name="room_number" id="tenant_room_number" class="form-select" required>
+                                <label class="form-label fw-semibold">Assign Room <span class="text-danger">*</span></label>
+                                <select name="room_id" id="tenant_room_id" class="form-select" required>
                                     <option value="">Select Room...</option>
                                     @if(isset($rooms))
                                         @foreach($rooms as $r)
-                                            <option value="{{ $r->room_number }}" data-type="{{ $r->room_type }}" data-rent="{{ $r->monthly_rent }}" data-deposit="{{ $r->security_deposit }}">
-                                                Room {{ $r->room_number }} ({{ $r->floor }} - {{ $r->room_type }})
+                                            <option value="{{ $r->id }}" data-number="{{ $r->room_number }}" data-type="{{ $r->room_type }}" data-rent="{{ $r->monthly_rent }}" data-deposit="{{ $r->security_deposit }}">
+                                                Room {{ $r->room_number }} ({{ $r->floor }} - {{ $r->room_type }}) [{{ ucfirst($r->occupancy_status) }}]
                                             </option>
                                         @endforeach
                                     @endif
                                 </select>
+                                <input type="hidden" name="room_number" id="tenant_room_number">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label fw-semibold">Room Type <span class="text-danger">*</span></label>
@@ -224,17 +225,18 @@
                             </div>
 
                             <div class="col-md-4">
-                                <label class="form-label fw-semibold">Room Number <span class="text-danger">*</span></label>
-                                <select id="edit_room_number" name="room_number" class="form-select" required>
+                                <label class="form-label fw-semibold">Assign Room <span class="text-danger">*</span></label>
+                                <select id="edit_tenant_room_id" name="room_id" class="form-select" required>
                                     <option value="">Select Room...</option>
                                     @if(isset($rooms))
                                         @foreach($rooms as $r)
-                                            <option value="{{ $r->room_number }}" data-type="{{ $r->room_type }}" data-rent="{{ $r->monthly_rent }}" data-deposit="{{ $r->security_deposit }}">
-                                                Room {{ $r->room_number }} ({{ $r->floor }} - {{ $r->room_type }})
+                                            <option value="{{ $r->id }}" data-number="{{ $r->room_number }}" data-type="{{ $r->room_type }}" data-rent="{{ $r->monthly_rent }}" data-deposit="{{ $r->security_deposit }}">
+                                                Room {{ $r->room_number }} ({{ $r->floor }} - {{ $r->room_type }}) [{{ ucfirst($r->occupancy_status) }}]
                                             </option>
                                         @endforeach
                                     @endif
                                 </select>
+                                <input type="hidden" name="room_number" id="edit_tenant_room_number">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label fw-semibold">Room Type <span class="text-danger">*</span></label>
@@ -310,16 +312,31 @@
                 });
 
                 // Auto-fill room details when room is selected
-                $('#tenant_room_number').on('change', function() {
+                $('#tenant_room_id').on('change', function() {
                     var $opt = $(this).find('option:selected');
+                    $('#tenant_room_number').val($opt.data('number') || '');
                     if ($opt.data('type')) {
-                        $('select[name="room_type"]').val($opt.data('type'));
+                        $('#addTenantModal select[name="room_type"]').val($opt.data('type'));
                     }
                     if ($opt.data('rent')) {
-                        $('input[name="monthly_rent"]').val($opt.data('rent'));
+                        $('#addTenantModal input[name="monthly_rent"]').val($opt.data('rent'));
                     }
                     if ($opt.data('deposit')) {
-                        $('input[name="security_deposit"]').val($opt.data('deposit'));
+                        $('#addTenantModal input[name="security_deposit"]').val($opt.data('deposit'));
+                    }
+                });
+
+                $('#edit_tenant_room_id').on('change', function() {
+                    var $opt = $(this).find('option:selected');
+                    $('#edit_tenant_room_number').val($opt.data('number') || '');
+                    if ($opt.data('type')) {
+                        $('#editTenantModal select[name="room_type"]').val($opt.data('type'));
+                    }
+                    if ($opt.data('rent')) {
+                        $('#editTenantModal input[name="monthly_rent"]').val($opt.data('rent'));
+                    }
+                    if ($opt.data('deposit')) {
+                        $('#editTenantModal input[name="security_deposit"]').val($opt.data('deposit'));
                     }
                 });
 
@@ -386,7 +403,8 @@
                                 $('#edit_phone').val(tenant.phone);
                                 $('#edit_email').val(tenant.email);
                                 $('#edit_emergency_contact').val(tenant.emergency_contact);
-                                $('#edit_room_number').val(tenant.room_number);
+                                $('#edit_tenant_room_id').val(tenant.room_id || '');
+                                $('#edit_tenant_room_number').val(tenant.room_number || '');
                                 $('#edit_room_type').val(tenant.room_type);
                                 if (tenant.commence_date) {
                                     $('#edit_commence_date').val(tenant.commence_date.substring(0, 10));

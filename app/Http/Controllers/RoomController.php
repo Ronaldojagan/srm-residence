@@ -17,7 +17,7 @@ class RoomController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $query = Room::query();
+            $query = Room::with('currentTenant');
 
             if ($request->filled('floor')) {
                 $query->where('floor', $request->floor);
@@ -54,10 +54,14 @@ class RoomController extends Controller
                     </div>';
                 })
                 ->addColumn('occupancy_badge', function ($row) {
+                    $tenantHtml = '';
+                    if ($row->currentTenant) {
+                        $tenantHtml = '<div class="mt-1 small text-dark"><i class="fas fa-user-circle text-primary me-1"></i> <span class="fw-semibold">' . e($row->currentTenant->name) . '</span></div>';
+                    }
                     if ($row->occupancy_status === 'available') {
                         return '<span class="badge bg-success-subtle text-success border border-success px-2 py-1"><i class="fas fa-check-circle me-1"></i> Available</span>';
                     } elseif ($row->occupancy_status === 'occupied') {
-                        return '<span class="badge bg-danger-subtle text-danger border border-danger px-2 py-1"><i class="fas fa-user-lock me-1"></i> Occupied</span>';
+                        return '<span class="badge bg-danger-subtle text-danger border border-danger px-2 py-1"><i class="fas fa-user-lock me-1"></i> Occupied</span>' . $tenantHtml;
                     } else {
                         return '<span class="badge bg-warning-subtle text-warning border border-warning px-2 py-1"><i class="fas fa-tools me-1"></i> Maintenance</span>';
                     }
@@ -193,3 +197,4 @@ class RoomController extends Controller
         ]);
     }
 }
+

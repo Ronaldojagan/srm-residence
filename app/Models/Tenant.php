@@ -11,6 +11,7 @@ class Tenant extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'room_id',
         'name',
         'email',
         'phone',
@@ -25,10 +26,16 @@ class Tenant extends Model
     ];
 
     protected $casts = [
+        'room_id' => 'integer',
         'monthly_rent' => 'float',
         'security_deposit' => 'float',
         'commence_date' => 'date',
         'status' => 'boolean',
     ];
+
+    public function room()
+    {
+        return $this->belongsTo(Room::class, 'room_id');
+    }
 }
 
