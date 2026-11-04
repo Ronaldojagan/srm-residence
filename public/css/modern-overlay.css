@@ -97,7 +97,7 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
 .logo-box, .navbar-custom .logo-dark {
   background: var(--res-sidebar-bg) !important;
   height: 70px !important;
-  width: 260px !important;
+  width: 250px !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.07) !important;
   display: flex !important;
   align-items: center !important;
@@ -323,7 +323,7 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
   background: var(--res-sidebar-bg) !important;
   border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
   box-shadow: 4px 0 24px 0 rgba(0, 0, 0, 0.08) !important;
-  width: 260px !important;
+  width: 250px !important;
   padding-top: 15px;
   z-index: 1000 !important;
 }
@@ -467,8 +467,8 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
 .content-page {
   background-color: var(--res-bg-canvas) !important;
   min-height: 100vh !important;
-  margin-left: 260px !important;
-  padding: 85px 12px 65px 12px !important;
+  margin-left: 250px !important;
+  padding: 85px 14px 65px 14px !important;
   transition: all 0.2s ease;
 }
 
@@ -826,7 +826,7 @@ table.dataTable tbody tr:hover {
   position: absolute !important;
   right: 0 !important;
   bottom: 0 !important;
-  left: 260px !important;
+  left: 250px !important;
 }
 
 @media (max-width: 991.98px) {
@@ -965,4 +965,175 @@ table.dataTable tbody tr:hover {
   font-size: 13.5px !important;
   padding: 10px 24px !important;
   background: #64748b !important;
+}
+
+/* ==========================================================================
+   SIDEBAR CONDENSED MODE (Body state: data-leftbar-size="condensed")
+   ========================================================================== */
+body[data-leftbar-size="condensed"] .logo-box,
+body[data-leftbar-size="condensed"] .navbar-custom .logo-dark {
+  width: 70px !important;
+  padding: 0 !important;
+  justify-content: center !important;
+}
+
+body[data-leftbar-size="condensed"] .res-logo-details {
+  display: none !important;
+}
+
+body[data-leftbar-size="condensed"] .left-side-menu {
+  width: 70px !important;
+}
+
+body[data-leftbar-size="condensed"] .content-page {
+  margin-left: 70px !important;
+}
+
+body[data-leftbar-size="condensed"] .res-footer,
+body[data-leftbar-size="condensed"] .footer {
+  left: 70px !important;
+}
+
+body[data-leftbar-size="condensed"] .res-sidebar-status-card,
+body[data-leftbar-size="condensed"] #sidebar-menu .menu-title {
+  display: none !important;
+}
+
+body[data-leftbar-size="condensed"] #sidebar-menu ul#side-menu > li > a {
+  padding: 12px 0 !important;
+  justify-content: center !important;
+  margin: 4px 8px !important;
+}
+
+body[data-leftbar-size="condensed"] #sidebar-menu ul#side-menu > li > a span:not(.res-nav-badge) {
+  display: none !important;
+}
+
+body[data-leftbar-size="condensed"] .res-nav-badge {
+  margin-right: 0 !important;
+}
+
+/* ==========================================================================
+   RESPONSIVE MOBILE OVERRIDES
+   ========================================================================== */
+@media (max-width: 991.98px) {
+  .logo-box, .navbar-custom .logo-dark {
+    width: 65px !important;
+    padding: 0 !important;
+    justify-content: center !important;
+  }
+
+  .res-logo-details {
+    display: none !important;
+  }
+
+  .content-page {
+    margin-left: 0 !important;
+    padding: 85px 14px 70px 14px !important;
+  }
+
+  .res-footer, .footer {
+    left: 0 !important;
+    padding: 12px 16px !important;
+  }
+
+  .res-topbar-pill {
+    display: none !important;
+  }
+
+  .nav-user {
+    padding: 4px 6px !important;
+    margin: 10px 0 !important;
+  }
+
+  .res-user-meta {
+    display: none !important;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .settings-container {
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+
+  .settings-sidebar {
+    flex: 0 0 auto !important;
+    width: 100% !important;
+  }
+
+  .page-title-main {
+    font-size: 19px !important;
+  }
+}
+
+/* ==========================================================================
+   MODALS, DROPDOWNS & TOOLTIPS Z-INDEX PROTECTION
+   ========================================================================== */
+.modal {
+  z-index: 1060 !important;
+}
+
+.modal-backdrop {
+  z-index: 1055 !important;
+}
+
+.select2-container--open {
+  z-index: 1070 !important;
+}
+
+.swal2-container {
+  z-index: 10000 !important;
+}
+
+.daterangepicker {
+  z-index: 1065 !important;
+}
+
+/* ==========================================================================
+   SETTINGS MODULE ENHANCEMENT
+   ========================================================================== */
+.settings-sidebar {
+  border-radius: var(--res-radius-lg) !important;
+  border: 1px solid var(--res-border) !important;
+  box-shadow: var(--res-shadow-md) !important;
+  overflow: hidden !important;
+}
+
+.settings-header {
+  background: #f8fafc !important;
+  border-bottom: 1px solid var(--res-border-subtle) !important;
+  padding: 16px 20px !important;
+  font-weight: 700 !important;
+  font-size: 13.5px !important;
+  color: #0f172a !important;
+}
+
+.settings-tabs li {
+  border-bottom: 1px solid var(--res-border-subtle) !important;
+}
+
+.tab-link {
+  padding: 13px 20px !important;
+  font-size: 13.5px !important;
+  color: #475569 !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+}
+
+.tab-link:hover {
+  background-color: #f8fafc !important;
+  color: var(--res-primary) !important;
+}
+
+.tab-link.active {
+  background-color: rgba(14, 161, 177, 0.08) !important;
+  color: var(--res-primary) !important;
+  border-left: 3px solid var(--res-primary) !important;
+  font-weight: 600 !important;
+}
+
+.tab-link i {
+  font-size: 15px !important;
+  margin-right: 10px !important;
 }

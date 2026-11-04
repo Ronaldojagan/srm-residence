@@ -102,12 +102,12 @@
 
         .res-input-group {
             position: relative;
-            margin-bottom: 1.25rem;
         }
 
         .res-input-group .form-control {
             height: 48px;
             padding-left: 42px;
+            padding-right: 42px;
             border-radius: 12px !important;
             border: 1.5px solid #e2e8f0;
             font-size: 14px;
@@ -127,6 +127,24 @@
             color: #94a3b8;
             font-size: 15px;
             z-index: 4;
+        }
+
+        .res-input-group .toggle-password-btn {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            padding: 4px;
+            z-index: 4;
+            transition: color 0.2s ease;
+        }
+
+        .res-input-group .toggle-password-btn:hover {
+            color: #0ea1b1;
         }
 
         .res-btn-submit {
@@ -216,6 +234,17 @@
 
                 <!-- Right Login Form -->
                 <div class="col-lg-6 res-login-form-side">
+                    <!-- Mobile Brand Header -->
+                    <div class="d-flex d-lg-none align-items-center mb-4 pb-3 border-bottom">
+                        <div class="res-logo-icon me-2" style="width: 38px; height: 38px; min-width: 38px; font-size: 16px;">
+                            <i class="fas fa-hotel"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold text-dark font-16">SRM RESIDENCE</div>
+                            <div class="text-muted font-10 fw-semibold text-uppercase letter-spacing-1">Student & Living Hub</div>
+                        </div>
+                    </div>
+
                     <div class="mb-4">
                         <div class="d-inline-flex p-2 rounded-3 bg-primary-subtle text-primary mb-3">
                             <i class="fas fa-lock-open font-18"></i>
@@ -262,12 +291,25 @@
                                 <input name="password" type="password" id="password" 
                                        class="form-control @error('password') is-invalid @enderror" 
                                        placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" required autocomplete="current-password">
+                                <button type="button" class="toggle-password-btn" id="togglePasswordBtn" aria-label="Toggle password visibility">
+                                    <i class="far fa-eye" id="togglePasswordIcon"></i>
+                                </button>
                             </div>
                             @error('password')
                                 <span class="text-danger small mt-1 d-block font-12 fw-medium">
                                     {{ $message }}
                                 </span>
                             @enderror
+                        </div>
+
+                        <!-- Remember Me -->
+                        <div class="mb-3 d-flex align-items-center justify-content-between">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="remember" id="remember" {{ old('remember') ? 'checked' : '' }}>
+                                <label class="form-check-label font-13 text-muted" for="remember">
+                                    Remember my session
+                                </label>
+                            </div>
                         </div>
 
                         <!-- Submit Button -->
@@ -279,7 +321,7 @@
                     </form>
 
                     <div class="text-center mt-4 pt-3 border-top text-muted font-12">
-                        <i class="fas fa-lock me-1 text-primary"></i> Protected by SSL 256-bit encryption &bull; SRM Residence Portal
+                        <i class="fas fa-shield-halved me-1 text-primary"></i> 256-bit SSL encrypted connection &bull; SRM Residence Portal
                     </div>
                 </div>
             </div>
@@ -289,5 +331,21 @@
     <!-- Scripts -->
     <script src="{{ url('assets/libs/jquery/jquery.min.js') }}"></script>
     <script src="{{ url('assets/libs/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggleBtn = document.getElementById('togglePasswordBtn');
+            const passwordInput = document.getElementById('password');
+            const toggleIcon = document.getElementById('togglePasswordIcon');
+
+            if (toggleBtn && passwordInput && toggleIcon) {
+                toggleBtn.addEventListener('click', function() {
+                    const isPassword = passwordInput.getAttribute('type') === 'password';
+                    passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+                    toggleIcon.classList.toggle('fa-eye', !isPassword);
+                    toggleIcon.classList.toggle('fa-eye-slash', isPassword);
+                });
+            }
+        });
+    </script>
 </body>
 </html>

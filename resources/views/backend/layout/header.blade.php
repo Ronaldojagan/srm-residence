@@ -1,42 +1,9 @@
 <div class="navbar-custom">
-    <!-- Left Logo Brand Box -->
-    <div class="logo-box">
-        <a href="{{ url('/admin/dashboard') }}" class="res-logo-brand">
-            <div class="res-logo-icon">
-                <i class="fas fa-hotel"></i>
-            </div>
-            <div class="res-logo-details d-none d-lg-flex">
-                <span class="res-logo-title">SRM RESIDENCE</span>
-                <span class="res-logo-subtitle">Student & Living Hub</span>
-            </div>
-        </a>
-    </div>
-
-    <!-- Left Controls (Mobile Menu Toggle & Status Pills) -->
-    <ul class="list-unstyled topnav-menu topnav-menu-left mb-0 d-flex align-items-center">
-        <li>
-            <button class="button-menu-mobile disable-btn waves-effect">
-                <i class="fe-menu"></i>
-            </button>
-        </li>
-        <li class="d-none d-md-flex align-items-center ms-2">
-            <span class="res-topbar-pill">
-                <span class="res-pulsing-dot me-2"></span>
-                <span>Academic Year 2026-27</span>
-            </span>
-        </li>
-        <li class="d-none d-xl-flex align-items-center ms-3">
-            <span class="text-muted font-13 fw-medium">
-                <i class="far fa-calendar-alt text-primary me-1"></i> {{ date('l, d M Y') }}
-            </span>
-        </li>
-    </ul>
-
-    <!-- Right Controls -->
+    <!-- Right Controls: Profile & Quick Links (Floated Right in UBold architecture) -->
     <ul class="list-unstyled topnav-menu float-end mb-0 d-flex align-items-center">
         <!-- Quick Action Shortcut: View Rooms -->
         <li class="d-none d-sm-inline-block me-2">
-            <a href="{{ url('/admin/rooms') }}" class="btn btn-sm btn-outline-primary py-1 px-2 font-12">
+            <a href="{{ url('/admin/rooms') }}" class="btn btn-sm btn-outline-primary py-1 px-3 font-12" style="border-radius: 20px;">
                 <i class="fas fa-door-open me-1"></i> 23 Rooms
             </a>
         </li>
@@ -96,6 +63,39 @@
                     @csrf
                 </form>
             </div>
+        </li>
+    </ul>
+
+    <!-- Left Logo Brand Box -->
+    <div class="logo-box">
+        <a href="{{ url('/admin/dashboard') }}" class="res-logo-brand">
+            <div class="res-logo-icon">
+                <i class="fas fa-hotel"></i>
+            </div>
+            <div class="res-logo-details d-none d-lg-flex">
+                <span class="res-logo-title">SRM RESIDENCE</span>
+                <span class="res-logo-subtitle">Student & Living Hub</span>
+            </div>
+        </a>
+    </div>
+
+    <!-- Left Controls (Mobile Menu Toggle & Status Pills) -->
+    <ul class="list-unstyled topnav-menu topnav-menu-left mb-0 d-flex align-items-center">
+        <li>
+            <button class="button-menu-mobile disable-btn waves-effect">
+                <i class="fe-menu"></i>
+            </button>
+        </li>
+        <li class="d-none d-md-flex align-items-center ms-2">
+            <span class="res-topbar-pill">
+                <span class="res-pulsing-dot me-2"></span>
+                <span>Academic Year 2026-27</span>
+            </span>
+        </li>
+        <li class="d-none d-xl-flex align-items-center ms-3">
+            <span class="text-muted font-13 fw-medium">
+                <i class="far fa-calendar-alt text-primary me-1"></i> {{ date('l, d M Y') }}
+            </span>
         </li>
     </ul>
 

@@ -36,8 +36,8 @@
             }
 
             .report-tabs .nav-link.active {
-                color: #4e73df;
-                background-color: rgba(78, 115, 223, 0.1);
+                color: #0ea1b1;
+                background-color: rgba(14, 161, 177, 0.1);
             }
 
             .filter-popup {
@@ -140,7 +140,7 @@
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="deliverymans-tab" data-bs-toggle="tab"
+                    <button class="nav-link" id="deliverymans-tab" data-bs-toggle="tab"
                         data-bs-target="#deliverymans-tab-pane" type="button" role="tab" data-type="deliverymans">
                         <i class="fas fa-users me-1"></i> Delivery Mans
                     </button>

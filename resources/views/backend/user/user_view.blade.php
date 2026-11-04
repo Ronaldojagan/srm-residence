@@ -15,7 +15,7 @@
             <div class="col-12">
                 <div class="page-title-box d-sm-flex align-items-center justify-content-between">
                     <h4 class="mb-sm-0">
-                        <span class="text-dark">Customer Profile</span>
+                        <span class="text-dark page-title-main">Resident & User Profile</span>
                     </h4>
                     <div class="page-title-right">
                         <a href="{{ url('/admin/users') }}" class="btn add-btn text-white">

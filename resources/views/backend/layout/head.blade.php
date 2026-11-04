@@ -13,9 +13,11 @@
 <!-- FontAwesome 6 Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
-@stack('head_content')
 <link href="{{url('assets/css/app.min.css')}}" rel="stylesheet" type="text/css" id="app-style" />
 <link href="{{url('assets/css/icons.min.css')}}" rel="stylesheet" type="text/css" />
+
+@stack('head_content')
+
 <link href="{{url('css/custom.css')}}" rel="stylesheet" type="text/css" />
 <!-- Modern Website Overlay -->
 <link href="{{url('css/modern-overlay.css')}}" rel="stylesheet" type="text/css" />
