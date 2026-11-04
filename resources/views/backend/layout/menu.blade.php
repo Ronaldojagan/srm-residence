@@ -20,6 +20,13 @@
                     </a>
                 </li>
                 <li>
+                    <a href="{{ url('/admin/tenants') }}">
+                        <i class="mdi mdi-account-group font-18 text-info"></i>
+                        <span class="badge bg-success rounded-pill float-end"></span>
+                        <span class="ms-1"> Tenants </span>
+                    </a>
+                </li>
+                <li>
                     <a href="{{ url('/admin/orders') }}">
                         <img src="{{url('img/order-menu.png')}}">
                         {{-- <svg class="svg-icons">

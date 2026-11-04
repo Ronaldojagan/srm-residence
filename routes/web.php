@@ -26,6 +26,7 @@ use App\Http\Controllers\ShopController;
 use App\Http\Controllers\SubCategoryController;
 use App\Http\Controllers\UserAccountReasonController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\TenantController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MissingBottleController;
@@ -210,6 +211,15 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'user-access:' . Use
         Route::get('/{user}/view', 'view');
         Route::get('/orders/{user}', 'getUserOrders');
         Route::get('/stats/{user}', 'getUserStats');
+        Route::post('/status', 'updateStatus');
+    });
+
+    Route::controller(TenantController::class)->prefix('tenants')->name('tenants.')->group(function () {
+        Route::get('/', 'index');
+        Route::post('/', 'store');
+        Route::get('/{tenant}/data', 'getData');
+        Route::post('/{tenant}/update', 'update');
+        Route::delete('/{tenant}', 'destroy');
         Route::post('/status', 'updateStatus');
     });
 
