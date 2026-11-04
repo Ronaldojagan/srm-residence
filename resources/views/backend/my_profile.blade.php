@@ -72,7 +72,6 @@
 
 
     @push('footer_content')
-        <script src="{{ url('assets/js/app.min.js') }}"></script>
         <script>
             $(function() {
                 @if (Session::has('success'))
@@ -80,18 +79,16 @@
                         title: "Good job!",
                         text: "{{ Session::get('success') }}",
                         icon: "success"
-                    })
+                    });
                 @elseif (Session::has('error'))
                     Swal.fire({
                         title: "Sorry!",
                         text: "{{ Session::get('error') }}",
                         icon: "error"
-                    })
+                    });
                 @endif
             });
         </script>
         <script src="{{ url('assets/libs/sweetalert2/sweetalert2.all.min.js') }}"></script>
-
-        <script src="{{ url('assets/js/pages/sweet-alerts.init.js') }}"></script>
     @endpush
 @endsection

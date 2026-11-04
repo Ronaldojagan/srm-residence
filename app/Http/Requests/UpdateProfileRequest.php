@@ -24,9 +24,9 @@ class UpdateProfileRequest extends FormRequest
     public function rules()
     {
         return [
-            'name'=>['required'],
-            'email'=>['required', 'email'],
-            'phone'=>['required', 'digits:10'],
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'unique:users,email,' . auth()->id()],
+            'phone' => ['nullable', 'string', 'max:20'],
         ];
     }
 }

@@ -72,18 +72,18 @@
         </div>
     </div>
     @push('footer_content')
-        <script src="https://code.jquery.com/jquery-3.6.1.min.js"
-            integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
         <script type="text/javascript">
             $(document).ready(function() {
-                $("#out-datepicker").flatpickr({
-                    dateFormat: "d-m-Y"
-                })
-            });
-            $(document).ready(function() {
-                $("#in-datepicker").flatpickr({
-                    dateFormat: "d-m-Y"
-                })
+                if ($("#out-datepicker").length) {
+                    $("#out-datepicker").flatpickr({
+                        dateFormat: "d-m-Y"
+                    });
+                }
+                if ($("#in-datepicker").length) {
+                    $("#in-datepicker").flatpickr({
+                        dateFormat: "d-m-Y"
+                    });
+                }
             });
         </script>
         <script src="{{ url('assets/libs/flatpickr/flatpickr.min.js') }}"></script>

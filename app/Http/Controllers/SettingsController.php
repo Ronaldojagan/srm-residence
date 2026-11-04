@@ -33,9 +33,9 @@ class SettingsController extends Controller
     {
         return $this->settingsService->profileEdit($request);
     }
-    public function updateProfile(UpdateProfileRequest $request, User $user)
+    public function updateProfile(UpdateProfileRequest $request)
     {
-        return $this->settingsService->updateProfile($request->validated(), $user);
+        return $this->settingsService->updateProfile($request->validated());
     }
     public function password(Request $request)
     {

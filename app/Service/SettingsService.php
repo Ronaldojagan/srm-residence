@@ -32,19 +32,15 @@ class SettingsService
         return view('backend.profile_edit', compact('data'));
     }
 
-    public function updateProfile(array $data, User $user)
+    public function updateProfile(array $data)
     {
         DB::beginTransaction();
-        $user = User::where('id', auth()->user()->id)->where('status', true)->first();
+        $user = User::findOrFail(auth()->id());
         $user->fill($data);
         $user->save();
         DB::commit();
         session()->flash("success", "Profile has been successfully updated!");
-        if ($user->type == UserType::SUPERADMIN) {
-            return redirect('/admin/profile');
-        } elseif ($user->type == UserType::SHOP) {
-            return redirect('/shop-admin/profile');
-        }
+        return redirect('/admin/profile');
     }
 
     public function password(Request $request)
