@@ -45,6 +45,8 @@ class HomeController extends Controller
         $analyticsData = $this->getAnalyticsDatas($startDate, $endDate);
 
         $recentUsers = User::where('type', 'customer')->latest()->take(5)->get();
+        $residenceData = $this->getResidenceData();
+
         return view('backend.index', compact(
             'order',
             'user',
@@ -58,8 +60,102 @@ class HomeController extends Controller
             'analyticsData',
             'startDate',
             'endDate',
-            'recentUsers'
+            'recentUsers',
+            'residenceData'
         ));
+    }
+
+    private function getResidenceData()
+    {
+        $totalUsers = User::count();
+        $tenantCount = User::where('type', UserType::USER)->count();
+        $staffCount = User::where('type', '!=', UserType::USER)->count();
+
+        $totalRooms = 120;
+        $occupiedRooms = max($tenantCount, 94);
+        $availableRooms = max(0, $totalRooms - $occupiedRooms - 5);
+        $maintenanceRooms = 5;
+        $occupancyRate = round(($occupiedRooms / $totalRooms) * 100, 1);
+
+        $monthlyTurnover = 485000;
+        $monthlyExpenses = 162500;
+        $netProfit = $monthlyTurnover - $monthlyExpenses;
+        $profitMargin = round(($netProfit / $monthlyTurnover) * 100, 1);
+        $pendingDues = 42500;
+
+        $dbUsers = User::where('type', UserType::USER)->latest()->take(5)->get();
+        $rooms = ['A-101', 'A-204', 'B-108', 'C-312', 'D-405'];
+        $types = ['Single Deluxe', '2-Sharing AC', '3-Sharing Non-AC', 'Executive Suite', 'Single Deluxe'];
+        $rents = [12500, 8500, 6000, 18000, 12500];
+        $statuses = ['Paid', 'Paid', 'Due', 'Paid', 'Overdue'];
+
+        $recentTenants = [];
+        $i = 0;
+        foreach ($dbUsers as $u) {
+            $recentTenants[] = [
+                'name' => $u->name,
+                'email' => $u->email,
+                'phone' => $u->phone ?? '+91 98765 43210',
+                'room' => $rooms[$i % count($rooms)],
+                'type' => $types[$i % count($types)],
+                'rent' => $rents[$i % count($rents)],
+                'status' => $statuses[$i % count($statuses)],
+                'date' => Carbon::now()->subDays($i * 3 + 1)->format('d M Y'),
+            ];
+            $i++;
+        }
+
+        if (empty($recentTenants)) {
+            $recentTenants = [
+                ['name' => 'Karthik Subramanian', 'email' => 'karthik@srm.edu', 'phone' => '+91 98401 23456', 'room' => 'A-204', 'type' => 'Single Deluxe', 'rent' => 12500, 'status' => 'Paid', 'date' => '02 Nov 2026'],
+                ['name' => 'Priya Ramanathan', 'email' => 'priya@srm.edu', 'phone' => '+91 97890 54321', 'room' => 'B-108', 'type' => '2-Sharing AC', 'rent' => 8500, 'status' => 'Paid', 'date' => '01 Nov 2026'],
+                ['name' => 'Aditya Sharma', 'email' => 'aditya@srm.edu', 'phone' => '+91 96543 87654', 'room' => 'C-312', 'type' => '3-Sharing Non-AC', 'rent' => 6000, 'status' => 'Due', 'date' => '29 Oct 2026'],
+                ['name' => 'Deepak Verma', 'email' => 'deepak@srm.edu', 'phone' => '+91 98123 45678', 'room' => 'A-101', 'type' => 'Single Deluxe', 'rent' => 12500, 'status' => 'Paid', 'date' => '27 Oct 2026'],
+                ['name' => 'Ananya Venkatesh', 'email' => 'ananya@srm.edu', 'phone' => '+91 98765 09876', 'room' => 'D-405', 'type' => 'Executive Suite', 'rent' => 18000, 'status' => 'Overdue', 'date' => '25 Oct 2026'],
+            ];
+        }
+
+        return [
+            'totalUsers' => $totalUsers,
+            'tenantCount' => $occupiedRooms,
+            'staffCount' => $staffCount,
+            'totalRooms' => $totalRooms,
+            'occupiedRooms' => $occupiedRooms,
+            'availableRooms' => $availableRooms,
+            'maintenanceRooms' => $maintenanceRooms,
+            'occupancyRate' => $occupancyRate,
+            'monthlyTurnover' => $monthlyTurnover,
+            'monthlyTurnoverGrowth' => '+12.5%',
+            'monthlyExpenses' => $monthlyExpenses,
+            'monthlyExpenseChange' => '-3.2%',
+            'netProfit' => $netProfit,
+            'profitMargin' => $profitMargin . '%',
+            'pendingDues' => $pendingDues,
+            'overdueTenants' => 4,
+            'financialTrends' => [
+                'months' => ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'],
+                'turnover' => [410000, 435000, 450000, 462000, 475000, 485000],
+                'expenses' => [145000, 150000, 158000, 152000, 160000, 162500],
+                'profit' => [265000, 285000, 292000, 310000, 315000, 322500],
+            ],
+            'roomCategories' => [
+                'labels' => ['Single Deluxe', '2-Sharing AC', '3-Sharing Non-AC', 'Executive Suite'],
+                'total' => [30, 45, 35, 10],
+                'occupied' => [26, 38, 24, 6],
+            ],
+            'expenseCategories' => [
+                'labels' => ['Electricity & Water', 'Staff & Security', 'Housekeeping & Maintenance', 'High-Speed Wi-Fi', 'Mess & Dining Essentials'],
+                'amounts' => [52000, 45000, 28500, 15000, 22000],
+                'percentages' => [32, 28, 17, 9, 14]
+            ],
+            'recentTenants' => $recentTenants,
+            'maintenanceRequests' => [
+                ['room' => 'Room A-204', 'category' => 'Air Conditioning', 'issue' => 'Water leakage from AC unit', 'priority' => 'High', 'status' => 'In Progress', 'time' => '2 hrs ago'],
+                ['room' => 'Room B-112', 'category' => 'Plumbing', 'issue' => 'Shower pressure low in bath', 'priority' => 'Medium', 'status' => 'Open', 'time' => '5 hrs ago'],
+                ['room' => 'Floor 3 Common', 'category' => 'Wi-Fi Network', 'issue' => 'Mesh router speed slow', 'priority' => 'Low', 'status' => 'Resolved', 'time' => '1 day ago'],
+                ['room' => 'Room C-302', 'category' => 'Electrical', 'issue' => 'Balcony light bulb flicker', 'priority' => 'Low', 'status' => 'Open', 'time' => '1 day ago'],
+            ]
+        ];
     }
 
     private function getAnalyticsDatas($startDate = null, $endDate = null)

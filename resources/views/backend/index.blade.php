@@ -2,777 +2,703 @@
 @section('content')
     @push('head_content')
         <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
-        <link rel="stylesheet" href="{{ url('assets/libs/chartist/chartist.min.css') }}">
-        <link href="https://cdn.datatables.net/1.11.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+        <style>
+            :root {
+                --res-primary: #0ea1b1;
+                --res-primary-rgb: 14, 161, 177;
+                --res-primary-dark: #097380;
+                --res-success: #10b981;
+                --res-warning: #f59e0b;
+                --res-danger: #ef4444;
+                --res-info: #3b82f6;
+                --res-purple: #8b5cf6;
+                --res-dark: #1e293b;
+                --res-card-bg: #ffffff;
+                --res-border: #e2e8f0;
+            }
+
+            .res-dashboard {
+                padding-bottom: 2.5rem;
+                color: #334155;
+            }
+
+            /* Welcome Header */
+            .res-hero-banner {
+                background: linear-gradient(135deg, #0ea1b1 0%, #086d77 100%);
+                border-radius: 20px;
+                padding: 1.75rem 2rem;
+                color: #ffffff;
+                box-shadow: 0 10px 25px -5px rgba(14, 161, 177, 0.25);
+                margin-bottom: 1.75rem;
+                position: relative;
+                overflow: hidden;
+            }
+            .res-hero-banner::after {
+                content: '';
+                position: absolute;
+                top: -40px;
+                right: -40px;
+                width: 200px;
+                height: 200px;
+                background: rgba(255, 255, 255, 0.08);
+                border-radius: 50%;
+                pointer-events: none;
+            }
+
+            /* Modern KPI Cards */
+            .res-kpi-card {
+                background: #ffffff;
+                border-radius: 16px;
+                border: 1px solid rgba(226, 232, 240, 0.8);
+                padding: 1.4rem;
+                transition: all 0.25s ease;
+                box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+                height: 100%;
+                position: relative;
+            }
+            .res-kpi-card:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 12px 24px -6px rgba(15, 23, 42, 0.08);
+                border-color: rgba(14, 161, 177, 0.4);
+            }
+            .res-icon-box {
+                width: 52px;
+                height: 52px;
+                border-radius: 14px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.4rem;
+                color: #ffffff;
+                margin-bottom: 1rem;
+            }
+            .res-icon-users { background: linear-gradient(135deg, #8b5cf6, #6366f1); box-shadow: 0 6px 14px rgba(99, 102, 241, 0.3); }
+            .res-icon-tenants { background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 6px 14px rgba(16, 185, 129, 0.3); }
+            .res-icon-rooms { background: linear-gradient(135deg, #0ea1b1, #0284c7); box-shadow: 0 6px 14px rgba(14, 161, 177, 0.3); }
+            .res-icon-turnover { background: linear-gradient(135deg, #3b82f6, #1d4ed8); box-shadow: 0 6px 14px rgba(59, 130, 246, 0.3); }
+            .res-icon-expenses { background: linear-gradient(135deg, #f43f5e, #e11d48); box-shadow: 0 6px 14px rgba(244, 63, 94, 0.3); }
+            .res-icon-profit { background: linear-gradient(135deg, #f59e0b, #d97706); box-shadow: 0 6px 14px rgba(245, 158, 11, 0.3); }
+
+            .res-kpi-title {
+                font-size: 0.85rem;
+                font-weight: 600;
+                color: #64748b;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+                margin-bottom: 0.35rem;
+            }
+            .res-kpi-value {
+                font-size: 1.65rem;
+                font-weight: 700;
+                color: #0f172a;
+                margin-bottom: 0.25rem;
+                line-height: 1.2;
+            }
+            .res-badge-pill {
+                font-size: 0.75rem;
+                padding: 0.25rem 0.6rem;
+                border-radius: 999px;
+                font-weight: 600;
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+            }
+
+            /* Pipeline Card */
+            .res-card {
+                background: #ffffff;
+                border-radius: 18px;
+                border: 1px solid rgba(226, 232, 240, 0.9);
+                padding: 1.5rem;
+                margin-bottom: 1.5rem;
+                box-shadow: 0 4px 14px rgba(15, 23, 42, 0.03);
+            }
+            .res-card-title {
+                font-size: 1.05rem;
+                font-weight: 700;
+                color: #0f172a;
+                margin-bottom: 1.25rem;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+
+            /* Visual Pipeline */
+            .res-pipeline-track {
+                height: 14px;
+                border-radius: 999px;
+                overflow: hidden;
+                display: flex;
+                background: #f1f5f9;
+                margin-bottom: 1rem;
+            }
+            .res-pipeline-seg {
+                height: 100%;
+                transition: width 0.6s ease;
+                position: relative;
+            }
+            .res-pipeline-seg-occupied { background: #10b981; }
+            .res-pipeline-seg-available { background: #0ea1b1; }
+            .res-pipeline-seg-maintenance { background: #f59e0b; }
+
+            .res-pipeline-stats {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+                gap: 1rem;
+            }
+            .res-pipe-box {
+                padding: 0.9rem;
+                border-radius: 12px;
+                border: 1px solid #f1f5f9;
+                background: #f8fafc;
+            }
+            .res-pipe-box.active-green { border-left: 4px solid #10b981; }
+            .res-pipe-box.active-teal { border-left: 4px solid #0ea1b1; }
+            .res-pipe-box.active-amber { border-left: 4px solid #f59e0b; }
+
+            /* Action Buttons */
+            .res-btn-action {
+                border-radius: 10px;
+                font-weight: 600;
+                font-size: 0.85rem;
+                padding: 0.55rem 1rem;
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                transition: all 0.2s ease;
+            }
+
+            /* Custom Tables */
+            .res-table {
+                margin-bottom: 0;
+            }
+            .res-table thead th {
+                font-size: 0.75rem;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                color: #64748b;
+                border-bottom: 1px solid #e2e8f0;
+                padding: 0.85rem 0.75rem;
+            }
+            .res-table tbody td {
+                padding: 0.95rem 0.75rem;
+                vertical-align: middle;
+                border-bottom: 1px solid #f1f5f9;
+                font-size: 0.9rem;
+            }
+            .res-table tbody tr:hover {
+                background-color: #f8fafc;
+            }
+
+            .res-avatar {
+                width: 38px;
+                height: 38px;
+                border-radius: 10px;
+                background: linear-gradient(135deg, #0ea1b1, #3b82f6);
+                color: #ffffff;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: 700;
+                font-size: 0.85rem;
+            }
+        </style>
     @endpush
 
-    <div class="row justify-content-between align-items-center">
-        <div class="col-md-4 mt-3">
-            <h4 class="page-title-main page">Dashboard</h4>
+    <div class="res-dashboard mt-3">
+
+        <!-- Welcome Banner & Quick Actions -->
+        <div class="res-hero-banner d-flex flex-wrap justify-content-between align-items-center">
+            <div>
+                <span class="badge bg-white text-dark px-3 py-1 rounded-pill mb-2 fw-semibold">
+                    <i class="fas fa-building text-info me-1"></i> SRM RESIDENCE ADMIN
+                </span>
+                <h3 class="fw-bold mb-1 text-white">Residence Operations & Financial Dashboard</h3>
+                <p class="mb-0 text-white-50" style="font-size: 0.95rem;">
+                    Live overview of tenants, room allocations, monthly turnover, and operational expenses.
+                </p>
+            </div>
+            <div class="mt-3 mt-md-0 d-flex flex-wrap gap-2">
+                <button type="button" class="btn btn-light res-btn-action text-dark" onclick="alert('Add Tenant form ready')">
+                    <i class="fas fa-user-plus text-primary"></i> Add Tenant
+                </button>
+                <button type="button" class="btn btn-light res-btn-action text-dark" onclick="alert('Room Allocation dialog')">
+                    <i class="fas fa-door-open text-info"></i> Allocate Room
+                </button>
+                <button type="button" class="btn btn-warning res-btn-action text-dark fw-bold" onclick="alert('Record Expense dialog')">
+                    <i class="fas fa-receipt"></i> Log Expense
+                </button>
+            </div>
         </div>
-        <div class="col-md-8 mt-3">
-            <div class="d-flex justify-content-end">
-                <div style="min-width: 250px;">
-                    <div class="input-form" id="reportrange"
-                        style="cursor: pointer; padding: 10px; border: 1px solid #0ea1b1; width: 100%; border-radius: 30px; color:#0ea1b1; text-align: center;">
-                        <i class="fa fa-calendar"></i>&nbsp;
-                        <span></span> <i class="fa fa-caret-down"></i>
+
+        <!-- 6 KPI CARDS (Users, Tenants, Rooms, Monthly Turnover, Expenses, Net Profit) -->
+        <div class="row g-3 mb-4">
+            <!-- 1. Users & Staff -->
+            <div class="col-xl-2 col-md-4 col-sm-6">
+                <div class="res-kpi-card">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="res-icon-box res-icon-users">
+                            <i class="fas fa-users-cog"></i>
+                        </div>
+                        <span class="res-badge-pill bg-light text-primary">
+                            <i class="fas fa-shield-alt"></i> {{ $residenceData['staffCount'] }} Staff
+                        </span>
                     </div>
-                    <input type="hidden" class="start-date" name="start_date">
-                    <input type="hidden" class="end-date" name="end_date">
+                    <div class="res-kpi-title">Total Users</div>
+                    <div class="res-kpi-value">{{ $residenceData['totalUsers'] }}</div>
+                    <small class="text-muted"><i class="fas fa-check-circle text-success me-1"></i> Active Accounts</small>
+                </div>
+            </div>
+
+            <!-- 2. Active Tenants -->
+            <div class="col-xl-2 col-md-4 col-sm-6">
+                <div class="res-kpi-card">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="res-icon-box res-icon-tenants">
+                            <i class="fas fa-user-friends"></i>
+                        </div>
+                        <span class="res-badge-pill bg-success-subtle text-success">
+                            <i class="fas fa-arrow-up"></i> +8 New
+                        </span>
+                    </div>
+                    <div class="res-kpi-title">Active Tenants</div>
+                    <div class="res-kpi-value">{{ $residenceData['occupiedRooms'] }}</div>
+                    <small class="text-muted"><i class="fas fa-bed text-success me-1"></i> Residing currently</small>
+                </div>
+            </div>
+
+            <!-- 3. Rooms & Occupancy -->
+            <div class="col-xl-2 col-md-4 col-sm-6">
+                <div class="res-kpi-card">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="res-icon-box res-icon-rooms">
+                            <i class="fas fa-door-closed"></i>
+                        </div>
+                        <span class="res-badge-pill bg-info-subtle text-info">
+                            {{ $residenceData['occupancyRate'] }}% Full
+                        </span>
+                    </div>
+                    <div class="res-kpi-title">Total Rooms</div>
+                    <div class="res-kpi-value">{{ $residenceData['totalRooms'] }}</div>
+                    <small class="text-muted">
+                        <span class="text-success fw-bold">{{ $residenceData['availableRooms'] }}</span> Vacant &bull; 
+                        <span class="text-warning fw-bold">{{ $residenceData['maintenanceRooms'] }}</span> Maint.
+                    </small>
+                </div>
+            </div>
+
+            <!-- 4. Monthly Turnover -->
+            <div class="col-xl-2 col-md-4 col-sm-6">
+                <div class="res-kpi-card">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="res-icon-box res-icon-turnover">
+                            <i class="fas fa-indian-rupee-sign"></i>
+                        </div>
+                        <span class="res-badge-pill bg-success-subtle text-success">
+                            <i class="fas fa-arrow-up"></i> {{ $residenceData['monthlyTurnoverGrowth'] }}
+                        </span>
+                    </div>
+                    <div class="res-kpi-title">Monthly Turnover</div>
+                    <div class="res-kpi-value">₹{{ number_format($residenceData['monthlyTurnover']) }}</div>
+                    <small class="text-muted"><i class="fas fa-calendar-check text-primary me-1"></i> This Month</small>
+                </div>
+            </div>
+
+            <!-- 5. Monthly Expenses -->
+            <div class="col-xl-2 col-md-4 col-sm-6">
+                <div class="res-kpi-card">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="res-icon-box res-icon-expenses">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                        </div>
+                        <span class="res-badge-pill bg-danger-subtle text-danger">
+                            <i class="fas fa-arrow-down"></i> {{ $residenceData['monthlyExpenseChange'] }}
+                        </span>
+                    </div>
+                    <div class="res-kpi-title">Monthly Expenses</div>
+                    <div class="res-kpi-value">₹{{ number_format($residenceData['monthlyExpenses']) }}</div>
+                    <small class="text-muted"><i class="fas fa-bolt text-warning me-1"></i> Power, Staff, Mess</small>
+                </div>
+            </div>
+
+            <!-- 6. Net Profit -->
+            <div class="col-xl-2 col-md-4 col-sm-6">
+                <div class="res-kpi-card">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="res-icon-box res-icon-profit">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <span class="res-badge-pill bg-warning-subtle text-dark">
+                            {{ $residenceData['profitMargin'] }}
+                        </span>
+                    </div>
+                    <div class="res-kpi-title">Net Cashflow</div>
+                    <div class="res-kpi-value">₹{{ number_format($residenceData['netProfit']) }}</div>
+                    <small class="text-muted"><i class="fas fa-wallet text-success me-1"></i> Net Operating Margin</small>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Summary Stats Cards -->
-    <div class="row dashboard-card mb-3 d-flex flex-wrap justify-content-between">
-        @php
-            $cards = [
-                [
-                    'url' => 'admin/orders',
-                    'label' => 'Orders',
-                    'count' => $orderCount,
-                    'id' => 'total-orders',
-                    'icon' => 'shopping-cart',
-                ],
-                [
-                    'url' => 'admin/products',
-                    'label' => 'Packages',
-                    'count' => $packageCount,
-                    'id' => 'total-products',
-                    'icon' => 'box',
-                ],
-                [
-                    'url' => 'admin/users',
-                    'label' => 'Users',
-                    'count' => $userCount,
-                    'id' => 'total-users',
-                    'icon' => 'users',
-                ],
-                [
-                    'url' => 'admin/shops',
-                    'label' => 'Delivery Mans',
-                    'count' => $shopCount,
-                    'id' => 'total-shops',
-                    'icon' => 'store',
-                ],
-            ];
-        @endphp
+        <!-- PIPELINES ROW: Room Occupancy & Rent Collection -->
+        <div class="row g-3 mb-4">
+            <!-- Room Occupancy Pipeline -->
+            <div class="col-lg-7">
+                <div class="res-card h-100">
+                    <div class="res-card-title">
+                        <span><i class="fas fa-stream text-primary me-2"></i> Room Occupancy & Allocation Pipeline</span>
+                        <span class="badge bg-primary-subtle text-primary fw-semibold">Capacity: {{ $residenceData['totalRooms'] }} Units</span>
+                    </div>
 
-        @php
-            $cardClasses = ['dash-card1', 'dash-card2', 'dash-card1', 'dash-card2'];
-            $cardIcons = ['dash-icon1.png', 'dash-icon2.png', 'dash-icon3.png', 'dash-icon4.png'];
-        @endphp
+                    <!-- Visual Segmented Bar -->
+                    <div class="res-pipeline-track">
+                        <div class="res-pipeline-seg res-pipeline-seg-occupied" style="width: {{ $residenceData['occupancyRate'] }}%;" title="Occupied ({{ $residenceData['occupancyRate'] }}%)"></div>
+                        <div class="res-pipeline-seg res-pipeline-seg-available" style="width: {{ round(($residenceData['availableRooms'] / $residenceData['totalRooms']) * 100, 1) }}%;" title="Available ({{ round(($residenceData['availableRooms'] / $residenceData['totalRooms']) * 100, 1) }}%)"></div>
+                        <div class="res-pipeline-seg res-pipeline-seg-maintenance" style="width: {{ round(($residenceData['maintenanceRooms'] / $residenceData['totalRooms']) * 100, 1) }}%;" title="Under Maintenance"></div>
+                    </div>
 
-        @foreach ($cards as $card)
-            <div class="dash-card-container">
-                <a href="{{ url($card['url']) }}">
-                    <div class="{{ $cardClasses[$loop->index % count($cardClasses)] }}">
-                        <div class="row mt-1 p-3">
-                            <div class="col-4">
-                                <img class="mt-1 img-fluid w-26"
-                                    src="{{ asset('img/' . $cardIcons[$loop->index % count($cardIcons)]) }}" alt="Icon">
+                    <!-- Pipeline Stage Boxes -->
+                    <div class="res-pipeline-stats">
+                        <div class="res-pipe-box active-green">
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted small fw-bold">Occupied Rooms</span>
+                                <span class="badge bg-success-subtle text-success">{{ $residenceData['occupancyRate'] }}%</span>
                             </div>
-                            <div class="col-8 text-white mb-0 fs-5">
-                                <p class="text-white mt-1 fs-4 mb-1">{{ $card['label'] }}</p>
-                                <p class="text-white fs-5 mt-0" id="{{ $card['id'] }}">
-                                    {{ $card['count'] }} {{ $card['label'] }}
-                                </p>
+                            <h4 class="fw-bold my-1 text-success">{{ $residenceData['occupiedRooms'] }}</h4>
+                            <small class="text-muted">Active Tenant Leases</small>
+                        </div>
+
+                        <div class="res-pipe-box active-teal">
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted small fw-bold">Available / Vacant</span>
+                                <span class="badge bg-info-subtle text-info">{{ round(($residenceData['availableRooms'] / $residenceData['totalRooms']) * 100, 1) }}%</span>
                             </div>
+                            <h4 class="fw-bold my-1 text-primary">{{ $residenceData['availableRooms'] }}</h4>
+                            <small class="text-muted">Ready for Immediate Move-in</small>
                         </div>
-                        <a class="ps-3 mt-0 fw-medium text-white" href="{{ url($card['url']) }}">
-                            View {{ $card['label'] }} <i class="fa fa-arrow-right"></i>
-                        </a>
-                    </div>
-                </a>
-            </div>
-        @endforeach
-    </div>
 
-    <!-- Analytics Summary Cards -->
-    {{-- <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="dashboard-index-order-stats-card order-card1">
-                <div class="d-flex align-items-center">
-                    <i class="fas fa-shopping-bag fa-2x me-3"></i>
-                    <div>
-                        <h5 class="text-white">Orders in Range</h5>
-                        <h2 class="text-white" id="rangeOrders">{{ $totalOrdersInRange }}</h2>
-                        <small>Selected period</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="dashboard-index-order-stats-card order-card2">
-                <div class="d-flex align-items-center">
-                    <i class="fas fa-rupee-sign fa-2x me-3"></i>
-                    <div>
-                        <h5 class="text-white">Total Revenue</h5>
-                        <h2 class="text-white" id="totalRevenue">₹{{ number_format($totalRevenue, 2) }}</h2>
-                        <small>Selected period</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="dashboard-index-order-stats-card order-card3">
-                <div class="d-flex align-items-center">
-                    <i class="fas fa-percentage fa-2x me-3"></i>
-                    <div>
-                        <h5 class="text-white">Commission</h5>
-                        <h2 class="text-white" id="totalCommission">₹{{ number_format($commission, 2) }}</h2>
-                        <small>Admin earnings</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="dashboard-index-order-stats-card order-card4">
-                <div class="d-flex align-items-center">
-                    <i class="fas fa-chart-line fa-2x me-3"></i>
-                    <div>
-                        <h5 class="text-white">Avg Order Value</h5>
-                        <h2 class="text-white" id="avgOrderValue">
-                            ₹{{ number_format($totalOrdersInRange > 0 ? $totalRevenue / $totalOrdersInRange : 0, 2) }}</h2>
-                        <small>Per order</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div> --}}
-
-    <!-- Charts Row -->
-    {{-- <div class="row mb-4">
-        <div class="col-md-6">
-            <div class="dashboard-index-chart-card">
-                <h5 class="mb-3">Order Status Distribution</h5>
-                <div class="dashboard-index-chart-container">
-                    <canvas id="orderStatusChart"></canvas>
-                    <div id="orderStatusEmpty" class="dashboard-card-empty-chart" style="display: none;">
-                        <div class="text-center">
-                            <i class="fa fa-chart-pie fa-3x mb-3" style="opacity: 0.3;"></i>
-                            <p>No order data available for selected period</p>
+                        <div class="res-pipe-box active-amber">
+                            <div class="d-flex justify-content-between">
+                                <span class="text-muted small fw-bold">Under Maintenance</span>
+                                <span class="badge bg-warning-subtle text-warning">{{ round(($residenceData['maintenanceRooms'] / $residenceData['totalRooms']) * 100, 1) }}%</span>
+                            </div>
+                            <h4 class="fw-bold my-1 text-warning">{{ $residenceData['maintenanceRooms'] }}</h4>
+                            <small class="text-muted">Cleaning / Deep Servicing</small>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="col-md-6">
-            <div class="dashboard-index-chart-card">
-                <h5 class="mb-3">Daily Orders Trend</h5>
-                <div class="dashboard-index-chart-container">
-                    <canvas id="dailyOrdersChart"></canvas>
-                    <div id="dailyOrdersEmpty" class="dashboard-card-empty-chart" style="display: none;">
-                        <div class="text-center">
-                            <i class="fa fa-chart-line fa-3x mb-3" style="opacity: 0.3;"></i>
-                            <p>No daily order data available for selected period</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div> --}}
 
-    <div class="row mb-4">
-        <div class="col-md-8">
-            <div class="dashboard-index-chart-card">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="mb-0">Recent Orders</h5>
-                    <div class="bulk-actions" id="bulkActionsPanel">
-                        <a href="{{ url('admin/orders') }}"
-                            class="fw-medium text-dark d-inline-flex align-items-center gap-1">
-                            View All
-                            <img src="{{ url('img/view-icon.png') }}" style="width:16px;" alt="View icon">
-                        </a>
+            <!-- Rent Collection Pipeline -->
+            <div class="col-lg-5">
+                <div class="res-card h-100">
+                    <div class="res-card-title">
+                        <span><i class="fas fa-hand-holding-dollar text-success me-2"></i> Rent Collection Pipeline</span>
+                        <span class="text-danger small fw-bold"><i class="fas fa-clock me-1"></i> Due: ₹{{ number_format($residenceData['pendingDues']) }}</span>
                     </div>
-                </div>
-                <div class="table-responsive table-border">
-                    <table id="orders-table" class="table" style="width:100%">
-                        <thead class="theme-menu-color">
-                            <tr>
-                                <th>S.no</th>
-                                <th>Order No</th>
-                                <th>Name</th>
-                                <th>Package</th>
-                                <th>Amount</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Order rows here -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card shadow-sm border-0 rounded-4" style="max-width: 340px;">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="mb-0 fw-semibold">Recent Users</h5>
-                    </div>
-                    <hr class="mt-0">
-                    <ul class="list-unstyled mb-0">
-                        @foreach ($recentUsers as $user)
-                            <li class="d-flex align-items-center justify-content-between py-2">
-                                <div class="d-flex align-items-center gap-3">
-                                    <img src="{{ url('img/avatar.jpg') }}" alt={{ $user->name }} class="rounded-circle"
-                                        width="45" height="45" style="object-fit: cover;">
-                                    <div>
-                                        <div class="fw-semibold" style="font-size: 14px;">{{ $user->name }}</div>
-                                        <div class="text-muted" style="font-size: 12px;">{{ $user->phone }}</div>
-                                    </div>
+
+                    <div class="d-flex flex-column gap-3">
+                        @foreach([
+                            ['label' => 'Collected On-Time', 'amount' => 358900, 'count' => 74, 'pct' => 74, 'color' => 'success', 'icon' => 'check-circle'],
+                            ['label' => 'Grace Period / Due', 'amount' => 87300, 'count' => 16, 'pct' => 18, 'color' => 'warning', 'icon' => 'hourglass-half'],
+                            ['label' => 'Overdue (> 7 Days)', 'amount' => 38800, 'count' => 4, 'pct' => 8, 'color' => 'danger', 'icon' => 'exclamation-circle']
+                        ] as $pipe)
+                            <div class="p-2 border rounded-3 bg-light">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="fw-semibold small text-dark">
+                                        <i class="fas fa-{{ $pipe['icon'] }} text-{{ $pipe['color'] }} me-1"></i> {{ $pipe['label'] }} ({{ $pipe['count'] }} tenants)
+                                    </span>
+                                    <span class="fw-bold text-{{ $pipe['color'] }}">₹{{ number_format($pipe['amount']) }}</span>
                                 </div>
-                                <span class="badge rounded-pill px-1 py-1"
-                                    style="background-color: #28a745; font-size: 10px;">Active</span>
-                            </li>
+                                <div class="progress" style="height: 6px;">
+                                    <div class="progress-bar bg-{{ $pipe['color'] }}" style="width: {{ $pipe['pct'] }}%"></div>
+                                </div>
+                            </div>
                         @endforeach
-                    </ul>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-    @push('footer_content')
-        <script src="https://code.jquery.com/jquery-3.6.1.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.0/jquery.validate.js"></script>
-        <script src="https://cdn.datatables.net/1.11.4/js/jquery.dataTables.min.js"></script>
-        <script src="https://cdn.datatables.net/1.11.4/js/dataTables.bootstrap5.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
-        <script src="{{ url('assets/libs/jquery-knob/jquery.knob.min.js') }}"></script>
 
-        <script>
-            let orderStatusChart, dailyOrdersChart, topProductsChart, revenueCommissionChart;
-            let dataTables = {};
-            let analyticsData = @json($analyticsData);
+        <!-- CHARTS SECTION: Turnover vs Expenses & Room Distribution -->
+        <div class="row g-3 mb-4">
+            <!-- Financial Trend Chart: Monthly Turnover vs Expenses -->
+            <div class="col-lg-8">
+                <div class="res-card h-100">
+                    <div class="res-card-title">
+                        <span><i class="fas fa-chart-area text-primary me-2"></i> Monthly Turnover vs. Expenses (Past 6 Months)</span>
+                        <div class="d-flex gap-2">
+                            <span class="badge bg-light text-primary border"><i class="fas fa-circle text-primary me-1" style="font-size: 8px;"></i> Turnover</span>
+                            <span class="badge bg-light text-danger border"><i class="fas fa-circle text-danger me-1" style="font-size: 8px;"></i> Expenses</span>
+                            <span class="badge bg-light text-success border"><i class="fas fa-circle text-success me-1" style="font-size: 8px;"></i> Net Profit</span>
+                        </div>
+                    </div>
+                    <div style="height: 320px; position: relative;">
+                        <canvas id="financialChart"></canvas>
+                    </div>
+                </div>
+            </div>
 
-            $(document).ready(function() {
-                initDateRangePicker();
-                initCharts();
-                initDataTables();
-                initTodayActivity();
-                updateActivityFeed();
+            <!-- Expense Category Breakdown Donut Chart -->
+            <div class="col-lg-4">
+                <div class="res-card h-100">
+                    <div class="res-card-title">
+                        <span><i class="fas fa-pie-chart text-danger me-2"></i> Monthly Expense Breakdown</span>
+                    </div>
+                    <div style="height: 250px; position: relative;" class="d-flex justify-content-center align-items-center">
+                        <canvas id="expenseChart"></canvas>
+                    </div>
+                    <div class="mt-3 pt-2 border-top">
+                        <div class="d-flex justify-content-between text-muted small mb-1">
+                            <span>Top Expense: Electricity & Power</span>
+                            <span class="fw-bold text-dark">32% (₹52,000)</span>
+                        </div>
+                        <div class="d-flex justify-content-between text-muted small">
+                            <span>Staff Salaries & Security</span>
+                            <span class="fw-bold text-dark">28% (₹45,000)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-                // Update activity feed every 30 seconds
-                setInterval(updateActivityFeed, 30000);
-            });
-
-            function initDateRangePicker() {
-                const start = moment().subtract(29, 'days');
-                const end = moment();
-
-                function cb(start, end, label) {
-                    if (label === 'All Dates') {
-                        $('#reportrange span').html('All Dates');
-                        $('.start-date').val('');
-                        $('.end-date').val('');
-                    } else {
-                        $('#reportrange span').html(start.format('D MMM, YYYY') + ' - ' + end.format('D MMM, YYYY'));
-                        $('.start-date').val(start.format('YYYY-MM-DD'));
-                        $('.end-date').val(end.format('YYYY-MM-DD'));
-                    }
-
-                    updateDashboardData(start, end, label);
-                }
-
-                $('#reportrange').daterangepicker({
-                    startDate: start,
-                    endDate: end,
-                    ranges: {
-                        'All Dates': [moment().subtract(10, 'years'), moment().add(10, 'years')],
-                        'Today': [moment().startOf('day'), moment().endOf('day')],
-                        'Yesterday': [moment().subtract(1, 'days').startOf('day'), moment().subtract(1, 'days').endOf(
-                            'day')],
-                        'Last 7 Days': [moment().subtract(6, 'days'), moment()],
-                        'Last 30 Days': [moment().subtract(29, 'days'), moment()],
-                        'This Month': [moment().startOf('month'), moment().endOf('month')],
-                        'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month')
-                            .endOf('month')
-                        ]
-                    }
-                }, cb);
-
-                cb(start, end);
-            }
-
-            // function updateDashboardData(start, end, label) {
-            //     const startDate = label === 'All Dates' ? '' : start.format('YYYY-MM-DD');
-            //     const endDate = label === 'All Dates' ? '' : end.format('YYYY-MM-DD');
-
-            //     showLoadingState();
-
-            //     $.ajax({
-            //         url: '{{ url('admin/analytics-data') }}',
-            //         method: 'GET',
-            //         data: {
-            //             start_date: startDate,
-            //             end_date: endDate
-            //         },
-            //         success: function(response) {
-            //             updateSummaryCards(response);
-            //             updateAnalyticsCards(response);
-            //             updateCharts(response);
-            //             updateTodayActivity(response);
-            //             refreshDataTables();
-            //             hideLoadingState();
-            //         },
-            //         error: function(xhr) {
-            //             console.error('Error updating dashboard data:', xhr);
-            //             hideLoadingState();
-            //             alert('Error loading dashboard data. Please try again.');
-            //         }
-            //     });
-            // }
-
-            function updateSummaryCards(response) {
-                if (response.summary) {
-                    $('#total-orders').text(response.summary.totalOrders || 0);
-                    $('#total-products').text(response.summary.totalProducts || 0);
-                    $('#total-users').text(response.summary.totalUsers || 0);
-                    $('#total-shops').text(response.summary.totalShops || 0);
-                    $('#total-delivery').text(response.summary.totalDelivery || 0);
-                }
-            }
-
-            function updateAnalyticsCards(response) {
-                if (response.summary) {
-                    $('#rangeOrders').text(response.summary.totalOrders || 0);
-                    $('#totalRevenue').text('₹' + parseFloat(response.summary.totalRevenue || 0).toFixed(2));
-                    $('#totalCommission').text('₹' + parseFloat(response.summary.commission || 0).toFixed(2));
-
-                    const avgOrderValue = response.summary.totalOrders > 0 ?
-                        response.summary.totalRevenue / response.summary.totalOrders : 0;
-                    $('#avgOrderValue').text('₹' + avgOrderValue.toFixed(2));
-                }
-            }
-
-            function updateTodayActivity(response) {
-                if (response.todayActivity) {
-                    $('#todayOrders').text(response.todayActivity.newOrders || 0);
-                    $('#todayUsers').text(response.todayActivity.newUsers || 0);
-                }
-            }
-
-            function updateActivityFeed() {
-                $.ajax({
-                    url: '{{ url('admin/today-activity-data') }}',
-                    method: 'GET',
-                    success: function(response) {
-                        const activityList = $('#activity-feed-list');
-                        activityList.empty();
-
-                        if (response.data && response.data.length > 0) {
-                            response.data.forEach(function(activity) {
-                                const item = `
-                                    <div class="list-group-item list-group-item-action">
-                                        <div class="d-flex align-items-center">
-                                            <div class="dashborad-card-activity-icon">
-                                                <i class="fas fa-${activity.icon}"></i>
+        <!-- DETAILS ROW: Recent Tenants & Maintenance Complaints -->
+        <div class="row g-3">
+            <!-- Recent Tenant Check-ins -->
+            <div class="col-lg-8">
+                <div class="res-card h-100">
+                    <div class="res-card-title">
+                        <span><i class="fas fa-user-check text-success me-2"></i> Recent Tenant Check-Ins & Allocations</span>
+                        <a href="{{ url('admin/users') }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">View All Tenants</a>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table res-table">
+                            <thead>
+                                <tr>
+                                    <th>Tenant</th>
+                                    <th>Room & Type</th>
+                                    <th>Check-in Date</th>
+                                    <th>Monthly Rent</th>
+                                    <th>Rent Status</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($residenceData['recentTenants'] as $tenant)
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="res-avatar">
+                                                {{ strtoupper(substr($tenant['name'], 0, 1)) }}
                                             </div>
-                                            <div class="dashboard-index-activity-content">
-                                                <h6 class="mb-1">${activity.title}</h6>
-                                                <p class="mb-0 text-muted">${activity.description}</p>
-                                            </div>
-                                            <div class="dashboard-index-activity-time">
-                                                ${activity.time}
+                                            <div>
+                                                <div class="fw-bold text-dark">{{ $tenant['name'] }}</div>
+                                                <small class="text-muted">{{ $tenant['phone'] }}</small>
                                             </div>
                                         </div>
-                                    </div>
-                                `;
-                                activityList.append(item);
-                            });
-                        } else {
-                            activityList.append(`
-                                <div class="text-center py-3 text-muted">
-                                    <i class="fas fa-info-circle fa-2x mb-2"></i>
-                                    <p>No recent activities found</p>
-                                </div>
-                            `);
-                        }
-                    },
-                    error: function(xhr) {
-                        console.error('Error updating activity feed:', xhr);
-                    }
-                });
-            }
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info-subtle text-info fw-bold">{{ $tenant['room'] }}</span>
+                                        <div class="small text-muted">{{ $tenant['type'] }}</div>
+                                    </td>
+                                    <td>
+                                        <span class="text-secondary small"><i class="far fa-calendar-alt me-1"></i> {{ $tenant['date'] }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="fw-bold text-dark">₹{{ number_format($tenant['rent']) }}</span>
+                                    </td>
+                                    <td>
+                                        @if($tenant['status'] == 'Paid')
+                                            <span class="badge bg-success-subtle text-success px-2 py-1"><i class="fas fa-check-circle me-1"></i> Paid</span>
+                                        @elseif($tenant['status'] == 'Due')
+                                            <span class="badge bg-warning-subtle text-warning px-2 py-1"><i class="fas fa-clock me-1"></i> Due</span>
+                                        @else
+                                            <span class="badge bg-danger-subtle text-danger px-2 py-1"><i class="fas fa-exclamation-triangle me-1"></i> Overdue</span>
+                                        @endif
+                                    </td>
+                                    <td class="text-end">
+                                        <button class="btn btn-sm btn-light border rounded-circle" title="View Tenant"><i class="fas fa-chevron-right text-muted"></i></button>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
 
-            function refreshDataTables() {
-                Object.keys(dataTables).forEach(function(key) {
-                    if (dataTables[key]) {
-                        dataTables[key].ajax.reload();
-                    }
-                });
-            }
+            <!-- Maintenance & Complaints -->
+            <div class="col-lg-4">
+                <div class="res-card h-100">
+                    <div class="res-card-title">
+                        <span><i class="fas fa-tools text-warning me-2"></i> Maintenance & Complaints</span>
+                        <span class="badge bg-warning-subtle text-warning">4 Active</span>
+                    </div>
 
-            function showLoadingState() {
-                $('.dashboard-index-chart-container').each(function() {
-                    if (!$(this).find('.dashboard-index-loading-overlay').length) {
-                        $(this).append(
-                            '<div class="dashboard-index-loading-overlay"><i class="fa fa-spinner fa-spin fa-2x"></i></div>'
-                        );
-                    }
-                });
-            }
+                    <div class="d-flex flex-column gap-3">
+                        @foreach($residenceData['maintenanceRequests'] as $req)
+                        <div class="p-3 border rounded-3 bg-light">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="fw-bold text-dark">{{ $req['room'] }}</span>
+                                @if($req['priority'] == 'High')
+                                    <span class="badge bg-danger-subtle text-danger px-2 py-1">High Priority</span>
+                                @elseif($req['priority'] == 'Medium')
+                                    <span class="badge bg-warning-subtle text-warning px-2 py-1">Medium</span>
+                                @else
+                                    <span class="badge bg-secondary-subtle text-secondary px-2 py-1">Low</span>
+                                @endif
+                            </div>
+                            <p class="mb-1 text-secondary small fw-medium">{{ $req['issue'] }}</p>
+                            <div class="d-flex justify-content-between align-items-center small text-muted">
+                                <span><i class="fas fa-tag me-1"></i> {{ $req['category'] }}</span>
+                                <span><i class="far fa-clock me-1"></i> {{ $req['time'] }}</span>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </div>
 
-            function hideLoadingState() {
-                $('.dashboard-index-loading-overlay').remove();
-            }
+    </div>
 
-            function initCharts() {
-                // Order Status Chart
-                const orderStatusCtx = document.getElementById('orderStatusChart').getContext('2d');
-                orderStatusChart = new Chart(orderStatusCtx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: [],
-                        datasets: [{
-                            data: [],
-                            backgroundColor: [
-                                '#FF6384',
-                                '#36A2EB',
-                                '#FFCE56',
-                                '#4BC0C0',
-                                '#9966FF',
-                                '#FF9F40'
-                            ],
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: {
-                                    padding: 20,
-                                    usePointStyle: true
+    @push('footer_content')
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                // Financial Trend Chart
+                const financialCtx = document.getElementById('financialChart');
+                if (financialCtx) {
+                    const months = @json($residenceData['financialTrends']['months']);
+                    const turnover = @json($residenceData['financialTrends']['turnover']);
+                    const expenses = @json($residenceData['financialTrends']['expenses']);
+                    const profit = @json($residenceData['financialTrends']['profit']);
+
+                    new Chart(financialCtx, {
+                        type: 'line',
+                        data: {
+                            labels: months,
+                            datasets: [
+                                {
+                                    label: 'Turnover (₹)',
+                                    data: turnover,
+                                    borderColor: '#0ea1b1',
+                                    backgroundColor: 'rgba(14, 161, 177, 0.1)',
+                                    tension: 0.35,
+                                    fill: true,
+                                    borderWidth: 3,
+                                    pointRadius: 4,
+                                    pointBackgroundColor: '#0ea1b1'
+                                },
+                                {
+                                    label: 'Expenses (₹)',
+                                    data: expenses,
+                                    borderColor: '#ef4444',
+                                    backgroundColor: 'transparent',
+                                    borderDash: [5, 5],
+                                    tension: 0.35,
+                                    borderWidth: 2,
+                                    pointRadius: 3,
+                                    pointBackgroundColor: '#ef4444'
+                                },
+                                {
+                                    label: 'Net Profit (₹)',
+                                    data: profit,
+                                    borderColor: '#10b981',
+                                    backgroundColor: 'rgba(16, 185, 129, 0.08)',
+                                    tension: 0.35,
+                                    fill: true,
+                                    borderWidth: 2,
+                                    pointRadius: 4,
+                                    pointBackgroundColor: '#10b981'
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            return context.dataset.label + ': ₹' + Number(context.raw).toLocaleString('en-IN');
+                                        }
+                                    }
                                 }
                             },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        const label = context.label || '';
-                                        const value = context.raw || 0;
-                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                        const percentage = Math.round((value / total) * 100);
-                                        return `${label}: ${value} (${percentage}%)`;
+                            scales: {
+                                y: {
+                                    grid: {
+                                        color: '#f1f5f9'
+                                    },
+                                    ticks: {
+                                        callback: function(value) {
+                                            return '₹' + (value / 1000) + 'k';
+                                        }
+                                    }
+                                },
+                                x: {
+                                    grid: {
+                                        display: false
                                     }
                                 }
                             }
-                        },
-                        cutout: '70%'
-                    }
-                });
+                        }
+                    });
+                }
 
-                // Daily Orders Chart
-                const dailyOrdersCtx = document.getElementById('dailyOrdersChart').getContext('2d');
-                dailyOrdersChart = new Chart(dailyOrdersCtx, {
-                    type: 'line',
-                    data: {
-                        labels: [],
-                        datasets: [{
-                            label: 'Orders',
-                            data: [],
-                            borderColor: '#36A2EB',
-                            backgroundColor: 'rgba(54, 162, 235, 0.1)',
-                            borderWidth: 2,
-                            pointBackgroundColor: '#36A2EB',
-                            pointRadius: 4,
-                            pointHoverRadius: 6,
-                            tension: 0.4,
-                            fill: true
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                display: false
-                            },
-                            tooltip: {
-                                mode: 'index',
-                                intersect: false
-                            }
+                // Expense Breakdown Donut Chart
+                const expenseCtx = document.getElementById('expenseChart');
+                if (expenseCtx) {
+                    const expenseLabels = @json($residenceData['expenseCategories']['labels']);
+                    const expenseAmounts = @json($residenceData['expenseCategories']['amounts']);
+
+                    new Chart(expenseCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: expenseLabels,
+                            datasets: [{
+                                data: expenseAmounts,
+                                backgroundColor: [
+                                    '#0ea1b1',
+                                    '#8b5cf6',
+                                    '#f59e0b',
+                                    '#3b82f6',
+                                    '#10b981'
+                                ],
+                                borderWidth: 2,
+                                borderColor: '#ffffff'
+                            }]
                         },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                grid: {
-                                    drawBorder: false
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                        boxWidth: 12,
+                                        font: {
+                                            size: 11
+                                        }
+                                    }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            return context.label + ': ₹' + Number(context.raw).toLocaleString('en-IN');
+                                        }
+                                    }
                                 }
                             },
-                            x: {
-                                grid: {
-                                    display: false
-                                }
-                            }
+                            cutout: '68%'
                         }
-                    }
-                });
-
-                // Top Products Chart
-                // const topProductsCtx = document.getElementById('topProductsChart').getContext('2d');
-                // topProductsChart = new Chart(topProductsCtx, {
-                //     type: 'bar',
-                //     data: {
-                //         labels: [],
-                //         datasets: [{
-                //             label: 'Quantity Sold',
-                //             data: [],
-                //             backgroundColor: '#4BC0C0',
-                //             borderColor: '#4BC0C0',
-                //             borderWidth: 1,
-                //             borderRadius: 4
-                //         }]
-                //     },
-                //     options: {
-                //         responsive: true,
-                //         maintainAspectRatio: false,
-                //         plugins: {
-                //             legend: {
-                //                 display: false
-                //             }
-                //         },
-                //         scales: {
-                //             y: {
-                //                 beginAtZero: true,
-                //                 grid: {
-                //                     drawBorder: false
-                //                 }
-                //             },
-                //             x: {
-                //                 grid: {
-                //                     display: false
-                //                 }
-                //             }
-                //         }
-                //     }
-                // });
-
-                // // Revenue vs Commission Chart
-                // const revenueCommissionCtx = document.getElementById('revenueCommissionChart').getContext('2d');
-                // revenueCommissionChart = new Chart(revenueCommissionCtx, {
-                //     type: 'bar',
-                //     data: {
-                //         labels: [],
-                //         datasets: [{
-                //                 label: 'Revenue',
-                //                 data: [],
-                //                 backgroundColor: '#36A2EB',
-                //                 borderColor: '#36A2EB',
-                //                 borderWidth: 1,
-                //                 borderRadius: 4
-                //             },
-                //             {
-                //                 label: 'Commission',
-                //                 data: [],
-                //                 backgroundColor: '#FFCE56',
-                //                 borderColor: '#FFCE56',
-                //                 borderWidth: 1,
-                //                 borderRadius: 4
-                //             }
-                //         ]
-                //     },
-                //     options: {
-                //         responsive: true,
-                //         maintainAspectRatio: false,
-                //         plugins: {
-                //             legend: {
-                //                 position: 'bottom',
-                //                 labels: {
-                //                     padding: 20,
-                //                     usePointStyle: true
-                //                 }
-                //             },
-                //             tooltip: {
-                //                 callbacks: {
-                //                     label: function(context) {
-                //                         let label = context.dataset.label || '';
-                //                         if (label) {
-                //                             label += ': ';
-                //                         }
-                //                         if (context.parsed.y !== null) {
-                //                             label += '₹' + context.parsed.y.toFixed(2);
-                //                         }
-                //                         return label;
-                //                     }
-                //                 }
-                //             }
-                //         },
-                //         scales: {
-                //             y: {
-                //                 beginAtZero: true,
-                //                 grid: {
-                //                     drawBorder: false
-                //                 },
-                //                 ticks: {
-                //                     callback: function(value) {
-                //                         return '₹' + value;
-                //                     }
-                //                 }
-                //             },
-                //             x: {
-                //                 grid: {
-                //                     display: false
-                //                 }
-                //             }
-                //         }
-                //     }
-                // });
-
-                if (analyticsData) {
-                    updateChartsData(analyticsData);
+                    });
                 }
-            }
-
-            function updateCharts(data) {
-                updateChartsData(data);
-            }
-
-            function updateChartsData(data) {
-                // Order Status Chart
-                if (data.orderStatus && data.orderStatus.length > 0) {
-                    orderStatusChart.data.labels = data.orderStatus.map(item => item.status);
-                    orderStatusChart.data.datasets[0].data = data.orderStatus.map(item => item.count);
-                    orderStatusChart.update();
-                    $('#orderStatusChart').show();
-                    $('#orderStatusEmpty').hide();
-                } else {
-                    $('#orderStatusChart').hide();
-                    $('#orderStatusEmpty').show();
-                }
-
-                // Daily Orders Chart
-                if (data.dailyOrders && data.dailyOrders.length > 0) {
-                    dailyOrdersChart.data.labels = data.dailyOrders.map(item => item.date);
-                    dailyOrdersChart.data.datasets[0].data = data.dailyOrders.map(item => item.count);
-                    dailyOrdersChart.update();
-                    $('#dailyOrdersChart').show();
-                    $('#dailyOrdersEmpty').hide();
-                } else {
-                    $('#dailyOrdersChart').hide();
-                    $('#dailyOrdersEmpty').show();
-                }
-
-                // Top Products Chart
-                if (data.topProducts && data.topProducts.length > 0) {
-                    topProductsChart.data.labels = data.topProducts.map(item => item.name);
-                    topProductsChart.data.datasets[0].data = data.topProducts.map(item => item.quantity);
-                    topProductsChart.update();
-                    $('#topProductsChart').show();
-                    $('#topProductsEmpty').hide();
-                } else {
-                    $('#topProductsChart').hide();
-                    $('#topProductsEmpty').show();
-                }
-
-                // Revenue vs Commission Chart
-                if (data.monthlyRevenue && data.monthlyRevenue.length > 0) {
-                    revenueCommissionChart.data.labels = data.monthlyRevenue.map(item => item.month);
-                    revenueCommissionChart.data.datasets[0].data = data.monthlyRevenue.map(item => item.revenue);
-                    revenueCommissionChart.data.datasets[1].data = data.monthlyRevenue.map(item => item.commission);
-                    revenueCommissionChart.update();
-                    console.log(revenueCommissionChart.data.datasets[0].data = data.monthlyRevenue.map(item => item.revenue));
-                    console.log(revenueCommissionChart.data.datasets[1].data = data.monthlyRevenue.map(item => item
-                        .commission));
-                    $('#revenueCommissionChart').show();
-                    $('#revenueCommissionEmpty').hide();
-                } else {
-                    $('#revenueCommissionChart').hide();
-                    $('#revenueCommissionEmpty').show();
-                }
-            }
-
-            $(function() {
-                var table = $('#orders-table').DataTable({
-                    processing: true,
-                    serverSide: true,
-                    searching: false,
-                    lengthChange: false,
-                    ajax: {
-                        url: "{{ url('/admin/orders-data') }}",
-                    },
-                    columns: [{
-                            data: 'order_no',
-                            name: 'order_no'
-                        },
-                        {
-                            data: 'user_name',
-                            name: 'user_name'
-                        },
-                        {
-                            data: 'package',
-                            name: 'package'
-                        },
-                        {
-                            data: 'amount',
-                            name: 'amount'
-                        },
-                        {
-                            data: 'action',
-                            name: 'action'
-                        },
-                    ],
-                    pageLength: 10,
-                    order: [
-                        [0, 'desc']
-                    ],
-                    language: {
-                        search: "_INPUT_",
-                        searchPlaceholder: "Search orders...",
-                        lengthMenu: "Show _MENU_ orders per page",
-                        zeroRecords: "No orders found",
-                        info: "Showing _START_ to _END_ of _TOTAL_ orders",
-                        infoEmpty: "No orders available",
-                        infoFiltered: "(filtered from _MAX_ total orders)"
-                    }
-                });
-                dataTables.users = $('#purchases-table').DataTable({
-                    processing: true,
-                    serverSide: true,
-                    ajax: {
-                        url: '{{ url('admin/user-data') }}',
-                        data: function(d) {
-                            d.start_date = $('.start-date').val();
-                            d.end_date = $('.end-date').val();
-                        }
-                    },
-                    columns: [{
-                            data: 'date',
-                            name: 'date'
-                        },
-                        {
-                            data: 'name',
-                            name: 'name'
-                        },
-                        {
-                            data: 'phone',
-                            name: 'phone'
-                        },
-                        {
-                            data: 'status',
-                            name: 'status'
-                        },
-                    ],
-                    pageLength: 10,
-                    order: [
-                        [0, 'desc']
-                    ],
-                    language: {
-                        search: "_INPUT_",
-                        searchPlaceholder: "Search users...",
-                        lengthMenu: "Show _MENU_ users per page",
-                        zeroRecords: "No users found",
-                        info: "Showing _START_ to _END_ of _TOTAL_ users",
-                        infoEmpty: "No users available",
-                        infoFiltered: "(filtered from _MAX_ total users)"
-                    }
-                });
             });
         </script>
     @endpush
