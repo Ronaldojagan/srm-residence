@@ -27,67 +27,6 @@
                     </a>
                 </li>
                 <li>
-                    <a href="{{ url('/admin/orders') }}">
-                        <img src="{{url('img/order-menu.png')}}">
-                        {{-- <svg class="svg-icons">
-                            <use href="#orders-icon"></use>
-                        </svg> --}}
-                        <span class="badge bg-success rounded-pill float-end"></span>
-                        <span class="ms-1"> Orders </span>
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ url('/admin/package') }}">
-                        <img src="{{url('img/packages-menu.png')}}">
-                        {{-- <svg class="svg-icons">
-                            <use href="#orders-icon"></use>
-                        </svg> --}}
-                        <span class="badge bg-success rounded-pill float-end"></span>
-                        <span class="ms-1"> Packages </span>
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ url('/admin/delivery-points') }}">
-                        <img src="{{url('img/delivery-points-menu.png')}}">
-                        {{-- <svg class="svg-icons">
-                            <use href="#brand-icon"></use>
-                        </svg> --}}
-                        <span class="badge bg-success rounded-pill float-end"></span>
-                        <span class="ms-1"> Delivery Points </span>
-                    </a>
-                </li>
-
-                <li>
-                    <a href="{{ url('/admin/delivery-mans') }}">
-                        <img src="{{url('img/delivery-man-menu.png')}}">
-                        {{-- <svg class="svg-icons">
-                            <use href="#products-icon"></use>
-                        </svg> --}}
-                        <span class="badge bg-success rounded-pill float-end"></span>
-                        <span class="ms-1">Delivery Mans</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ url('/admin/payments') }}">
-                        {{-- <img src="{{url('img/payment-menu.png')}}"> --}}
-                        <svg class="svg-icons">
-                            <use href="#payment-icon"></use>
-                        </svg>
-                        <span class="badge bg-success rounded-pill float-end"></span>
-                        <span class="ms-1"> Payments </span>
-                    </a>
-                </li>
-                <li>
-                    <a href="{{ url('/admin/bottle-missing') }}">
-                        <img src="{{url('img/bottle-menu.png')}}">
-                        {{-- <svg class="svg-icons">
-                            <use href="#shops-icon"></use>
-                        </svg> --}}
-                        <span class="badge bg-success rounded-pill float-end"></span>
-                        <span class="ms-1"> Bottle Missings </span>
-                    </a>
-                </li>
-                <li>
                     <a href="{{ url('/admin/reports') }}">
                         {{-- <img src="{{url('img/report-menu.png')}}"> --}}
                         <svg class="svg-icons">
