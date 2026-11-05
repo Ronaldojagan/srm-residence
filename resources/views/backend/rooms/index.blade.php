@@ -361,8 +361,12 @@
                     ],
                     order: [[1, 'asc']],
                     language: {
-                        search: "_INPUT_",
+                        search: "",
                         searchPlaceholder: "Search rooms...",
+                        lengthMenu: "Show _MENU_ entries",
+                        zeroRecords: "No matching rooms found",
+                        info: "Showing _START_ to _END_ of _TOTAL_ rooms",
+                        infoEmpty: "Showing 0 to 0 of 0 rooms",
                         paginate: {
                             previous: "<i class='mdi mdi-chevron-left'>",
                             next: "<i class='mdi mdi-chevron-right'>"

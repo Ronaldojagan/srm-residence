@@ -550,9 +550,9 @@
                         [1, 'desc']
                     ],
                     language: {
-                        search: "_INPUT_",
+                        search: "",
                         searchPlaceholder: "Search orders...",
-                        lengthMenu: "Show _MENU_ orders per page",
+                        lengthMenu: "Show _MENU_ orders",
                         zeroRecords: "No orders found",
                         info: "Showing _START_ to _END_ of _TOTAL_ orders",
                         infoEmpty: "No orders available",

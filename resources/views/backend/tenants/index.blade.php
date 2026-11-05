@@ -290,7 +290,7 @@
                     processing: true,
                     serverSide: true,
                     ajax: "{{ url('/admin/tenants') }}",
-                    order: [[0, 'desc']],
+                    order: [],
                     columns: [
                         { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
                         { data: 'name_email', name: 'name' },
@@ -300,7 +300,16 @@
                         { data: 'commence_date_formatted', name: 'commence_date' },
                         { data: 'status_toggle', name: 'status', orderable: false, searchable: false },
                         { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-center' },
-                    ]
+                    ],
+                    language: {
+                        search: "",
+                        searchPlaceholder: "Search tenants...",
+                        lengthMenu: "Show _MENU_ entries",
+                        zeroRecords: "No matching tenants found",
+                        info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                        infoEmpty: "Showing 0 to 0 of 0 entries",
+                        infoFiltered: "(filtered from _MAX_ total entries)"
+                    }
                 });
 
                 const Toast = Swal.mixin({
