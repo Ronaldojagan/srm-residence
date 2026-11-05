@@ -140,7 +140,14 @@
                                     <option value="">Select Room...</option>
                                     @if(isset($rooms))
                                         @foreach($rooms as $r)
-                                            <option value="{{ $r->id }}" data-number="{{ $r->room_number }}" data-type="{{ $r->room_type }}" data-rent="{{ $r->monthly_rent }}" data-deposit="{{ $r->security_deposit }}">
+                                            <option value="{{ $r->id }}" 
+                                                data-number="{{ $r->room_number }}" 
+                                                data-type="{{ $r->room_type }}" 
+                                                data-rent="{{ $r->monthly_rent }}" 
+                                                data-deposit="{{ $r->security_deposit }}"
+                                                data-eb="{{ $r->eb_charges }}"
+                                                data-maintenance="{{ $r->maintenance_charges }}"
+                                                data-other="{{ $r->other_charges }}">
                                                 Room {{ $r->room_number }} ({{ $r->floor }} - {{ $r->room_type }}) [{{ ucfirst($r->occupancy_status) }}]
                                             </option>
                                         @endforeach
@@ -163,12 +170,42 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold">Monthly Rent (₹) <span class="text-danger">*</span></label>
-                                <input type="number" name="monthly_rent" class="form-control" placeholder="e.g. 12000" min="0" required>
+                                <label class="form-label fw-semibold">Base Monthly Rent (₹) <span class="text-danger">*</span></label>
+                                <input type="number" step="0.01" name="monthly_rent" id="add_monthly_rent" class="form-control charge-input" placeholder="e.g. 12000" min="0" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Security Deposit (₹)</label>
-                                <input type="number" name="security_deposit" class="form-control" placeholder="e.g. 24000" min="0" value="0">
+                                <input type="number" step="0.01" name="security_deposit" class="form-control" placeholder="e.g. 24000" min="0" value="0">
+                            </div>
+
+                            <!-- Additional Charges based on room -->
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">EB Charges (₹)</label>
+                                <input type="number" step="0.01" name="eb_charges" id="add_eb_charges" class="form-control charge-input" placeholder="0.00" value="0.00">
+                                <small class="text-muted font-11">Room electricity charge</small>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Maintenance Charges (₹)</label>
+                                <input type="number" step="0.01" name="maintenance_charges" id="add_maintenance_charges" class="form-control charge-input" placeholder="0.00" value="0.00">
+                                <small class="text-muted font-11">Upkeep & housekeeping</small>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Other Charges (₹)</label>
+                                <input type="number" step="0.01" name="other_charges" id="add_other_charges" class="form-control charge-input" placeholder="0.00" value="0.00">
+                                <small class="text-muted font-11">Wi-Fi / water / services</small>
+                            </div>
+
+                            <!-- Live Monthly Package Calculation -->
+                            <div class="col-12">
+                                <div class="p-3 bg-light rounded border d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <span class="text-muted small text-uppercase fw-bold d-block">Total Monthly Payable</span>
+                                        <small class="text-muted">Rent + EB + Maintenance + Other Charges</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <h4 class="fw-bold text-success mb-0" id="add_total_monthly_display">₹0.00</h4>
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="col-12">
@@ -230,7 +267,14 @@
                                     <option value="">Select Room...</option>
                                     @if(isset($rooms))
                                         @foreach($rooms as $r)
-                                            <option value="{{ $r->id }}" data-number="{{ $r->room_number }}" data-type="{{ $r->room_type }}" data-rent="{{ $r->monthly_rent }}" data-deposit="{{ $r->security_deposit }}">
+                                            <option value="{{ $r->id }}" 
+                                                data-number="{{ $r->room_number }}" 
+                                                data-type="{{ $r->room_type }}" 
+                                                data-rent="{{ $r->monthly_rent }}" 
+                                                data-deposit="{{ $r->security_deposit }}"
+                                                data-eb="{{ $r->eb_charges }}"
+                                                data-maintenance="{{ $r->maintenance_charges }}"
+                                                data-other="{{ $r->other_charges }}">
                                                 Room {{ $r->room_number }} ({{ $r->floor }} - {{ $r->room_type }}) [{{ ucfirst($r->occupancy_status) }}]
                                             </option>
                                         @endforeach
@@ -253,12 +297,42 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold">Monthly Rent (₹) <span class="text-danger">*</span></label>
-                                <input type="number" id="edit_monthly_rent" name="monthly_rent" class="form-control" min="0" required>
+                                <label class="form-label fw-semibold">Base Monthly Rent (₹) <span class="text-danger">*</span></label>
+                                <input type="number" step="0.01" id="edit_monthly_rent" name="monthly_rent" class="form-control edit-charge-input" min="0" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Security Deposit (₹)</label>
-                                <input type="number" id="edit_security_deposit" name="security_deposit" class="form-control" min="0">
+                                <input type="number" step="0.01" id="edit_security_deposit" name="security_deposit" class="form-control" min="0">
+                            </div>
+
+                            <!-- Additional Charges based on room -->
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">EB Charges (₹)</label>
+                                <input type="number" step="0.01" id="edit_eb_charges" name="eb_charges" class="form-control edit-charge-input" placeholder="0.00">
+                                <small class="text-muted font-11">Room electricity charge</small>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Maintenance Charges (₹)</label>
+                                <input type="number" step="0.01" id="edit_maintenance_charges" name="maintenance_charges" class="form-control edit-charge-input" placeholder="0.00">
+                                <small class="text-muted font-11">Upkeep & housekeeping</small>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Other Charges (₹)</label>
+                                <input type="number" step="0.01" id="edit_other_charges" name="other_charges" class="form-control edit-charge-input" placeholder="0.00">
+                                <small class="text-muted font-11">Wi-Fi / water / services</small>
+                            </div>
+
+                            <!-- Live Monthly Package Calculation in Edit -->
+                            <div class="col-12">
+                                <div class="p-3 bg-light rounded border d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <span class="text-muted small text-uppercase fw-bold d-block">Total Monthly Payable</span>
+                                        <small class="text-muted">Rent + EB + Maintenance + Other Charges</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <h4 class="fw-bold text-success mb-0" id="edit_total_monthly_display">₹0.00</h4>
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="col-12">
@@ -320,6 +394,28 @@
                     timerProgressBar: true
                 });
 
+                // Calculations for live monthly totals
+                function calcAddTenantTotal() {
+                    var rent = parseFloat($('#add_monthly_rent').val()) || 0;
+                    var eb = parseFloat($('#add_eb_charges').val()) || 0;
+                    var maint = parseFloat($('#add_maintenance_charges').val()) || 0;
+                    var other = parseFloat($('#add_other_charges').val()) || 0;
+                    var total = rent + eb + maint + other;
+                    $('#add_total_monthly_display').text('₹' + total.toLocaleString('en-IN', { minimumFractionDigits: 2 }));
+                }
+
+                function calcEditTenantTotal() {
+                    var rent = parseFloat($('#edit_monthly_rent').val()) || 0;
+                    var eb = parseFloat($('#edit_eb_charges').val()) || 0;
+                    var maint = parseFloat($('#edit_maintenance_charges').val()) || 0;
+                    var other = parseFloat($('#edit_other_charges').val()) || 0;
+                    var total = rent + eb + maint + other;
+                    $('#edit_total_monthly_display').text('₹' + total.toLocaleString('en-IN', { minimumFractionDigits: 2 }));
+                }
+
+                $(document).on('keyup change input', '.charge-input', calcAddTenantTotal);
+                $(document).on('keyup change input', '.edit-charge-input', calcEditTenantTotal);
+
                 // Auto-fill room details when room is selected
                 $('#tenant_room_id').on('change', function() {
                     var $opt = $(this).find('option:selected');
@@ -327,12 +423,22 @@
                     if ($opt.data('type')) {
                         $('#addTenantModal select[name="room_type"]').val($opt.data('type'));
                     }
-                    if ($opt.data('rent')) {
-                        $('#addTenantModal input[name="monthly_rent"]').val($opt.data('rent'));
+                    if ($opt.data('rent') !== undefined) {
+                        $('#add_monthly_rent').val($opt.data('rent'));
                     }
-                    if ($opt.data('deposit')) {
+                    if ($opt.data('eb') !== undefined) {
+                        $('#add_eb_charges').val($opt.data('eb'));
+                    }
+                    if ($opt.data('maintenance') !== undefined) {
+                        $('#add_maintenance_charges').val($opt.data('maintenance'));
+                    }
+                    if ($opt.data('other') !== undefined) {
+                        $('#add_other_charges').val($opt.data('other'));
+                    }
+                    if ($opt.data('deposit') !== undefined) {
                         $('#addTenantModal input[name="security_deposit"]').val($opt.data('deposit'));
                     }
+                    calcAddTenantTotal();
                 });
 
                 $('#edit_tenant_room_id').on('change', function() {
@@ -341,12 +447,22 @@
                     if ($opt.data('type')) {
                         $('#editTenantModal select[name="room_type"]').val($opt.data('type'));
                     }
-                    if ($opt.data('rent')) {
-                        $('#editTenantModal input[name="monthly_rent"]').val($opt.data('rent'));
+                    if ($opt.data('rent') !== undefined) {
+                        $('#edit_monthly_rent').val($opt.data('rent'));
                     }
-                    if ($opt.data('deposit')) {
+                    if ($opt.data('eb') !== undefined) {
+                        $('#edit_eb_charges').val($opt.data('eb'));
+                    }
+                    if ($opt.data('maintenance') !== undefined) {
+                        $('#edit_maintenance_charges').val($opt.data('maintenance'));
+                    }
+                    if ($opt.data('other') !== undefined) {
+                        $('#edit_other_charges').val($opt.data('other'));
+                    }
+                    if ($opt.data('deposit') !== undefined) {
                         $('#editTenantModal input[name="security_deposit"]').val($opt.data('deposit'));
                     }
+                    calcEditTenantTotal();
                 });
 
                 // 1. ADD TENANT VIA AJAX
@@ -419,8 +535,12 @@
                                     $('#edit_commence_date').val(tenant.commence_date.substring(0, 10));
                                 }
                                 $('#edit_monthly_rent').val(tenant.monthly_rent);
+                                $('#edit_eb_charges').val(tenant.eb_charges || '0.00');
+                                $('#edit_maintenance_charges').val(tenant.maintenance_charges || '0.00');
+                                $('#edit_other_charges').val(tenant.other_charges || '0.00');
                                 $('#edit_security_deposit').val(tenant.security_deposit);
                                 $('#edit_address').val(tenant.address);
+                                calcEditTenantTotal();
 
                                 $('#editTenantModal').modal('show');
                             }

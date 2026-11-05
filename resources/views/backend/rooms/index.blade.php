@@ -200,6 +200,22 @@
                                 <input type="number" step="0.01" name="security_deposit" class="form-control" placeholder="10000" value="10000">
                             </div>
 
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">EB Charges (₹)</label>
+                                <input type="number" step="0.01" name="eb_charges" class="form-control" placeholder="0.00" value="0.00">
+                                <small class="text-muted">Default room electricity charge</small>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Maintenance Charges (₹)</label>
+                                <input type="number" step="0.01" name="maintenance_charges" class="form-control" placeholder="0.00" value="0.00">
+                                <small class="text-muted">Room upkeep / cleaning</small>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Other Charges (₹)</label>
+                                <input type="number" step="0.01" name="other_charges" class="form-control" placeholder="0.00" value="0.00">
+                                <small class="text-muted">Wi-Fi, water, or miscellaneous</small>
+                            </div>
+
                             <div class="col-md-12">
                                 <label class="form-label fw-bold">Initial Occupancy Status <span class="text-danger">*</span></label>
                                 <select name="occupancy_status" class="form-select" required>
@@ -284,6 +300,19 @@
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Security Deposit (₹)</label>
                                 <input type="number" step="0.01" id="edit_security_deposit" name="security_deposit" class="form-control">
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">EB Charges (₹)</label>
+                                <input type="number" step="0.01" id="edit_eb_charges" name="eb_charges" class="form-control" placeholder="0.00">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Maintenance Charges (₹)</label>
+                                <input type="number" step="0.01" id="edit_maintenance_charges" name="maintenance_charges" class="form-control" placeholder="0.00">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Other Charges (₹)</label>
+                                <input type="number" step="0.01" id="edit_other_charges" name="other_charges" class="form-control" placeholder="0.00">
                             </div>
 
                             <div class="col-md-12">
@@ -451,6 +480,9 @@
                                 $('#edit_room_type').val(room.room_type);
                                 $('#edit_capacity').val(room.capacity);
                                 $('#edit_monthly_rent').val(room.monthly_rent);
+                                $('#edit_eb_charges').val(room.eb_charges || '0.00');
+                                $('#edit_maintenance_charges').val(room.maintenance_charges || '0.00');
+                                $('#edit_other_charges').val(room.other_charges || '0.00');
                                 $('#edit_security_deposit').val(room.security_deposit);
                                 $('#edit_occupancy_status').val(room.occupancy_status);
                                 $('#edit_amenities').val(room.amenities);

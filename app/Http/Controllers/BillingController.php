@@ -362,9 +362,9 @@ class BillingController extends Controller
                 continue;
             }
 
-            $rent = (float) $t->monthly_rent;
+            $rent = (float) $t->monthly_rent + (float) $t->eb_charges + (float) $t->maintenance_charges + (float) $t->other_charges;
             if ($rent <= 0 && $t->room) {
-                $rent = (float) $t->room->monthly_rent;
+                $rent = (float) $t->room->total_monthly;
             }
             if ($rent <= 0) {
                 $rent = 5000.00; // Default fallback
@@ -557,3 +557,4 @@ class BillingController extends Controller
         ]);
     }
 }
+

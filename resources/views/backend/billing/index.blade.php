@@ -326,8 +326,12 @@
                                     @foreach($activeTenants as $t)
                                         <option value="{{ $t->id }}" 
                                             data-rent="{{ $t->monthly_rent }}" 
+                                            data-total="{{ $t->total_monthly_due }}"
+                                            data-eb="{{ $t->eb_charges }}"
+                                            data-maint="{{ $t->maintenance_charges }}"
+                                            data-other="{{ $t->other_charges }}"
                                             data-room="{{ $t->room ? $t->room->room_number : $t->room_number }}">
-                                            {{ $t->name }} (Room {{ $t->room ? $t->room->room_number : $t->room_number }})
+                                            {{ $t->name }} (Room {{ $t->room ? $t->room->room_number : $t->room_number }}) - ₹{{ number_format($t->total_monthly_due) }}/mo
                                         </option>
                                     @endforeach
                                 </select>
@@ -933,26 +937,28 @@
                 // =========================================================================
                 // 3. AUTO-FILL AMOUNT ON TENANT SELECTION
                 // =========================================================================
-                $('#bill_tenant_id').on('change', function() {
-                    var selected = $(this).find(':selected');
-                    var rent = selected.data('rent');
+                function updateBillAmount() {
+                    var selected = $('#bill_tenant_id').find(':selected');
                     var billType = $('#bill_type_select').val();
+                    var amt = 0;
 
-                    if (billType === 'Monthly Rent' && rent) {
-                        $('#bill_amount_input').val(rent);
-                        $('#immediate_pay_amt').val(rent);
+                    if (billType === 'Monthly Rent') {
+                        amt = selected.data('total') || selected.data('rent') || 0;
+                    } else if (billType === 'Electricity') {
+                        amt = selected.data('eb') || 0;
+                    } else if (billType === 'Maintenance') {
+                        amt = selected.data('maint') || 0;
+                    } else if (billType === 'Other') {
+                        amt = selected.data('other') || 0;
                     }
-                });
 
-                $('#bill_type_select').on('change', function() {
-                    if ($(this).val() === 'Monthly Rent') {
-                        var rent = $('#bill_tenant_id').find(':selected').data('rent');
-                        if (rent) {
-                            $('#bill_amount_input').val(rent);
-                            $('#immediate_pay_amt').val(rent);
-                        }
+                    if (amt > 0) {
+                        $('#bill_amount_input').val(amt);
+                        $('#immediate_pay_amt').val(amt);
                     }
-                });
+                }
+
+                $('#bill_tenant_id, #bill_type_select').on('change', updateBillAmount);
 
                 // Toggle immediate payment fields
                 $('#immediate_payment_check').on('change', function() {
@@ -1368,3 +1374,4 @@
         </script>
     @endpush
 @endsection
+

@@ -34,9 +34,17 @@ class TenantController extends Controller
                             <div class="small text-muted mt-1">' . e($row->room_type) . ($floor ? ' (' . e($floor) . ')' : '') . '</div>';
                 })
                 ->addColumn('rent_display', function ($row) {
+                    $total = (float) $row->monthly_rent + (float) $row->eb_charges + (float) $row->maintenance_charges + (float) $row->other_charges;
+                    $extra = [];
+                    if ($row->eb_charges > 0) $extra[] = 'EB: ₹' . number_format($row->eb_charges);
+                    if ($row->maintenance_charges > 0) $extra[] = 'Maint: ₹' . number_format($row->maintenance_charges);
+                    if ($row->other_charges > 0) $extra[] = 'Other: ₹' . number_format($row->other_charges);
+                    $extraHtml = !empty($extra) ? '<small class="text-muted d-block font-11">+' . implode(' | ', $extra) . '</small>' : '';
+
                     return '<div>
-                        <span class="fw-bold text-dark">₹' . number_format($row->monthly_rent) . '</span>
-                        <small class="text-muted d-block">Dep: ₹' . number_format($row->security_deposit) . '</small>
+                        <span class="fw-bold text-dark font-13">₹' . number_format($total) . ' <small class="text-muted fw-normal">/mo</small></span>
+                        <small class="text-muted d-block font-11">Rent: ₹' . number_format($row->monthly_rent) . ' | Dep: ₹' . number_format($row->security_deposit) . '</small>
+                        ' . $extraHtml . '
                     </div>';
                 })
                 ->addColumn('commence_date_formatted', function ($row) {
@@ -62,7 +70,7 @@ class TenantController extends Controller
         $stats = [
             'totalTenants' => Tenant::count(),
             'activeTenants' => Tenant::where('status', 1)->count(),
-            'totalRent' => Tenant::where('status', 1)->sum('monthly_rent'),
+            'totalRent' => Tenant::where('status', 1)->selectRaw('SUM(monthly_rent + eb_charges + maintenance_charges + other_charges) as total')->value('total') ?? 0,
             'occupiedRooms' => Tenant::where('status', 1)->whereNotNull('room_id')->distinct('room_id')->count('room_id'),
         ];
 
@@ -81,6 +89,9 @@ class TenantController extends Controller
             'room_number' => 'nullable|string|max:50',
             'room_type' => 'required|string|max:100',
             'monthly_rent' => 'required|numeric|min:0',
+            'eb_charges' => 'nullable|numeric|min:0',
+            'maintenance_charges' => 'nullable|numeric|min:0',
+            'other_charges' => 'nullable|numeric|min:0',
             'security_deposit' => 'nullable|numeric|min:0',
             'commence_date' => 'nullable|date',
             'emergency_contact' => 'nullable|string|max:20',
@@ -89,6 +100,10 @@ class TenantController extends Controller
 
         $room = Room::findOrFail($validated['room_id']);
         $validated['room_number'] = $room->room_number;
+        $validated['eb_charges'] = $validated['eb_charges'] ?? 0;
+        $validated['maintenance_charges'] = $validated['maintenance_charges'] ?? 0;
+        $validated['other_charges'] = $validated['other_charges'] ?? 0;
+        $validated['security_deposit'] = $validated['security_deposit'] ?? 0;
         $validated['status'] = 1;
 
         $tenant = Tenant::create($validated);
@@ -125,6 +140,9 @@ class TenantController extends Controller
             'room_number' => 'nullable|string|max:50',
             'room_type' => 'required|string|max:100',
             'monthly_rent' => 'required|numeric|min:0',
+            'eb_charges' => 'nullable|numeric|min:0',
+            'maintenance_charges' => 'nullable|numeric|min:0',
+            'other_charges' => 'nullable|numeric|min:0',
             'security_deposit' => 'nullable|numeric|min:0',
             'commence_date' => 'nullable|date',
             'emergency_contact' => 'nullable|string|max:20',
@@ -136,6 +154,10 @@ class TenantController extends Controller
 
         $newRoom = Room::findOrFail($newRoomId);
         $validated['room_number'] = $newRoom->room_number;
+        $validated['eb_charges'] = $validated['eb_charges'] ?? 0;
+        $validated['maintenance_charges'] = $validated['maintenance_charges'] ?? 0;
+        $validated['other_charges'] = $validated['other_charges'] ?? 0;
+        $validated['security_deposit'] = $validated['security_deposit'] ?? 0;
 
         $tenant->update($validated);
 

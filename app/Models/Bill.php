@@ -90,3 +90,4 @@ class Bill extends Model
         $this->saveQuietly();
     }
 }
+

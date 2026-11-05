@@ -49,8 +49,15 @@ class RoomController extends Controller
                     </div>';
                 })
                 ->addColumn('rent_display', function ($row) {
+                    $extra = [];
+                    if ($row->eb_charges > 0) $extra[] = 'EB: ₹' . number_format($row->eb_charges);
+                    if ($row->maintenance_charges > 0) $extra[] = 'Maint: ₹' . number_format($row->maintenance_charges);
+                    if ($row->other_charges > 0) $extra[] = 'Other: ₹' . number_format($row->other_charges);
+                    $extraHtml = !empty($extra) ? '<small class="text-muted d-block font-11">+' . implode(' | ', $extra) . '</small>' : '';
+
                     return '<div>
                         <span class="fw-bold text-dark">₹' . number_format($row->monthly_rent) . '</span>
+                        ' . $extraHtml . '
                         <small class="text-muted d-block">Deposit: ₹' . number_format($row->security_deposit) . '</small>
                     </div>';
                 })
@@ -110,6 +117,9 @@ class RoomController extends Controller
             'room_type' => 'required|string|max:100',
             'capacity' => 'required|integer|min:1|max:10',
             'monthly_rent' => 'required|numeric|min:0',
+            'eb_charges' => 'nullable|numeric|min:0',
+            'maintenance_charges' => 'nullable|numeric|min:0',
+            'other_charges' => 'nullable|numeric|min:0',
             'security_deposit' => 'nullable|numeric|min:0',
             'occupancy_status' => 'required|in:available,occupied,maintenance',
             'amenities' => 'nullable|string',
@@ -147,6 +157,9 @@ class RoomController extends Controller
             'room_type' => 'required|string|max:100',
             'capacity' => 'required|integer|min:1|max:10',
             'monthly_rent' => 'required|numeric|min:0',
+            'eb_charges' => 'nullable|numeric|min:0',
+            'maintenance_charges' => 'nullable|numeric|min:0',
+            'other_charges' => 'nullable|numeric|min:0',
             'security_deposit' => 'nullable|numeric|min:0',
             'occupancy_status' => 'required|in:available,occupied,maintenance',
             'amenities' => 'nullable|string',

@@ -16,6 +16,9 @@ class Room extends Model
         'room_type',
         'capacity',
         'monthly_rent',
+        'eb_charges',
+        'maintenance_charges',
+        'other_charges',
         'security_deposit',
         'occupancy_status',
         'amenities',
@@ -24,10 +27,18 @@ class Room extends Model
 
     protected $casts = [
         'monthly_rent' => 'decimal:2',
+        'eb_charges' => 'decimal:2',
+        'maintenance_charges' => 'decimal:2',
+        'other_charges' => 'decimal:2',
         'security_deposit' => 'decimal:2',
         'capacity' => 'integer',
         'status' => 'boolean',
     ];
+
+    public function getTotalMonthlyAttribute(): float
+    {
+        return (float) $this->monthly_rent + (float) $this->eb_charges + (float) $this->maintenance_charges + (float) $this->other_charges;
+    }
 
     public function tenants()
     {
