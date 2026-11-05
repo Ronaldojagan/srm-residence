@@ -102,31 +102,35 @@
 
         .res-input-group {
             position: relative;
+            display: block;
         }
 
         .res-input-group .form-control {
-            height: 48px;
-            padding-left: 42px;
-            padding-right: 42px;
+            height: 48px !important;
+            padding-left: 46px !important;
+            padding-right: 46px !important;
             border-radius: 12px !important;
-            border: 1.5px solid #e2e8f0;
-            font-size: 14px;
-            font-weight: 500;
+            border: 1.5px solid #e2e8f0 !important;
+            font-size: 14px !important;
+            font-weight: 500 !important;
+            line-height: 1.5 !important;
         }
 
         .res-input-group .form-control:focus {
-            border-color: #0ea1b1;
-            box-shadow: 0 0 0 4px rgba(14, 161, 177, 0.15);
+            border-color: #0ea1b1 !important;
+            box-shadow: 0 0 0 4px rgba(14, 161, 177, 0.15) !important;
         }
 
         .res-input-group .input-icon {
             position: absolute;
-            left: 15px;
+            left: 16px;
             top: 50%;
             transform: translateY(-50%);
             color: #94a3b8;
-            font-size: 15px;
-            z-index: 4;
+            font-size: 16px;
+            z-index: 5;
+            pointer-events: none;
+            line-height: 1;
         }
 
         .res-input-group .toggle-password-btn {
@@ -138,13 +142,27 @@
             border: none;
             color: #94a3b8;
             cursor: pointer;
-            padding: 4px;
-            z-index: 4;
+            padding: 8px;
+            z-index: 5;
             transition: color 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            line-height: 1;
         }
 
         .res-input-group .toggle-password-btn:hover {
             color: #0ea1b1;
+        }
+
+        /* WebKit Autofill Compatibility */
+        .res-input-group input:-webkit-autofill,
+        .res-input-group input:-webkit-autofill:hover, 
+        .res-input-group input:-webkit-autofill:focus {
+            -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+            -webkit-text-fill-color: #1e293b !important;
+            transition: background-color 5000s ease-in-out 0s;
         }
 
         .res-btn-submit {
