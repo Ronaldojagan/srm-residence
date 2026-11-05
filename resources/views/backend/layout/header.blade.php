@@ -11,7 +11,7 @@
         <!-- User Profile Dropdown -->
         <li class="dropdown notification-list topbar-dropdown">
             <a class="nav-link dropdown-toggle nav-user me-0 waves-effect waves-light"
-                data-bs-toggle="dropdown" href="#" role="button" aria-haspopup="false" aria-expanded="false">
+                data-bs-toggle="dropdown" data-bs-display="static" href="#" role="button" aria-haspopup="false" aria-expanded="false">
                 <div class="res-avatar-wrapper">
                     <img src="{{ url('img/avatar.jpg') }}" alt="user-avatar" class="rounded-circle">
                     <span class="res-avatar-online"></span>
@@ -82,7 +82,7 @@
     <!-- Left Controls (Mobile Menu Toggle & Status Pills) -->
     <ul class="list-unstyled topnav-menu topnav-menu-left mb-0 d-flex align-items-center">
         <li>
-            <button class="button-menu-mobile disable-btn waves-effect">
+            <button class="button-menu-mobile waves-effect waves-light" type="button" aria-label="Toggle navigation">
                 <i class="fe-menu"></i>
             </button>
         </li>
