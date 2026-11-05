@@ -50,6 +50,7 @@
         <script src="{{url('assets/libs/feather-icons/feather.min.js')}}"></script>
 
         @stack('footer_content')
+        @stack('scripts')
         <script src="{{url('assets/js/app.min.js')}}"></script>
         <script src="{{url('assets/js/custom.js')}}"></script>
     </body>

@@ -375,38 +375,45 @@
                                             <i class="fas fa-bolt text-warning me-1"></i> Electricity (EB) Meter Reading & Units Calculation
                                         </div>
                                         <div class="font-12 text-muted" id="eb_rate_badge">
-                                            Rate: <span class="fw-bold text-dark" id="display_eb_rate">₹10.00</span> / Unit
+                                            Active Rate: <span class="fw-bold text-dark" id="display_eb_rate">₹10.00</span> / Unit
                                         </div>
                                     </div>
                                     <div class="card-body py-3 px-3">
                                         <div class="row g-2 align-items-center">
-                                            <div class="col-md-3">
-                                                <label class="form-label small fw-semibold mb-1">Previous Reading</label>
+                                            <div class="col-md-2">
+                                                <label class="form-label small fw-semibold mb-1">Previous (Units)</label>
                                                 <input type="number" step="0.01" min="0" name="eb_previous_reading" id="bill_eb_prev_reading" class="form-control form-control-sm" placeholder="0.00">
-                                                <small class="text-muted font-10">From tenant start/last bill</small>
+                                                <small class="text-muted font-10">Start / last bill</small>
                                             </div>
                                             <div class="col-md-3">
-                                                <label class="form-label small fw-semibold mb-1">Current Reading</label>
-                                                <input type="number" step="0.01" min="0" name="eb_current_reading" id="bill_eb_curr_reading" class="form-control form-control-sm" placeholder="e.g. 150.00">
-                                                <small class="text-muted font-10">Enter current meter reading</small>
+                                                <label class="form-label small fw-semibold mb-1">Current Reading (Units) <span class="text-danger">*</span></label>
+                                                <input type="number" step="0.01" min="0" name="eb_current_reading" id="bill_eb_curr_reading" class="form-control form-control-sm" placeholder="Enter meter units">
+                                                <small class="text-muted font-10">Current meter reading</small>
                                             </div>
-                                            <div class="col-md-3">
+                                            <div class="col-md-2">
                                                 <label class="form-label small fw-semibold mb-1">Consumed Units</label>
                                                 <div class="input-group input-group-sm">
                                                     <input type="number" step="0.01" readonly name="eb_consumed_units" id="bill_eb_consumed_units" class="form-control form-control-sm bg-white fw-bold text-primary" placeholder="0.00" value="0.00">
-                                                    <span class="input-group-text font-11">Units</span>
+                                                    <span class="input-group-text font-11">kWh</span>
                                                 </div>
                                                 <small class="text-muted font-10" id="eb_diff_hint">Current - Previous</small>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label small fw-semibold mb-1">Rate (₹/Unit)</label>
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text font-11">₹</span>
+                                                    <input type="number" step="0.01" min="0" name="eb_unit_rate" id="bill_eb_unit_rate" class="form-control form-control-sm fw-semibold" placeholder="10.00" value="10.00">
+                                                </div>
+                                                <small class="text-muted font-10">Per unit price</small>
                                             </div>
                                             <div class="col-md-3">
                                                 <label class="form-label small fw-semibold mb-1">EB Charge Amount</label>
                                                 <div class="input-group input-group-sm">
                                                     <span class="input-group-text font-11">₹</span>
-                                                    <input type="number" step="0.01" readonly name="eb_amount" id="bill_eb_amount" class="form-control form-control-sm bg-white fw-bold text-success" placeholder="0.00" value="0.00">
+                                                    <input type="number" step="0.01" readonly name="eb_amount" id="bill_eb_amount" class="form-control form-control-sm bg-white fw-bold text-success font-13" placeholder="0.00" value="0.00">
                                                 </div>
                                                 <small class="text-muted font-10">Units × Rate</small>
                                             </div>
-                                            <input type="hidden" name="eb_unit_rate" id="bill_eb_unit_rate" value="10.00">
                                         </div>
                                     </div>
                                 </div>
@@ -889,7 +896,7 @@
         </div>
     </div>
 
-    @push('scripts')
+    @push('footer_content')
         <script src="https://cdn.datatables.net/1.11.4/js/jquery.dataTables.min.js"></script>
         <script src="https://cdn.datatables.net/1.11.4/js/dataTables.bootstrap5.min.js"></script>
         <script src="{{ url('assets/libs/sweetalert2/sweetalert2.all.min.js') }}"></script>
@@ -1041,6 +1048,9 @@
                     var currRaw = $('#bill_eb_curr_reading').val();
                     var rate = parseFloat($('#bill_eb_unit_rate').val()) || 10.00;
 
+                    // Update live rate display badge
+                    $('#display_eb_rate').text('₹' + rate.toFixed(2));
+
                     if (currRaw === '' || isNaN(parseFloat(currRaw))) {
                         $('#bill_eb_consumed_units').val('0.00');
                         $('#bill_eb_amount').val('0.00');
@@ -1081,30 +1091,7 @@
                     calculateInvoiceTotal();
                 }
 
-                function populateTenantItems() {
-                    var $opt = $('#bill_tenant_id').find(':selected');
-                    if (!$opt.val()) {
-                        $('#billItemsBody').html('<tr><td colspan="4" class="text-center text-muted py-3">Please select a resident to load invoice items.</td></tr>');
-                        calculateInvoiceTotal();
-                        return;
-                    }
-
-                    var rent = parseFloat($opt.data('rent')) || 0;
-                    var maint = parseFloat($opt.data('maint')) || 0;
-                    var other = parseFloat($opt.data('other')) || 0;
-                    var ebRate = parseFloat($opt.data('eb-rate')) || 10.00;
-                    var ebPrev = parseFloat($opt.data('eb-prev')) || 0.00;
-
-                    // Set EB Meter Section fields
-                    $('#bill_eb_prev_reading').val(ebPrev.toFixed(2));
-                    $('#bill_eb_curr_reading').val('');
-                    $('#bill_eb_consumed_units').val('0.00');
-                    $('#bill_eb_amount').val('0.00');
-                    $('#bill_eb_unit_rate').val(ebRate.toFixed(2));
-                    $('#display_eb_rate').text('₹' + ebRate.toFixed(2));
-                    $('#eb_diff_hint').text('Current - Previous').removeClass('text-danger');
-
-                    // Pre-populate line items (1. Rent, 2. Maintenance, 3. Other, 4. EB)
+                function renderDefaultTenantItems(rent, maint, other, ebRate) {
                     var rows = '';
 
                     // 1. Rent
@@ -1188,19 +1175,73 @@
                     calculateInvoiceTotal();
                 }
 
+                function populateTenantItems() {
+                    var $opt = $('#bill_tenant_id').find(':selected');
+                    var tenantId = $opt.val();
+                    if (!tenantId) {
+                        $('#billItemsBody').html('<tr><td colspan="4" class="text-center text-muted py-3"><i class="fas fa-arrow-up me-1"></i> Select a resident above to auto-populate invoice line items.</td></tr>');
+                        calculateInvoiceTotal();
+                        return;
+                    }
+
+                    var rent = parseFloat($opt.data('rent')) || 0;
+                    var maint = parseFloat($opt.data('maint')) || 0;
+                    var other = parseFloat($opt.data('other')) || 0;
+                    var ebRate = parseFloat($opt.data('eb-rate')) || 10.00;
+                    var ebPrev = parseFloat($opt.data('eb-prev')) || 0.00;
+
+                    // Set EB Meter Section fields immediately
+                    $('#bill_eb_prev_reading').val(ebPrev.toFixed(2));
+                    $('#bill_eb_curr_reading').val('');
+                    $('#bill_eb_consumed_units').val('0.00');
+                    $('#bill_eb_amount').val('0.00');
+                    $('#bill_eb_unit_rate').val(ebRate.toFixed(2));
+                    $('#display_eb_rate').text('₹' + ebRate.toFixed(2));
+                    $('#eb_diff_hint').text('Current - Previous').removeClass('text-danger');
+
+                    // Pre-populate line items (1. Rent, 2. Maintenance, 3. Other, 4. EB)
+                    renderDefaultTenantItems(rent, maint, other, ebRate);
+
+                    // Also fetch live billing info via AJAX to guarantee 100% sync
+                    $.ajax({
+                        url: "{{ url('/admin/billing/tenants') }}/" + tenantId + "/billing-info",
+                        type: "GET",
+                        success: function(res) {
+                            if (res.success && res.tenant) {
+                                var t = res.tenant;
+                                if (t.eb_previous_reading !== undefined && t.eb_previous_reading !== null) {
+                                    $('#bill_eb_prev_reading').val(parseFloat(t.eb_previous_reading).toFixed(2));
+                                }
+                                if (t.eb_unit_rate !== undefined && t.eb_unit_rate !== null) {
+                                    $('#bill_eb_unit_rate').val(parseFloat(t.eb_unit_rate).toFixed(2));
+                                    $('#display_eb_rate').text('₹' + parseFloat(t.eb_unit_rate).toFixed(2));
+                                }
+                                calculateEbConsumption();
+                            }
+                        }
+                    });
+                }
+
                 // Event bindings for dynamic items & meter calculation
-                $('#bill_tenant_id').on('change', populateTenantItems);
-                $(document).on('keyup change input', '#bill_eb_curr_reading, #bill_eb_prev_reading', calculateEbConsumption);
+                $(document).on('change', '#bill_tenant_id', populateTenantItems);
+                $(document).on('keyup change input', '#bill_eb_curr_reading, #bill_eb_prev_reading, #bill_eb_unit_rate', calculateEbConsumption);
                 $(document).on('keyup change input', '.item-amt-input', calculateInvoiceTotal);
 
                 // Remove line item
                 $(document).on('click', '.btn-remove-item', function() {
                     $(this).closest('tr').remove();
+                    if ($('#billItemsBody tr').length === 0) {
+                        $('#billItemsBody').html('<tr><td colspan="4" class="text-center text-muted py-3"><i class="fas fa-arrow-up me-1"></i> No items added. Click "+ Add Custom Item" above.</td></tr>');
+                    }
                     calculateInvoiceTotal();
                 });
 
                 // Add Custom Line Item
-                $('#btnAddCustomItem').on('click', function() {
+                $(document).on('click', '#btnAddCustomItem', function(e) {
+                    e.preventDefault();
+                    if ($('#billItemsBody tr td[colspan]').length > 0) {
+                        $('#billItemsBody').empty();
+                    }
                     customItemCounter++;
                     var newRow = '<tr class="custom-item-row">' +
                         '<td>' +
@@ -1208,7 +1249,7 @@
                             '<input type="hidden" name="items[' + customItemCounter + '][type]" value="Custom">' +
                             '<small class="text-muted font-11">Custom resident charge</small>' +
                         '</td>' +
-                        '<td><span class="badge bg-dark-subtle text-dark border border-dark-subtle">Custom</span></td>' +
+                        '<td><span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">Custom</span></td>' +
                         '<td>' +
                             '<div class="input-group input-group-sm">' +
                                 '<span class="input-group-text">₹</span>' +
