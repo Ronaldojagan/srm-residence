@@ -1,3 +1,14 @@
+/* Remove up/down arrows from all number input fields */
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+  -webkit-appearance: none !important;
+  margin: 0 !important;
+}
+input[type=number] {
+  -moz-appearance: textfield !important;
+  appearance: textfield !important;
+}
+
 :root {
   --border-radius: 30px;
   --wpd-color: #0C2A6D;

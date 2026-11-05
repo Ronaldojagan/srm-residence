@@ -6,6 +6,21 @@
         <link href="https://cdn.datatables.net/1.11.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
         <style>
+            /* Remove browser number spin buttons */
+            input[type=number]::-webkit-outer-spin-button,
+            input[type=number]::-webkit-inner-spin-button {
+                -webkit-appearance: none !important;
+                margin: 0 !important;
+            }
+            input[type=number] {
+                -moz-appearance: textfield !important;
+                appearance: textfield !important;
+            }
+            .readonly-lock-field {
+                background-color: #f8fafc !important;
+                color: #334155 !important;
+                cursor: not-allowed;
+            }
             .stat-pill-card {
                 background: #ffffff;
                 border-radius: 14px;
@@ -381,36 +396,36 @@
                                     <div class="card-body py-3 px-3">
                                         <div class="row g-2 align-items-center">
                                             <div class="col-md-2">
-                                                <label class="form-label small fw-semibold mb-1">Previous (Units)</label>
-                                                <input type="number" step="0.01" min="0" name="eb_previous_reading" id="bill_eb_prev_reading" class="form-control form-control-sm" placeholder="0.00">
+                                                <label class="form-label small fw-semibold mb-1"><i class="fas fa-lock text-muted font-10 me-1"></i> Previous (Units)</label>
+                                                <input type="number" step="0.01" min="0" readonly name="eb_previous_reading" id="bill_eb_prev_reading" class="form-control form-control-sm readonly-lock-field text-center font-12 fw-semibold" placeholder="0.00">
                                                 <small class="text-muted font-10">Start / last bill</small>
                                             </div>
                                             <div class="col-md-3">
                                                 <label class="form-label small fw-semibold mb-1">Current Reading (Units) <span class="text-danger">*</span></label>
-                                                <input type="number" step="0.01" min="0" name="eb_current_reading" id="bill_eb_curr_reading" class="form-control form-control-sm" placeholder="Enter meter units">
+                                                <input type="number" step="0.01" min="0" name="eb_current_reading" id="bill_eb_curr_reading" class="form-control form-control-sm border-primary" placeholder="Enter meter units">
                                                 <small class="text-muted font-10">Current meter reading</small>
                                             </div>
                                             <div class="col-md-2">
                                                 <label class="form-label small fw-semibold mb-1">Consumed Units</label>
                                                 <div class="input-group input-group-sm">
-                                                    <input type="number" step="0.01" readonly name="eb_consumed_units" id="bill_eb_consumed_units" class="form-control form-control-sm bg-white fw-bold text-primary" placeholder="0.00" value="0.00">
-                                                    <span class="input-group-text font-11">kWh</span>
+                                                    <input type="text" readonly name="eb_consumed_units" id="bill_eb_consumed_units" class="form-control form-control-sm readonly-lock-field fw-bold text-primary text-center font-13" placeholder="0" value="0">
+                                                    <span class="input-group-text font-11 px-2">Units</span>
                                                 </div>
                                                 <small class="text-muted font-10" id="eb_diff_hint">Current - Previous</small>
                                             </div>
                                             <div class="col-md-2">
-                                                <label class="form-label small fw-semibold mb-1">Rate (₹/Unit)</label>
+                                                <label class="form-label small fw-semibold mb-1"><i class="fas fa-lock text-muted font-10 me-1"></i> Rate (₹/Unit)</label>
                                                 <div class="input-group input-group-sm">
                                                     <span class="input-group-text font-11">₹</span>
-                                                    <input type="number" step="0.01" min="0" name="eb_unit_rate" id="bill_eb_unit_rate" class="form-control form-control-sm fw-semibold" placeholder="10.00" value="10.00">
+                                                    <input type="number" step="0.01" min="0" readonly name="eb_unit_rate" id="bill_eb_unit_rate" class="form-control form-control-sm readonly-lock-field fw-bold text-center" placeholder="10.00" value="10.00">
                                                 </div>
-                                                <small class="text-muted font-10">Per unit price</small>
+                                                <small class="text-muted font-10">Agreed unit rate</small>
                                             </div>
                                             <div class="col-md-3">
                                                 <label class="form-label small fw-semibold mb-1">EB Charge Amount</label>
                                                 <div class="input-group input-group-sm">
                                                     <span class="input-group-text font-11">₹</span>
-                                                    <input type="number" step="0.01" readonly name="eb_amount" id="bill_eb_amount" class="form-control form-control-sm bg-white fw-bold text-success font-13" placeholder="0.00" value="0.00">
+                                                    <input type="number" step="0.01" readonly name="eb_amount" id="bill_eb_amount" class="form-control form-control-sm readonly-lock-field fw-bold text-success font-13" placeholder="0.00" value="0.00">
                                                 </div>
                                                 <small class="text-muted font-10">Units × Rate</small>
                                             </div>
@@ -1052,7 +1067,7 @@
                     $('#display_eb_rate').text('₹' + rate.toFixed(2));
 
                     if (currRaw === '' || isNaN(parseFloat(currRaw))) {
-                        $('#bill_eb_consumed_units').val('0.00');
+                        $('#bill_eb_consumed_units').val('0');
                         $('#bill_eb_amount').val('0.00');
                         $('#eb_diff_hint').text('Current - Previous').removeClass('text-danger');
                         updateEbLineItem(0, rate, prev, 0, 0);
@@ -1061,15 +1076,16 @@
 
                     var curr = parseFloat(currRaw);
                     if (curr < prev) {
-                        $('#eb_diff_hint').html('<span class="text-danger fw-semibold">Current cannot be less than previous (' + prev.toFixed(2) + ')</span>');
-                        $('#bill_eb_consumed_units').val('0.00');
+                        $('#eb_diff_hint').html('<span class="text-danger fw-semibold">Current cannot be less than previous (' + prev + ')</span>');
+                        $('#bill_eb_consumed_units').val('0');
                         $('#bill_eb_amount').val('0.00');
                         updateEbLineItem(0, rate, prev, curr, 0);
                     } else {
                         var units = curr - prev;
                         var cost = units * rate;
-                        $('#eb_diff_hint').html('<span class="text-success fw-semibold">' + units.toFixed(2) + ' units consumed</span>');
-                        $('#bill_eb_consumed_units').val(units.toFixed(2));
+                        var unitsDisplay = (units % 1 === 0) ? units.toFixed(0) : units.toFixed(2);
+                        $('#eb_diff_hint').html('<span class="text-success fw-semibold">' + unitsDisplay + ' units consumed</span>');
+                        $('#bill_eb_consumed_units').val(unitsDisplay);
                         $('#bill_eb_amount').val(cost.toFixed(2));
                         updateEbLineItem(cost, rate, prev, curr, units);
                     }
@@ -1080,11 +1096,14 @@
                     if ($ebRow.length > 0) {
                         $ebRow.find('.item-amt-input').val(cost > 0 ? cost.toFixed(2) : '0.00');
                         if (units && units > 0) {
-                            var desc = units.toFixed(2) + ' units @ ₹' + rate.toFixed(2) + '/unit (Meter: ' + prev.toFixed(2) + ' ➔ ' + curr.toFixed(2) + ')';
-                            $ebRow.find('.eb-item-desc').text(desc);
+                            var unitsText = (units % 1 === 0) ? units.toFixed(0) : units.toFixed(2);
+                            var prevText = (prev % 1 === 0) ? prev.toFixed(0) : prev.toFixed(2);
+                            var currText = (curr % 1 === 0) ? curr.toFixed(0) : curr.toFixed(2);
+                            var desc = unitsText + ' units @ ₹' + rate.toFixed(2) + '/unit (Meter: ' + prevText + ' ➔ ' + currText + ')';
+                            $ebRow.find('.eb-item-desc').html('<i class="fas fa-bolt text-warning me-1"></i>' + desc);
                             $ebRow.find('input[name*="[details]"]').val(desc);
                         } else {
-                            $ebRow.find('.eb-item-desc').text('Billed on meter units @ ₹' + rate.toFixed(2) + '/unit');
+                            $ebRow.find('.eb-item-desc').html('<i class="fas fa-bolt text-warning me-1"></i>Billed on meter units @ ₹' + rate.toFixed(2) + '/unit');
                             $ebRow.find('input[name*="[details]"]').val('');
                         }
                     }
@@ -1094,80 +1113,80 @@
                 function renderDefaultTenantItems(rent, maint, other, ebRate) {
                     var rows = '';
 
-                    // 1. Rent
+                    // 1. Rent (Locked - Readonly)
                     rows += '<tr class="standard-item-row" data-type="Rent">' +
                         '<td>' +
-                            '<input type="text" name="items[0][title]" class="form-control form-control-sm fw-semibold" value="Room Monthly Rent">' +
+                            '<input type="text" readonly name="items[0][title]" class="form-control form-control-sm fw-semibold readonly-lock-field" value="Room Monthly Rent">' +
                             '<input type="hidden" name="items[0][type]" value="Rent">' +
-                            '<small class="text-muted font-11">Room base accommodation fee</small>' +
+                            '<small class="text-muted font-11"><i class="fas fa-lock me-1 font-10 text-muted"></i>Fixed base room accommodation</small>' +
                         '</td>' +
                         '<td><span class="badge bg-primary-subtle text-primary border border-primary-subtle">Rent</span></td>' +
                         '<td>' +
                             '<div class="input-group input-group-sm">' +
-                                '<span class="input-group-text">₹</span>' +
-                                '<input type="number" step="0.01" min="0" name="items[0][amount]" class="form-control form-control-sm text-end item-amt-input" value="' + rent.toFixed(2) + '">' +
+                                '<span class="input-group-text bg-light">₹</span>' +
+                                '<input type="number" step="0.01" readonly name="items[0][amount]" class="form-control form-control-sm text-end item-amt-input readonly-lock-field fw-bold" value="' + rent.toFixed(2) + '">' +
                             '</div>' +
                         '</td>' +
                         '<td class="text-center">' +
-                            '<button type="button" class="btn btn-xs btn-outline-danger btn-remove-item" title="Remove Item"><i class="fas fa-trash-alt"></i></button>' +
+                            '<span class="badge bg-light text-muted border px-2 py-1 font-10" title="Fixed registered amount (cannot be edited)"><i class="fas fa-lock me-1"></i>Fixed</span>' +
                         '</td>' +
                     '</tr>';
 
-                    // 2. Maintenance
+                    // 2. Maintenance (Locked - Readonly)
                     rows += '<tr class="standard-item-row" data-type="Maintenance">' +
                         '<td>' +
-                            '<input type="text" name="items[1][title]" class="form-control form-control-sm fw-semibold" value="Maintenance Charges">' +
+                            '<input type="text" readonly name="items[1][title]" class="form-control form-control-sm fw-semibold readonly-lock-field" value="Maintenance Charges">' +
                             '<input type="hidden" name="items[1][type]" value="Maintenance">' +
-                            '<small class="text-muted font-11">Building maintenance & cleaning</small>' +
+                            '<small class="text-muted font-11"><i class="fas fa-lock me-1 font-10 text-muted"></i>Building maintenance & cleaning</small>' +
                         '</td>' +
                         '<td><span class="badge bg-info-subtle text-info border border-info-subtle">Maintenance</span></td>' +
                         '<td>' +
                             '<div class="input-group input-group-sm">' +
-                                '<span class="input-group-text">₹</span>' +
-                                '<input type="number" step="0.01" min="0" name="items[1][amount]" class="form-control form-control-sm text-end item-amt-input" value="' + maint.toFixed(2) + '">' +
+                                '<span class="input-group-text bg-light">₹</span>' +
+                                '<input type="number" step="0.01" readonly name="items[1][amount]" class="form-control form-control-sm text-end item-amt-input readonly-lock-field fw-bold" value="' + maint.toFixed(2) + '">' +
                             '</div>' +
                         '</td>' +
                         '<td class="text-center">' +
-                            '<button type="button" class="btn btn-xs btn-outline-danger btn-remove-item" title="Remove Item"><i class="fas fa-trash-alt"></i></button>' +
+                            '<span class="badge bg-light text-muted border px-2 py-1 font-10" title="Fixed registered amount (cannot be edited)"><i class="fas fa-lock me-1"></i>Fixed</span>' +
                         '</td>' +
                     '</tr>';
 
-                    // 3. Other Charges
+                    // 3. Other Charges (Locked - Readonly)
                     rows += '<tr class="standard-item-row" data-type="Other">' +
                         '<td>' +
-                            '<input type="text" name="items[2][title]" class="form-control form-control-sm fw-semibold" value="Other Charges">' +
+                            '<input type="text" readonly name="items[2][title]" class="form-control form-control-sm fw-semibold readonly-lock-field" value="Other Charges">' +
                             '<input type="hidden" name="items[2][type]" value="Other">' +
-                            '<small class="text-muted font-11">Wi-Fi, water & campus amenities</small>' +
+                            '<small class="text-muted font-11"><i class="fas fa-lock me-1 font-10 text-muted"></i>Wi-Fi, water & campus amenities</small>' +
                         '</td>' +
                         '<td><span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">Other</span></td>' +
                         '<td>' +
                             '<div class="input-group input-group-sm">' +
-                                '<span class="input-group-text">₹</span>' +
-                                '<input type="number" step="0.01" min="0" name="items[2][amount]" class="form-control form-control-sm text-end item-amt-input" value="' + other.toFixed(2) + '">' +
+                                '<span class="input-group-text bg-light">₹</span>' +
+                                '<input type="number" step="0.01" readonly name="items[2][amount]" class="form-control form-control-sm text-end item-amt-input readonly-lock-field fw-bold" value="' + other.toFixed(2) + '">' +
                             '</div>' +
                         '</td>' +
                         '<td class="text-center">' +
-                            '<button type="button" class="btn btn-xs btn-outline-danger btn-remove-item" title="Remove Item"><i class="fas fa-trash-alt"></i></button>' +
+                            '<span class="badge bg-light text-muted border px-2 py-1 font-10" title="Fixed registered amount (cannot be edited)"><i class="fas fa-lock me-1"></i>Fixed</span>' +
                         '</td>' +
                     '</tr>';
 
-                    // 4. Electricity (EB)
+                    // 4. Electricity (EB) (Locked - Computed via Meter Readings)
                     rows += '<tr class="eb-item-row" data-type="Electricity">' +
                         '<td>' +
-                            '<input type="text" name="items[3][title]" class="form-control form-control-sm fw-semibold" value="Electricity Charges (EB)">' +
+                            '<input type="text" readonly name="items[3][title]" class="form-control form-control-sm fw-semibold readonly-lock-field" value="Electricity Charges (EB)">' +
                             '<input type="hidden" name="items[3][type]" value="Electricity">' +
                             '<input type="hidden" name="items[3][details]" value="">' +
-                            '<small class="text-muted font-11 eb-item-desc">Billed on meter units @ ₹' + ebRate.toFixed(2) + '/unit</small>' +
+                            '<small class="text-muted font-11 eb-item-desc"><i class="fas fa-bolt text-warning me-1"></i>Billed on meter units @ ₹' + ebRate.toFixed(2) + '/unit</small>' +
                         '</td>' +
                         '<td><span class="badge bg-warning-subtle text-warning border border-warning-subtle">Electricity</span></td>' +
                         '<td>' +
                             '<div class="input-group input-group-sm">' +
-                                '<span class="input-group-text">₹</span>' +
-                                '<input type="number" step="0.01" min="0" name="items[3][amount]" class="form-control form-control-sm text-end item-amt-input" value="0.00">' +
+                                '<span class="input-group-text bg-light">₹</span>' +
+                                '<input type="number" step="0.01" readonly name="items[3][amount]" class="form-control form-control-sm text-end item-amt-input readonly-lock-field fw-bold text-success" value="0.00">' +
                             '</div>' +
                         '</td>' +
                         '<td class="text-center">' +
-                            '<button type="button" class="btn btn-xs btn-outline-danger btn-remove-item" title="Remove Item"><i class="fas fa-trash-alt"></i></button>' +
+                            '<span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1 font-10" title="Calculated from meter consumption"><i class="fas fa-bolt me-1"></i>Meter</span>' +
                         '</td>' +
                     '</tr>';
 
@@ -1191,9 +1210,10 @@
                     var ebPrev = parseFloat($opt.data('eb-prev')) || 0.00;
 
                     // Set EB Meter Section fields immediately
-                    $('#bill_eb_prev_reading').val(ebPrev.toFixed(2));
+                    var prevDisplay = (ebPrev % 1 === 0) ? ebPrev.toFixed(0) : ebPrev.toFixed(2);
+                    $('#bill_eb_prev_reading').val(prevDisplay);
                     $('#bill_eb_curr_reading').val('');
-                    $('#bill_eb_consumed_units').val('0.00');
+                    $('#bill_eb_consumed_units').val('0');
                     $('#bill_eb_amount').val('0.00');
                     $('#bill_eb_unit_rate').val(ebRate.toFixed(2));
                     $('#display_eb_rate').text('₹' + ebRate.toFixed(2));
@@ -1210,7 +1230,8 @@
                             if (res.success && res.tenant) {
                                 var t = res.tenant;
                                 if (t.eb_previous_reading !== undefined && t.eb_previous_reading !== null) {
-                                    $('#bill_eb_prev_reading').val(parseFloat(t.eb_previous_reading).toFixed(2));
+                                    var pt = parseFloat(t.eb_previous_reading);
+                                    $('#bill_eb_prev_reading').val((pt % 1 === 0) ? pt.toFixed(0) : pt.toFixed(2));
                                 }
                                 if (t.eb_unit_rate !== undefined && t.eb_unit_rate !== null) {
                                     $('#bill_eb_unit_rate').val(parseFloat(t.eb_unit_rate).toFixed(2));
