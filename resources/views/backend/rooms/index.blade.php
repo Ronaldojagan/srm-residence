@@ -201,9 +201,9 @@
                             </div>
 
                             <div class="col-md-4">
-                                <label class="form-label fw-bold">EB Charges (₹)</label>
-                                <input type="number" step="0.01" name="eb_charges" class="form-control" placeholder="0.00" value="0.00">
-                                <small class="text-muted">Default room electricity charge</small>
+                                <label class="form-label fw-bold">EB Rate (₹/Unit)</label>
+                                <input type="number" step="0.01" name="eb_unit_rate" class="form-control" placeholder="10.00" value="10.00">
+                                <small class="text-muted">Electricity cost per unit (kWh)</small>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label fw-bold">Maintenance Charges (₹)</label>
@@ -303,8 +303,9 @@
                             </div>
 
                             <div class="col-md-4">
-                                <label class="form-label fw-bold">EB Charges (₹)</label>
-                                <input type="number" step="0.01" id="edit_eb_charges" name="eb_charges" class="form-control" placeholder="0.00">
+                                <label class="form-label fw-bold">EB Rate (₹/Unit)</label>
+                                <input type="number" step="0.01" id="edit_eb_unit_rate" name="eb_unit_rate" class="form-control" placeholder="10.00">
+                                <small class="text-muted">Electricity cost per unit (kWh)</small>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label fw-bold">Maintenance Charges (₹)</label>
@@ -480,7 +481,7 @@
                                 $('#edit_room_type').val(room.room_type);
                                 $('#edit_capacity').val(room.capacity);
                                 $('#edit_monthly_rent').val(room.monthly_rent);
-                                $('#edit_eb_charges').val(room.eb_charges || '0.00');
+                                $('#edit_eb_unit_rate').val(room.eb_unit_rate || '10.00');
                                 $('#edit_maintenance_charges').val(room.maintenance_charges || '0.00');
                                 $('#edit_other_charges').val(room.other_charges || '0.00');
                                 $('#edit_security_deposit').val(room.security_deposit);

@@ -34,9 +34,9 @@ class TenantController extends Controller
                             <div class="small text-muted mt-1">' . e($row->room_type) . ($floor ? ' (' . e($floor) . ')' : '') . '</div>';
                 })
                 ->addColumn('rent_display', function ($row) {
-                    $total = (float) $row->monthly_rent + (float) $row->eb_charges + (float) $row->maintenance_charges + (float) $row->other_charges;
+                    $total = (float) $row->monthly_rent + (float) $row->maintenance_charges + (float) $row->other_charges;
                     $extra = [];
-                    if ($row->eb_charges > 0) $extra[] = 'EB: ₹' . number_format($row->eb_charges);
+                    if ($row->eb_unit_rate > 0) $extra[] = 'EB: ₹' . number_format($row->eb_unit_rate, 2) . '/unit';
                     if ($row->maintenance_charges > 0) $extra[] = 'Maint: ₹' . number_format($row->maintenance_charges);
                     if ($row->other_charges > 0) $extra[] = 'Other: ₹' . number_format($row->other_charges);
                     $extraHtml = !empty($extra) ? '<small class="text-muted d-block font-11">+' . implode(' | ', $extra) . '</small>' : '';
@@ -70,7 +70,7 @@ class TenantController extends Controller
         $stats = [
             'totalTenants' => Tenant::count(),
             'activeTenants' => Tenant::where('status', 1)->count(),
-            'totalRent' => Tenant::where('status', 1)->selectRaw('SUM(monthly_rent + eb_charges + maintenance_charges + other_charges) as total')->value('total') ?? 0,
+            'totalRent' => Tenant::where('status', 1)->selectRaw('SUM(monthly_rent + maintenance_charges + other_charges) as total')->value('total') ?? 0,
             'occupiedRooms' => Tenant::where('status', 1)->whereNotNull('room_id')->distinct('room_id')->count('room_id'),
         ];
 
@@ -89,7 +89,7 @@ class TenantController extends Controller
             'room_number' => 'nullable|string|max:50',
             'room_type' => 'required|string|max:100',
             'monthly_rent' => 'required|numeric|min:0',
-            'eb_charges' => 'nullable|numeric|min:0',
+            'eb_unit_rate' => 'nullable|numeric|min:0',
             'maintenance_charges' => 'nullable|numeric|min:0',
             'other_charges' => 'nullable|numeric|min:0',
             'security_deposit' => 'nullable|numeric|min:0',
@@ -100,7 +100,7 @@ class TenantController extends Controller
 
         $room = Room::findOrFail($validated['room_id']);
         $validated['room_number'] = $room->room_number;
-        $validated['eb_charges'] = $validated['eb_charges'] ?? 0;
+        $validated['eb_unit_rate'] = $validated['eb_unit_rate'] ?? 10.00;
         $validated['maintenance_charges'] = $validated['maintenance_charges'] ?? 0;
         $validated['other_charges'] = $validated['other_charges'] ?? 0;
         $validated['security_deposit'] = $validated['security_deposit'] ?? 0;
@@ -140,7 +140,7 @@ class TenantController extends Controller
             'room_number' => 'nullable|string|max:50',
             'room_type' => 'required|string|max:100',
             'monthly_rent' => 'required|numeric|min:0',
-            'eb_charges' => 'nullable|numeric|min:0',
+            'eb_unit_rate' => 'nullable|numeric|min:0',
             'maintenance_charges' => 'nullable|numeric|min:0',
             'other_charges' => 'nullable|numeric|min:0',
             'security_deposit' => 'nullable|numeric|min:0',
@@ -154,7 +154,7 @@ class TenantController extends Controller
 
         $newRoom = Room::findOrFail($newRoomId);
         $validated['room_number'] = $newRoom->room_number;
-        $validated['eb_charges'] = $validated['eb_charges'] ?? 0;
+        $validated['eb_unit_rate'] = $validated['eb_unit_rate'] ?? 10.00;
         $validated['maintenance_charges'] = $validated['maintenance_charges'] ?? 0;
         $validated['other_charges'] = $validated['other_charges'] ?? 0;
         $validated['security_deposit'] = $validated['security_deposit'] ?? 0;

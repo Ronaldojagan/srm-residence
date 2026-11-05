@@ -327,7 +327,7 @@
                                         <option value="{{ $t->id }}" 
                                             data-rent="{{ $t->monthly_rent }}" 
                                             data-total="{{ $t->total_monthly_due }}"
-                                            data-eb="{{ $t->eb_charges }}"
+                                            data-eb="{{ $t->eb_unit_rate }}"
                                             data-maint="{{ $t->maintenance_charges }}"
                                             data-other="{{ $t->other_charges }}"
                                             data-room="{{ $t->room ? $t->room->room_number : $t->room_number }}">

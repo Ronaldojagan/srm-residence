@@ -145,7 +145,7 @@
                                                 data-type="{{ $r->room_type }}" 
                                                 data-rent="{{ $r->monthly_rent }}" 
                                                 data-deposit="{{ $r->security_deposit }}"
-                                                data-eb="{{ $r->eb_charges }}"
+                                                data-eb="{{ $r->eb_unit_rate }}"
                                                 data-maintenance="{{ $r->maintenance_charges }}"
                                                 data-other="{{ $r->other_charges }}">
                                                 Room {{ $r->room_number }} ({{ $r->floor }} - {{ $r->room_type }}) [{{ ucfirst($r->occupancy_status) }}]
@@ -180,9 +180,12 @@
 
                             <!-- Additional Charges based on room -->
                             <div class="col-md-4">
-                                <label class="form-label fw-semibold">EB Charges (₹)</label>
-                                <input type="number" step="0.01" name="eb_charges" id="add_eb_charges" class="form-control charge-input" placeholder="0.00" value="0.00">
-                                <small class="text-muted font-11">Room electricity charge</small>
+                                <label class="form-label fw-semibold">EB Rate (₹ per Unit)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text fw-bold">₹</span>
+                                    <input type="number" step="0.01" name="eb_unit_rate" id="add_eb_unit_rate" class="form-control" placeholder="10.00" value="10.00">
+                                </div>
+                                <small class="text-muted font-11">Cost per electricity unit (kWh)</small>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label fw-semibold">Maintenance Charges (₹)</label>
@@ -199,8 +202,8 @@
                             <div class="col-12">
                                 <div class="p-3 bg-light rounded border d-flex justify-content-between align-items-center">
                                     <div>
-                                        <span class="text-muted small text-uppercase fw-bold d-block">Total Monthly Payable</span>
-                                        <small class="text-muted">Rent + EB + Maintenance + Other Charges</small>
+                                        <span class="text-muted small text-uppercase fw-bold d-block">Fixed Monthly Due</span>
+                                        <small class="text-muted">Rent + Maintenance + Other (EB billed on usage @ <strong class="text-primary" id="add_eb_rate_display">₹10.00/unit</strong>)</small>
                                     </div>
                                     <div class="text-end">
                                         <h4 class="fw-bold text-success mb-0" id="add_total_monthly_display">₹0.00</h4>
@@ -272,7 +275,7 @@
                                                 data-type="{{ $r->room_type }}" 
                                                 data-rent="{{ $r->monthly_rent }}" 
                                                 data-deposit="{{ $r->security_deposit }}"
-                                                data-eb="{{ $r->eb_charges }}"
+                                                data-eb="{{ $r->eb_unit_rate }}"
                                                 data-maintenance="{{ $r->maintenance_charges }}"
                                                 data-other="{{ $r->other_charges }}">
                                                 Room {{ $r->room_number }} ({{ $r->floor }} - {{ $r->room_type }}) [{{ ucfirst($r->occupancy_status) }}]
@@ -307,9 +310,12 @@
 
                             <!-- Additional Charges based on room -->
                             <div class="col-md-4">
-                                <label class="form-label fw-semibold">EB Charges (₹)</label>
-                                <input type="number" step="0.01" id="edit_eb_charges" name="eb_charges" class="form-control edit-charge-input" placeholder="0.00">
-                                <small class="text-muted font-11">Room electricity charge</small>
+                                <label class="form-label fw-semibold">EB Rate (₹ per Unit)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text fw-bold">₹</span>
+                                    <input type="number" step="0.01" id="edit_eb_unit_rate" name="eb_unit_rate" class="form-control" placeholder="10.00">
+                                </div>
+                                <small class="text-muted font-11">Cost per electricity unit (kWh)</small>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label fw-semibold">Maintenance Charges (₹)</label>
@@ -326,8 +332,8 @@
                             <div class="col-12">
                                 <div class="p-3 bg-light rounded border d-flex justify-content-between align-items-center">
                                     <div>
-                                        <span class="text-muted small text-uppercase fw-bold d-block">Total Monthly Payable</span>
-                                        <small class="text-muted">Rent + EB + Maintenance + Other Charges</small>
+                                        <span class="text-muted small text-uppercase fw-bold d-block">Fixed Monthly Due</span>
+                                        <small class="text-muted">Rent + Maintenance + Other (EB billed on usage @ <strong class="text-primary" id="edit_eb_rate_display">₹10.00/unit</strong>)</small>
                                     </div>
                                     <div class="text-end">
                                         <h4 class="fw-bold text-success mb-0" id="edit_total_monthly_display">₹0.00</h4>
@@ -397,24 +403,26 @@
                 // Calculations for live monthly totals
                 function calcAddTenantTotal() {
                     var rent = parseFloat($('#add_monthly_rent').val()) || 0;
-                    var eb = parseFloat($('#add_eb_charges').val()) || 0;
                     var maint = parseFloat($('#add_maintenance_charges').val()) || 0;
                     var other = parseFloat($('#add_other_charges').val()) || 0;
-                    var total = rent + eb + maint + other;
+                    var total = rent + maint + other;
+                    var ebRate = parseFloat($('#add_eb_unit_rate').val()) || 0;
                     $('#add_total_monthly_display').text('₹' + total.toLocaleString('en-IN', { minimumFractionDigits: 2 }));
+                    $('#add_eb_rate_display').text('₹' + ebRate.toFixed(2) + '/unit');
                 }
 
                 function calcEditTenantTotal() {
                     var rent = parseFloat($('#edit_monthly_rent').val()) || 0;
-                    var eb = parseFloat($('#edit_eb_charges').val()) || 0;
                     var maint = parseFloat($('#edit_maintenance_charges').val()) || 0;
                     var other = parseFloat($('#edit_other_charges').val()) || 0;
-                    var total = rent + eb + maint + other;
+                    var total = rent + maint + other;
+                    var ebRate = parseFloat($('#edit_eb_unit_rate').val()) || 0;
                     $('#edit_total_monthly_display').text('₹' + total.toLocaleString('en-IN', { minimumFractionDigits: 2 }));
+                    $('#edit_eb_rate_display').text('₹' + ebRate.toFixed(2) + '/unit');
                 }
 
-                $(document).on('keyup change input', '.charge-input', calcAddTenantTotal);
-                $(document).on('keyup change input', '.edit-charge-input', calcEditTenantTotal);
+                $(document).on('keyup change input', '.charge-input, #add_eb_unit_rate', calcAddTenantTotal);
+                $(document).on('keyup change input', '.edit-charge-input, #edit_eb_unit_rate', calcEditTenantTotal);
 
                 // Auto-fill room details when room is selected
                 $('#tenant_room_id').on('change', function() {
@@ -427,7 +435,7 @@
                         $('#add_monthly_rent').val($opt.data('rent'));
                     }
                     if ($opt.data('eb') !== undefined) {
-                        $('#add_eb_charges').val($opt.data('eb'));
+                        $('#add_eb_unit_rate').val($opt.data('eb'));
                     }
                     if ($opt.data('maintenance') !== undefined) {
                         $('#add_maintenance_charges').val($opt.data('maintenance'));
@@ -451,7 +459,7 @@
                         $('#edit_monthly_rent').val($opt.data('rent'));
                     }
                     if ($opt.data('eb') !== undefined) {
-                        $('#edit_eb_charges').val($opt.data('eb'));
+                        $('#edit_eb_unit_rate').val($opt.data('eb'));
                     }
                     if ($opt.data('maintenance') !== undefined) {
                         $('#edit_maintenance_charges').val($opt.data('maintenance'));
@@ -535,7 +543,7 @@
                                     $('#edit_commence_date').val(tenant.commence_date.substring(0, 10));
                                 }
                                 $('#edit_monthly_rent').val(tenant.monthly_rent);
-                                $('#edit_eb_charges').val(tenant.eb_charges || '0.00');
+                                $('#edit_eb_unit_rate').val(tenant.eb_unit_rate !== null && tenant.eb_unit_rate !== undefined ? tenant.eb_unit_rate : '10.00');
                                 $('#edit_maintenance_charges').val(tenant.maintenance_charges || '0.00');
                                 $('#edit_other_charges').val(tenant.other_charges || '0.00');
                                 $('#edit_security_deposit').val(tenant.security_deposit);

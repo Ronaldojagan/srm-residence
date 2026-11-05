@@ -362,7 +362,7 @@ class BillingController extends Controller
                 continue;
             }
 
-            $rent = (float) $t->monthly_rent + (float) $t->eb_charges + (float) $t->maintenance_charges + (float) $t->other_charges;
+            $rent = (float) $t->monthly_rent + (float) $t->maintenance_charges + (float) $t->other_charges;
             if ($rent <= 0 && $t->room) {
                 $rent = (float) $t->room->total_monthly;
             }

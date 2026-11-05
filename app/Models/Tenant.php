@@ -18,7 +18,7 @@ class Tenant extends Model
         'room_number',
         'room_type',
         'monthly_rent',
-        'eb_charges',
+        'eb_unit_rate',
         'maintenance_charges',
         'other_charges',
         'security_deposit',
@@ -31,7 +31,7 @@ class Tenant extends Model
     protected $casts = [
         'room_id' => 'integer',
         'monthly_rent' => 'float',
-        'eb_charges' => 'float',
+        'eb_unit_rate' => 'float',
         'maintenance_charges' => 'float',
         'other_charges' => 'float',
         'security_deposit' => 'float',
@@ -41,7 +41,7 @@ class Tenant extends Model
 
     public function getTotalMonthlyDueAttribute(): float
     {
-        return (float) $this->monthly_rent + (float) $this->eb_charges + (float) $this->maintenance_charges + (float) $this->other_charges;
+        return (float) $this->monthly_rent + (float) $this->maintenance_charges + (float) $this->other_charges;
     }
 
     public function room()
