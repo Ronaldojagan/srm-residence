@@ -90,16 +90,20 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.03) !important;
   height: 70px !important;
   padding: 0 1.5rem 0 0 !important;
-  position: relative !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
   z-index: 1001 !important;
 }
 
-/* Logo Box on Top Navbar (Flush to left screen edge) */
+/* Logo Box on Top Navbar (Flush to left screen edge - Permanent Sidebar Head) */
 .logo-box, .navbar-custom .logo-dark {
   background: var(--res-sidebar-bg) !important;
   height: 70px !important;
   width: 250px !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.07) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: flex-start !important;
@@ -375,6 +379,10 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
   box-shadow: 4px 0 24px 0 rgba(0, 0, 0, 0.08) !important;
   width: 250px !important;
   padding-top: 15px;
+  position: fixed !important;
+  top: 70px !important;
+  bottom: 0 !important;
+  left: 0 !important;
   z-index: 1000 !important;
 }
 
