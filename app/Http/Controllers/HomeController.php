@@ -61,9 +61,25 @@ class HomeController extends Controller
             : 162500;
 
         $monthlyTurnover = 485000;
+        $pendingDues = 42500;
+        $overdueTenantsCount = 4;
+
+        // Integrate real Bills & Payments if data is present
+        $realCollected = \App\Models\BillPayment::sum('amount');
+        if ($realCollected > 0) {
+            $monthlyTurnover = (int) $realCollected;
+        }
+        $realDue = \App\Models\Bill::whereIn('status', ['unpaid', 'partially_paid', 'overdue'])->sum('due_amount');
+        if ($realDue > 0) {
+            $pendingDues = (int) $realDue;
+        }
+        $realOverdue = \App\Models\Bill::where('status', 'overdue')->count();
+        if ($realOverdue > 0) {
+            $overdueTenantsCount = $realOverdue;
+        }
+
         $netProfit = $monthlyTurnover - $monthlyExpenses;
         $profitMargin = $monthlyTurnover > 0 ? round(($netProfit / $monthlyTurnover) * 100, 1) : 0;
-        $pendingDues = 42500;
 
         // Fetch recent tenants with real rooms if available
         $tenantsList = Tenant::with('room')->latest()->take(5)->get();
@@ -131,7 +147,7 @@ class HomeController extends Controller
             'netProfit' => $netProfit,
             'profitMargin' => $profitMargin . '%',
             'pendingDues' => $pendingDues,
-            'overdueTenants' => 4,
+            'overdueTenants' => $overdueTenantsCount,
             'financialTrends' => [
                 'months' => ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'],
                 'turnover' => [410000, 435000, 450000, 462000, 475000, 485000],

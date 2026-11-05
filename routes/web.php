@@ -6,6 +6,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\TenantController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SettingsController;
 use Illuminate\Support\Facades\Auth;
@@ -81,6 +82,21 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'user-access:' . Use
         Route::get('/{expense}/data', 'getData')->name('data');
         Route::post('/{expense}/update', 'update')->name('update');
         Route::delete('/{expense}', 'destroy')->name('destroy');
+    });
+
+    // Bills & Payments
+    Route::controller(BillingController::class)->prefix('billing')->name('billing.')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/bills-data', 'billsData')->name('bills.data');
+        Route::get('/payments-data', 'paymentsData')->name('payments.data');
+        Route::post('/bills', 'storeBill')->name('bills.store');
+        Route::post('/bills/quick-monthly', 'quickGenerateMonthlyRent')->name('bills.quick_monthly');
+        Route::get('/bills/{id}', 'getBillDetails')->name('bills.details');
+        Route::post('/bills/{id}/update', 'updateBill')->name('bills.update');
+        Route::delete('/bills/{id}', 'destroyBill')->name('bills.destroy');
+        Route::post('/payments', 'storePayment')->name('payments.store');
+        Route::get('/payments/{id}', 'getPaymentDetails')->name('payments.details');
+        Route::delete('/payments/{id}', 'destroyPayment')->name('payments.destroy');
     });
 
     // Reports

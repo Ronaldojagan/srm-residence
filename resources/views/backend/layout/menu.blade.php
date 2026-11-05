@@ -34,6 +34,12 @@
                         <span class="badge bg-primary-subtle text-primary ms-auto font-11">23</span>
                     </a>
                 </li>
+                <li class="{{ request()->is('admin/billing*') ? 'menuitem-active' : '' }}">
+                    <a href="{{ url('/admin/billing') }}" class="{{ request()->is('admin/billing*') ? 'active' : '' }}">
+                        <span class="res-nav-badge nav-badge-billing"><i class="fas fa-file-invoice-dollar"></i></span>
+                        <span class="ms-1"> Bills & Payments </span>
+                    </a>
+                </li>
                 <li class="{{ request()->is('admin/expenses*') ? 'menuitem-active' : '' }}">
                     <a href="#sidebarExpenses" data-bs-toggle="collapse" class="{{ request()->is('admin/expenses*') ? '' : 'collapsed' }}" aria-expanded="{{ request()->is('admin/expenses*') ? 'true' : 'false' }}">
                         <span class="res-nav-badge nav-badge-expenses"><i class="fas fa-wallet"></i></span>
