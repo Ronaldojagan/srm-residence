@@ -47,15 +47,17 @@
                 border-bottom: 2px solid var(--res-primary);
                 background: transparent;
             }
-            /* Printable Invoice Styling */
+            /* Printable Invoice & Receipt Styling */
             @media print {
                 body * {
                     visibility: hidden !important;
                 }
-                #printableInvoiceArea, #printableInvoiceArea * {
+                #printableInvoiceArea, #printableInvoiceArea *,
+                #printableReceiptArea, #printableReceiptArea * {
                     visibility: visible !important;
                 }
-                #printableInvoiceArea {
+                #printableInvoiceArea,
+                #printableReceiptArea {
                     position: absolute !important;
                     left: 0 !important;
                     top: 0 !important;
