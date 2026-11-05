@@ -89,11 +89,12 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
   border-bottom: 1px solid var(--res-border) !important;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.03) !important;
   height: 70px !important;
-  padding: 0 1.5rem !important;
+  padding: 0 1.5rem 0 0 !important;
+  position: relative !important;
   z-index: 1001 !important;
 }
 
-/* Logo Box on Top Navbar */
+/* Logo Box on Top Navbar (Flush to left screen edge) */
 .logo-box, .navbar-custom .logo-dark {
   background: var(--res-sidebar-bg) !important;
   height: 70px !important;
@@ -103,6 +104,8 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
   align-items: center !important;
   justify-content: flex-start !important;
   padding: 0 1.25rem !important;
+  margin: 0 !important;
+  float: left !important;
   transition: all 0.2s ease !important;
 }
 
@@ -193,6 +196,26 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
   color: #475569;
   display: inline-flex;
   align-items: center;
+}
+
+/* Center: Academic Year & Live Date */
+.res-topbar-center {
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 16px !important;
+  z-index: 1002 !important;
+  white-space: nowrap !important;
+  pointer-events: auto !important;
+}
+
+@media (max-width: 991.98px) {
+  .res-topbar-center {
+    display: none !important;
+  }
 }
 
 /* Modern User Profile Dropdown Pill */

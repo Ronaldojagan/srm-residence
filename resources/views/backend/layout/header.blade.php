@@ -1,4 +1,28 @@
 <div class="navbar-custom">
+    <!-- Left Logo Brand Box (Starts at left: 0 with zero gap) -->
+    <div class="logo-box">
+        <a href="{{ url('/admin/dashboard') }}" class="res-logo-brand">
+            <div class="res-logo-icon">
+                <i class="fas fa-hotel"></i>
+            </div>
+            <div class="res-logo-details d-none d-lg-flex">
+                <span class="res-logo-title">SRM RESIDENCE</span>
+                <span class="res-logo-subtitle">Student & Living Hub</span>
+            </div>
+        </a>
+    </div>
+
+    <!-- Center: Academic Year & Live Date (Centered across topbar) -->
+    <div class="res-topbar-center d-none d-md-flex align-items-center">
+        <span class="res-topbar-pill">
+            <span class="res-pulsing-dot me-2"></span>
+            <span>Academic Year 2026-27</span>
+        </span>
+        <span class="text-muted font-13 fw-medium">
+            <i class="far fa-calendar-alt text-primary me-1"></i> {{ date('l, d M Y') }}
+        </span>
+    </div>
+
     <!-- Right Controls: Profile & Quick Links (Floated Right in UBold architecture) -->
     <ul class="list-unstyled topnav-menu float-end mb-0 d-flex align-items-center">
         <!-- Quick Action Shortcut: View Rooms -->
@@ -63,39 +87,6 @@
                     @csrf
                 </form>
             </div>
-        </li>
-    </ul>
-
-    <!-- Left Logo Brand Box -->
-    <div class="logo-box">
-        <a href="{{ url('/admin/dashboard') }}" class="res-logo-brand">
-            <div class="res-logo-icon">
-                <i class="fas fa-hotel"></i>
-            </div>
-            <div class="res-logo-details d-none d-lg-flex">
-                <span class="res-logo-title">SRM RESIDENCE</span>
-                <span class="res-logo-subtitle">Student & Living Hub</span>
-            </div>
-        </a>
-    </div>
-
-    <!-- Left Controls (Mobile Menu Toggle & Status Pills) -->
-    <ul class="list-unstyled topnav-menu topnav-menu-left mb-0 d-flex align-items-center">
-        <li>
-            <button class="button-menu-mobile waves-effect waves-light" type="button" aria-label="Toggle navigation">
-                <i class="fe-menu"></i>
-            </button>
-        </li>
-        <li class="d-none d-md-flex align-items-center ms-2">
-            <span class="res-topbar-pill">
-                <span class="res-pulsing-dot me-2"></span>
-                <span>Academic Year 2026-27</span>
-            </span>
-        </li>
-        <li class="d-none d-xl-flex align-items-center ms-3">
-            <span class="text-muted font-13 fw-medium">
-                <i class="far fa-calendar-alt text-primary me-1"></i> {{ date('l, d M Y') }}
-            </span>
         </li>
     </ul>
 
