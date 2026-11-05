@@ -208,10 +208,10 @@
         </style>
     @endpush
 
-    <div class="res-dashboard mt-3">
+    <div class="res-dashboard">
 
         <!-- Welcome Banner & Quick Actions -->
-        <div class="res-hero-banner d-flex flex-wrap justify-content-between align-items-center">
+        <div class="res-hero-banner d-flex flex-wrap justify-content-between align-items-center mt-1">
             <div>
                 <span class="badge bg-white text-dark px-3 py-1 rounded-pill mb-2 fw-semibold">
                     <i class="fas fa-building text-info me-1"></i> SRM RESIDENCE ADMIN

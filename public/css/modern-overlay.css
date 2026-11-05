@@ -526,14 +526,16 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
   background-color: var(--res-bg-canvas) !important;
   min-height: 100vh !important;
   margin-left: 250px !important;
-  padding: 85px 14px 65px 14px !important;
+  margin-top: 70px !important;
+  padding: 16px 16px 65px 16px !important;
   transition: all 0.2s ease;
 }
 
 @media (max-width: 991.98px) {
   .content-page {
     margin-left: 0 !important;
-    padding-top: 80px !important;
+    margin-top: 70px !important;
+    padding: 16px 14px 70px 14px !important;
   }
   .logo-box, .navbar-custom .logo-dark {
     width: 60px !important;
@@ -1135,7 +1137,8 @@ body[data-leftbar-size="condensed"] .res-nav-badge {
 
   .content-page {
     margin-left: 0 !important;
-    padding: 85px 14px 70px 14px !important;
+    margin-top: 70px !important;
+    padding: 16px 14px 70px 14px !important;
   }
 
   .res-footer, .footer {
