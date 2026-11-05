@@ -225,12 +225,12 @@
                 <a href="{{ url('admin/tenants') }}" class="btn btn-light res-btn-action text-dark">
                     <i class="fas fa-user-plus text-primary"></i> Create Tenant
                 </a>
-                <button type="button" class="btn btn-light res-btn-action text-dark" onclick="alert('Room Allocation dialog')">
-                    <i class="fas fa-door-open text-info"></i> Allocate Room
-                </button>
-                <button type="button" class="btn btn-warning res-btn-action text-dark fw-bold" onclick="alert('Record Expense dialog')">
-                    <i class="fas fa-receipt"></i> Log Expense
-                </button>
+                <a href="{{ url('admin/rooms') }}" class="btn btn-light res-btn-action text-dark">
+                    <i class="fas fa-door-open text-info"></i> View Rooms
+                </a>
+                <a href="{{ url('admin/billing') }}" class="btn btn-warning res-btn-action text-dark fw-bold">
+                    <i class="fas fa-file-invoice-dollar"></i> Bills & Payments
+                </a>
             </div>
         </div>
 
@@ -261,11 +261,11 @@
                             <i class="fas fa-user-friends"></i>
                         </div>
                         <span class="res-badge-pill bg-success-subtle text-success">
-                            <i class="fas fa-arrow-up"></i> +8 New
+                            <i class="fas fa-user-check"></i> {{ $residenceData['tenantCount'] }} Active
                         </span>
                     </div>
                     <div class="res-kpi-title">Active Tenants</div>
-                    <div class="res-kpi-value">{{ $residenceData['occupiedRooms'] }}</div>
+                    <div class="res-kpi-value">{{ $residenceData['tenantCount'] }}</div>
                     <small class="text-muted"><i class="fas fa-bed text-success me-1"></i> Residing currently</small>
                 </div>
             </div>
@@ -408,15 +408,11 @@
                     </div>
 
                     <div class="d-flex flex-column gap-3">
-                        @foreach([
-                            ['label' => 'Collected On-Time', 'amount' => 358900, 'count' => 74, 'pct' => 74, 'color' => 'success', 'icon' => 'check-circle'],
-                            ['label' => 'Grace Period / Due', 'amount' => 87300, 'count' => 16, 'pct' => 18, 'color' => 'warning', 'icon' => 'hourglass-half'],
-                            ['label' => 'Overdue (> 7 Days)', 'amount' => 38800, 'count' => 4, 'pct' => 8, 'color' => 'danger', 'icon' => 'exclamation-circle']
-                        ] as $pipe)
+                        @foreach($residenceData['rentPipeline'] as $pipe)
                             <div class="p-2 border rounded-3 bg-light">
                                 <div class="d-flex justify-content-between align-items-center mb-1">
                                     <span class="fw-semibold small text-dark">
-                                        <i class="fas fa-{{ $pipe['icon'] }} text-{{ $pipe['color'] }} me-1"></i> {{ $pipe['label'] }} ({{ $pipe['count'] }} tenants)
+                                        <i class="fas fa-{{ $pipe['icon'] }} text-{{ $pipe['color'] }} me-1"></i> {{ $pipe['label'] }} ({{ $pipe['count'] }} {{ \Illuminate\Support\Str::plural('tenant', $pipe['count']) }})
                                     </span>
                                     <span class="fw-bold text-{{ $pipe['color'] }}">₹{{ number_format($pipe['amount']) }}</span>
                                 </div>
@@ -459,14 +455,18 @@
                         <canvas id="expenseChart"></canvas>
                     </div>
                     <div class="mt-3 pt-2 border-top">
-                        <div class="d-flex justify-content-between text-muted small mb-1">
-                            <span>Top Expense: Electricity & Power</span>
-                            <span class="fw-bold text-dark">32% (₹52,000)</span>
-                        </div>
-                        <div class="d-flex justify-content-between text-muted small">
-                            <span>Staff Salaries & Security</span>
-                            <span class="fw-bold text-dark">28% (₹45,000)</span>
-                        </div>
+                        @if(!empty($residenceData['expenseCategories']['top']))
+                            @foreach($residenceData['expenseCategories']['top'] as $topExp)
+                                <div class="d-flex justify-content-between text-muted small mb-1">
+                                    <span>{{ $topExp['category'] }}</span>
+                                    <span class="fw-bold text-dark">{{ $topExp['pct'] }} (₹{{ number_format($topExp['amount']) }})</span>
+                                </div>
+                            @endforeach
+                        @else
+                            <div class="text-center text-muted small py-1">
+                                <i class="fas fa-info-circle me-1"></i> No operational expenses logged this month.
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -542,15 +542,11 @@
                 <div class="res-card h-100">
                     <div class="res-card-title">
                         <span><i class="fas fa-tools text-warning me-2"></i> Maintenance & Complaints</span>
-                        <span class="badge bg-warning-subtle text-warning">4 Active</span>
+                        <span class="badge bg-warning-subtle text-warning">{{ count($residenceData['maintenanceRequests']) }} Active</span>
                     </div>
 
                     <div class="d-flex flex-column gap-3">
-                        @foreach($residenceData['maintenanceRequests'] ?? [
-                            ['room' => 'Room 104', 'priority' => 'High', 'issue' => 'AC cooling unit intermittent trip', 'category' => 'Electrical', 'time' => '1 hr ago'],
-                            ['room' => 'Room 208', 'priority' => 'Medium', 'issue' => 'Geyser water pressure low', 'category' => 'Plumbing', 'time' => '3 hrs ago'],
-                            ['room' => 'Room 312', 'priority' => 'Low', 'issue' => 'Balcony latch sticky', 'category' => 'Carpentry', 'time' => 'Yesterday']
-                        ] as $req)
+                        @forelse($residenceData['maintenanceRequests'] as $req)
                         <div class="p-3 border rounded-3 bg-light">
                             <div class="d-flex justify-content-between align-items-center mb-1">
                                 <span class="fw-bold text-dark">{{ $req['room'] }}</span>
@@ -568,7 +564,15 @@
                                 <span><i class="far fa-clock me-1"></i> {{ $req['time'] }}</span>
                             </div>
                         </div>
-                        @endforeach
+                        @empty
+                        <div class="p-4 border rounded-3 bg-light text-center my-auto">
+                            <div class="avatar-sm mx-auto mb-2 text-success">
+                                <i class="fas fa-check-circle fa-2x"></i>
+                            </div>
+                            <h6 class="fw-bold text-dark mb-1">All Facilities Operational</h6>
+                            <p class="text-muted small mb-0">No active maintenance complaints or room servicing tickets.</p>
+                        </div>
+                        @endforelse
                     </div>
                 </div>
             </div>
@@ -579,11 +583,11 @@
     @push('footer_content')
         @php
             $chartMonths = $residenceData['financialTrends']['months'] ?? ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'];
-            $chartTurnover = $residenceData['financialTrends']['turnover'] ?? [410000, 435000, 450000, 462000, 475000, 485000];
-            $chartExpenses = $residenceData['financialTrends']['expenses'] ?? [145000, 150000, 158000, 152000, 160000, 165000];
-            $chartProfit = $residenceData['financialTrends']['profit'] ?? [265000, 285000, 292000, 310000, 315000, 320000];
-            $expenseLabels = $residenceData['expenseCategories']['labels'] ?? ['Maintenance & Repairs', 'Electricity Bill', 'Water & Plumbing', 'WiFi & Internet', 'Other'];
-            $expenseAmounts = $residenceData['expenseCategories']['amounts'] ?? [48500, 34200, 26000, 18500, 16300];
+            $chartTurnover = $residenceData['financialTrends']['turnover'] ?? [0, 0, 0, 0, 0, 0];
+            $chartExpenses = $residenceData['financialTrends']['expenses'] ?? [0, 0, 0, 0, 0, 0];
+            $chartProfit = $residenceData['financialTrends']['profit'] ?? [0, 0, 0, 0, 0, 0];
+            $expenseLabels = $residenceData['expenseCategories']['labels'] ?? ['No Expenses Recorded'];
+            $expenseAmounts = $residenceData['expenseCategories']['amounts'] ?? [0];
         @endphp
         <script>
             document.addEventListener('DOMContentLoaded', function () {
@@ -657,7 +661,7 @@
                                     },
                                     ticks: {
                                         callback: function(value) {
-                                            return '₹' + (value / 1000) + 'k';
+                                            return '₹' + Number(value).toLocaleString('en-IN');
                                         }
                                     }
                                 },
@@ -674,47 +678,86 @@
                 // Expense Breakdown Donut Chart
                 const expenseCtx = document.getElementById('expenseChart');
                 if (expenseCtx) {
-                    new Chart(expenseCtx, {
-                        type: 'doughnut',
-                        data: {
-                            labels: expenseLabels,
-                            datasets: [{
-                                data: expenseAmounts,
-                                backgroundColor: [
-                                    '#0ea1b1',
-                                    '#8b5cf6',
-                                    '#f59e0b',
-                                    '#3b82f6',
-                                    '#10b981'
-                                ],
-                                borderWidth: 2,
-                                borderColor: '#ffffff'
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: {
-                                    position: 'bottom',
-                                    labels: {
-                                        boxWidth: 12,
-                                        font: {
-                                            size: 11
+                    const rawLabels = @json($expenseLabels);
+                    const rawAmounts = @json($expenseAmounts);
+                    const totalAmount = rawAmounts.reduce((a, b) => a + b, 0);
+
+                    if (totalAmount === 0) {
+                        new Chart(expenseCtx, {
+                            type: 'doughnut',
+                            data: {
+                                labels: ['No Expenses Recorded'],
+                                datasets: [{
+                                    data: [1],
+                                    backgroundColor: ['#e2e8f0'],
+                                    borderWidth: 0
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: {
+                                        position: 'bottom',
+                                        labels: {
+                                            boxWidth: 12,
+                                            font: { size: 11 }
+                                        }
+                                    },
+                                    tooltip: {
+                                        callbacks: {
+                                            label: function() { return 'No expenses logged yet'; }
                                         }
                                     }
                                 },
-                                tooltip: {
-                                    callbacks: {
-                                        label: function(context) {
-                                            return context.label + ': ₹' + Number(context.raw).toLocaleString('en-IN');
+                                cutout: '68%'
+                            }
+                        });
+                    } else {
+                        new Chart(expenseCtx, {
+                            type: 'doughnut',
+                            data: {
+                                labels: rawLabels,
+                                datasets: [{
+                                    data: rawAmounts,
+                                    backgroundColor: [
+                                        '#0ea1b1',
+                                        '#8b5cf6',
+                                        '#f59e0b',
+                                        '#3b82f6',
+                                        '#10b981',
+                                        '#ec4899',
+                                        '#64748b'
+                                    ],
+                                    borderWidth: 2,
+                                    borderColor: '#ffffff'
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: {
+                                        position: 'bottom',
+                                        labels: {
+                                            boxWidth: 12,
+                                            font: {
+                                                size: 11
+                                            }
+                                        }
+                                    },
+                                    tooltip: {
+                                        callbacks: {
+                                            label: function(context) {
+                                                return context.label + ': ₹' + Number(context.raw).toLocaleString('en-IN');
+                                            }
                                         }
                                     }
-                                }
-                            },
-                            cutout: '68%'
-                        }
-                    });
+                                },
+                                cutout: '68%'
+                            }
+                        });
+                    }
                 }
             });
         </script>

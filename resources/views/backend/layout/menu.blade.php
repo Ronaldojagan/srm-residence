@@ -31,7 +31,7 @@
                     <a href="{{ url('/admin/rooms') }}" class="{{ request()->is('admin/rooms*') ? 'active' : '' }}">
                         <span class="res-nav-badge nav-badge-rooms"><i class="fas fa-door-open"></i></span>
                         <span class="ms-1"> Rooms </span>
-                        <span class="badge bg-primary-subtle text-primary ms-auto font-11">23</span>
+                        <span class="badge bg-primary-subtle text-primary ms-auto font-11">{{ \App\Models\Room::count() }}</span>
                     </a>
                 </li>
                 <li class="{{ request()->is('admin/billing*') ? 'menuitem-active' : '' }}">

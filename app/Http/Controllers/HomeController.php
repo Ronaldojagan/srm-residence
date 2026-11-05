@@ -40,11 +40,13 @@ class HomeController extends Controller
 
     private function getResidenceData()
     {
+        // Update any overdue bills automatically
+        \App\Models\Bill::where('status', 'unpaid')
+            ->whereDate('due_date', '<', Carbon::today())
+            ->update(['status' => 'overdue']);
+
         $totalUsers = User::count();
-        $tenantCount = Tenant::count();
-        if ($tenantCount === 0) {
-            $tenantCount = User::where('type', UserType::USER)->count();
-        }
+        $tenantCount = Tenant::where('status', 1)->count();
         $staffCount = User::where('type', '!=', UserType::USER)->count();
 
         $totalRooms = Room::count();
@@ -53,82 +55,186 @@ class HomeController extends Controller
         $maintenanceRooms = Room::where('occupancy_status', 'maintenance')->count();
         $occupancyRate = $totalRooms > 0 ? round(($occupiedRooms / $totalRooms) * 100, 1) : 0;
 
-        // Dynamic or default financials
-        $roomExpensesTotal = Expense::where('expense_type', 'room')->sum('amount');
-        $personalExpensesTotal = Expense::where('expense_type', 'personal')->sum('amount');
-        $monthlyExpenses = ($roomExpensesTotal + $personalExpensesTotal) > 0 
-            ? ($roomExpensesTotal + $personalExpensesTotal) 
-            : 162500;
+        $currentMonth = Carbon::now()->month;
+        $currentYear = Carbon::now()->year;
 
-        $monthlyTurnover = 485000;
-        $pendingDues = 42500;
-        $overdueTenantsCount = 4;
+        // Monthly Turnover (Collections this month)
+        $thisMonthTurnover = (float) \App\Models\BillPayment::whereMonth('payment_date', $currentMonth)
+            ->whereYear('payment_date', $currentYear)
+            ->sum('amount');
+        $totalTurnoverAllTime = (float) \App\Models\BillPayment::sum('amount');
+        $monthlyTurnover = $thisMonthTurnover > 0 ? $thisMonthTurnover : $totalTurnoverAllTime;
 
-        // Integrate real Bills & Payments if data is present
-        $realCollected = \App\Models\BillPayment::sum('amount');
-        if ($realCollected > 0) {
-            $monthlyTurnover = (int) $realCollected;
-        }
-        $realDue = \App\Models\Bill::whereIn('status', ['unpaid', 'partially_paid', 'overdue'])->sum('due_amount');
-        if ($realDue > 0) {
-            $pendingDues = (int) $realDue;
-        }
-        $realOverdue = \App\Models\Bill::where('status', 'overdue')->count();
-        if ($realOverdue > 0) {
-            $overdueTenantsCount = $realOverdue;
+        // Last month turnover for growth comparison
+        $lastMonth = Carbon::now()->subMonth();
+        $lastMonthTurnover = (float) \App\Models\BillPayment::whereMonth('payment_date', $lastMonth->month)
+            ->whereYear('payment_date', $lastMonth->year)
+            ->sum('amount');
+
+        if ($lastMonthTurnover > 0) {
+            $diff = (($thisMonthTurnover - $lastMonthTurnover) / $lastMonthTurnover) * 100;
+            $monthlyTurnoverGrowth = ($diff >= 0 ? '+' : '') . round($diff, 1) . '%';
+        } elseif ($thisMonthTurnover > 0) {
+            $monthlyTurnoverGrowth = '+100%';
+        } else {
+            $monthlyTurnoverGrowth = '0%';
         }
 
+        // Monthly Expenses
+        $thisMonthExpenses = (float) Expense::whereMonth('expense_date', $currentMonth)
+            ->whereYear('expense_date', $currentYear)
+            ->sum('amount');
+        $totalExpensesAllTime = (float) Expense::sum('amount');
+        $monthlyExpenses = $thisMonthExpenses > 0 ? $thisMonthExpenses : $totalExpensesAllTime;
+
+        $lastMonthExpenses = (float) Expense::whereMonth('expense_date', $lastMonth->month)
+            ->whereYear('expense_date', $lastMonth->year)
+            ->sum('amount');
+
+        if ($lastMonthExpenses > 0) {
+            $diffExp = (($thisMonthExpenses - $lastMonthExpenses) / $lastMonthExpenses) * 100;
+            $monthlyExpenseChange = ($diffExp >= 0 ? '+' : '') . round($diffExp, 1) . '%';
+        } elseif ($thisMonthExpenses > 0) {
+            $monthlyExpenseChange = '+100%';
+        } else {
+            $monthlyExpenseChange = '0%';
+        }
+
+        // Net Cashflow & Profit Margin
         $netProfit = $monthlyTurnover - $monthlyExpenses;
-        $profitMargin = $monthlyTurnover > 0 ? round(($netProfit / $monthlyTurnover) * 100, 1) : 0;
+        $profitMargin = $monthlyTurnover > 0 ? round(($netProfit / $monthlyTurnover) * 100, 1) . '%' : '0%';
 
-        // Fetch recent tenants with real rooms if available
-        $tenantsList = Tenant::with('room')->latest()->take(5)->get();
-        $recentTenants = [];
+        $pendingDues = (float) \App\Models\Bill::whereIn('status', ['unpaid', 'partially_paid', 'overdue'])->sum('due_amount');
+        $overdueTenantsCount = \App\Models\Bill::where('status', 'overdue')->count();
 
-        if ($tenantsList->count() > 0) {
-            foreach ($tenantsList as $t) {
-                $recentTenants[] = [
-                    'name' => $t->name,
-                    'email' => $t->email,
-                    'phone' => $t->phone,
-                    'room' => $t->room ? $t->room->room_number : 'Unassigned',
-                    'type' => $t->room ? $t->room->room_type : 'Standard',
-                    'rent' => $t->rent_amount ?? 10000,
-                    'status' => $t->status ? 'Active' : 'Inactive',
-                    'date' => $t->commence_date ? Carbon::parse($t->commence_date)->format('d M Y') : $t->created_at->format('d M Y'),
-                ];
+        // Rent Collection Pipeline Breakdown
+        $collectedOnTime = (float) \App\Models\BillPayment::sum('amount');
+        $paidTenants = \App\Models\Bill::where('status', 'paid')->distinct('tenant_id')->count('tenant_id');
+
+        $dueAmount = (float) \App\Models\Bill::whereIn('status', ['unpaid', 'partially_paid'])->sum('due_amount');
+        $dueTenants = \App\Models\Bill::whereIn('status', ['unpaid', 'partially_paid'])->distinct('tenant_id')->count('tenant_id');
+
+        $overdueAmount = (float) \App\Models\Bill::where('status', 'overdue')->sum('due_amount');
+        $overdueTenants = \App\Models\Bill::where('status', 'overdue')->distinct('tenant_id')->count('tenant_id');
+
+        $totalPipeline = $collectedOnTime + $dueAmount + $overdueAmount;
+        $collectedPct = $totalPipeline > 0 ? round(($collectedOnTime / $totalPipeline) * 100) : 0;
+        $duePct = $totalPipeline > 0 ? round(($dueAmount / $totalPipeline) * 100) : 0;
+        $overduePct = $totalPipeline > 0 ? round(($overdueAmount / $totalPipeline) * 100) : 0;
+
+        $rentPipeline = [
+            [
+                'label' => 'Collected On-Time',
+                'amount' => $collectedOnTime,
+                'count' => $paidTenants,
+                'pct' => $collectedPct,
+                'color' => 'success',
+                'icon' => 'check-circle'
+            ],
+            [
+                'label' => 'Grace Period / Due',
+                'amount' => $dueAmount,
+                'count' => $dueTenants,
+                'pct' => $duePct,
+                'color' => 'warning',
+                'icon' => 'hourglass-half'
+            ],
+            [
+                'label' => 'Overdue (> Due Date)',
+                'amount' => $overdueAmount,
+                'count' => $overdueTenants,
+                'pct' => $overduePct,
+                'color' => 'danger',
+                'icon' => 'exclamation-circle'
+            ],
+        ];
+
+        // Past 6 Months Financial Trends
+        $trendMonths = [];
+        $trendTurnover = [];
+        $trendExpenses = [];
+        $trendProfit = [];
+
+        for ($i = 5; $i >= 0; $i--) {
+            $dt = Carbon::now()->subMonths($i);
+            $trendMonths[] = $dt->format('M');
+            $m = $dt->month;
+            $y = $dt->year;
+
+            $t = (float) \App\Models\BillPayment::whereMonth('payment_date', $m)->whereYear('payment_date', $y)->sum('amount');
+            $e = (float) Expense::whereMonth('expense_date', $m)->whereYear('expense_date', $y)->sum('amount');
+            $p = $t - $e;
+
+            $trendTurnover[] = (int) $t;
+            $trendExpenses[] = (int) $e;
+            $trendProfit[] = (int) $p;
+        }
+
+        // Expense Category Breakdown
+        $expGrouped = Expense::select('category', DB::raw('SUM(amount) as total'))
+            ->groupBy('category')
+            ->orderByDesc('total')
+            ->get();
+
+        $expenseLabels = [];
+        $expenseAmounts = [];
+        if ($expGrouped->count() > 0) {
+            foreach ($expGrouped as $eg) {
+                $expenseLabels[] = $eg->category;
+                $expenseAmounts[] = (int) $eg->total;
             }
         } else {
-            $dbUsers = User::where('type', UserType::USER)->latest()->take(5)->get();
-            $rooms = ['A-101', 'A-204', 'B-108', 'C-312', 'D-405'];
-            $types = ['Single Deluxe', '2-Sharing AC', '3-Sharing Non-AC', 'Executive Suite', 'Single Deluxe'];
-            $rents = [12500, 8500, 6000, 18000, 12500];
-            $statuses = ['Paid', 'Paid', 'Due', 'Paid', 'Overdue'];
+            $expenseLabels = ['Maintenance & Repairs', 'Electricity & Water', 'WiFi & Amenities', 'Staff & Operational'];
+            $expenseAmounts = [0, 0, 0, 0];
+        }
 
-            $i = 0;
-            foreach ($dbUsers as $u) {
-                $recentTenants[] = [
-                    'name' => $u->name,
-                    'email' => $u->email,
-                    'phone' => $u->phone ?? '+91 98765 43210',
-                    'room' => $rooms[$i % count($rooms)],
-                    'type' => $types[$i % count($types)],
-                    'rent' => $rents[$i % count($rents)],
-                    'status' => $statuses[$i % count($statuses)],
-                    'date' => Carbon::now()->subDays($i * 3 + 1)->format('d M Y'),
+        $topExpenses = [];
+        $totalAllExpenses = array_sum($expenseAmounts);
+        if ($totalAllExpenses > 0 && $expGrouped->count() > 0) {
+            foreach ($expGrouped->take(2) as $eg) {
+                $pct = round(($eg->total / $totalAllExpenses) * 100, 1);
+                $topExpenses[] = [
+                    'category' => $eg->category,
+                    'amount' => (float) $eg->total,
+                    'pct' => $pct . '%',
                 ];
-                $i++;
             }
         }
 
-        if (empty($recentTenants)) {
-            $recentTenants = [
-                ['name' => 'Karthik Subramanian', 'email' => 'karthik@srm.edu', 'phone' => '+91 98401 23456', 'room' => 'A-204', 'type' => 'Single Deluxe', 'rent' => 12500, 'status' => 'Paid', 'date' => '02 Nov 2026'],
-                ['name' => 'Priya Ramanathan', 'email' => 'priya@srm.edu', 'phone' => '+91 97890 54321', 'room' => 'B-108', 'type' => '2-Sharing AC', 'rent' => 8500, 'status' => 'Paid', 'date' => '01 Nov 2026'],
-                ['name' => 'Aditya Sharma', 'email' => 'aditya@srm.edu', 'phone' => '+91 96543 87654', 'room' => 'C-312', 'type' => '3-Sharing Non-AC', 'rent' => 6000, 'status' => 'Due', 'date' => '29 Oct 2026'],
-                ['name' => 'Deepak Verma', 'email' => 'deepak@srm.edu', 'phone' => '+91 98123 45678', 'room' => 'A-101', 'type' => 'Single Deluxe', 'rent' => 12500, 'status' => 'Paid', 'date' => '27 Oct 2026'],
-                ['name' => 'Ananya Venkatesh', 'email' => 'ananya@srm.edu', 'phone' => '+91 98765 09876', 'room' => 'D-405', 'type' => 'Executive Suite', 'rent' => 18000, 'status' => 'Overdue', 'date' => '25 Oct 2026'],
+        // Recent Tenants Check-ins with real status
+        $tenantsList = Tenant::with(['room', 'bills'])->latest()->take(5)->get();
+        $recentTenants = [];
+        foreach ($tenantsList as $t) {
+            $hasOverdue = $t->bills ? $t->bills->where('status', 'overdue')->count() > 0 : false;
+            $hasDue = $t->bills ? $t->bills->whereIn('status', ['unpaid', 'partially_paid'])->count() > 0 : false;
+            $rentStatus = $hasOverdue ? 'Overdue' : ($hasDue ? 'Due' : 'Paid');
+
+            $recentTenants[] = [
+                'name' => $t->name,
+                'email' => $t->email,
+                'phone' => $t->phone ?? '-',
+                'room' => $t->room ? 'Room ' . $t->room->room_number : ($t->room_number ? 'Room ' . $t->room_number : 'Unassigned'),
+                'type' => $t->room ? $t->room->room_type : ($t->room_type ?? 'Standard'),
+                'rent' => (float) ($t->monthly_rent > 0 ? $t->monthly_rent : ($t->room ? $t->room->total_monthly : 5000)),
+                'status' => $rentStatus,
+                'date' => $t->commence_date ? Carbon::parse($t->commence_date)->format('d M Y') : $t->created_at->format('d M Y'),
             ];
+        }
+
+        // Rooms under maintenance
+        $maintRooms = Room::where('occupancy_status', 'maintenance')->get();
+        $maintenanceRequests = [];
+        if ($maintRooms->count() > 0) {
+            foreach ($maintRooms as $mr) {
+                $maintenanceRequests[] = [
+                    'room' => 'Room ' . $mr->room_number . ' (' . $mr->floor . ')',
+                    'category' => 'Room Maintenance',
+                    'issue' => 'Room undergoing servicing / deep cleaning',
+                    'priority' => 'Medium',
+                    'status' => 'In Progress',
+                    'time' => $mr->updated_at ? $mr->updated_at->diffForHumans() : 'Active',
+                ];
+            }
         }
 
         return [
@@ -141,36 +247,27 @@ class HomeController extends Controller
             'maintenanceRooms' => $maintenanceRooms,
             'occupancyRate' => $occupancyRate,
             'monthlyTurnover' => $monthlyTurnover,
-            'monthlyTurnoverGrowth' => '+12.5%',
+            'monthlyTurnoverGrowth' => $monthlyTurnoverGrowth,
             'monthlyExpenses' => $monthlyExpenses,
-            'monthlyExpenseChange' => '-3.2%',
+            'monthlyExpenseChange' => $monthlyExpenseChange,
             'netProfit' => $netProfit,
-            'profitMargin' => $profitMargin . '%',
+            'profitMargin' => $profitMargin,
             'pendingDues' => $pendingDues,
             'overdueTenants' => $overdueTenantsCount,
+            'rentPipeline' => $rentPipeline,
             'financialTrends' => [
-                'months' => ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'],
-                'turnover' => [410000, 435000, 450000, 462000, 475000, 485000],
-                'expenses' => [145000, 150000, 158000, 152000, 160000, (int)$monthlyExpenses],
-                'profit' => [265000, 285000, 292000, 310000, 315000, (int)$netProfit],
-            ],
-            'roomCategories' => [
-                'labels' => ['Single Deluxe', '2-Sharing AC', '3-Sharing Non-AC', 'Executive Suite'],
-                'total' => [30, 45, 35, 10],
-                'occupied' => [26, 38, 24, 6],
+                'months' => $trendMonths,
+                'turnover' => $trendTurnover,
+                'expenses' => $trendExpenses,
+                'profit' => $trendProfit,
             ],
             'expenseCategories' => [
-                'labels' => ['Electricity & Water', 'Staff & Security', 'Housekeeping & Maintenance', 'High-Speed Wi-Fi', 'Mess & Dining Essentials'],
-                'amounts' => [52000, 45000, 28500, 15000, 22000],
-                'percentages' => [32, 28, 17, 9, 14]
+                'labels' => $expenseLabels,
+                'amounts' => $expenseAmounts,
+                'top' => $topExpenses,
             ],
             'recentTenants' => $recentTenants,
-            'maintenanceRequests' => [
-                ['room' => 'Room A-204', 'category' => 'Air Conditioning', 'issue' => 'Water leakage from AC unit', 'priority' => 'High', 'status' => 'In Progress', 'time' => '2 hrs ago'],
-                ['room' => 'Room B-112', 'category' => 'Plumbing', 'issue' => 'Shower pressure low in bath', 'priority' => 'Medium', 'status' => 'Open', 'time' => '5 hrs ago'],
-                ['room' => 'Floor 3 Common', 'category' => 'Wi-Fi Network', 'issue' => 'Mesh router speed slow', 'priority' => 'Low', 'status' => 'Resolved', 'time' => '1 day ago'],
-                ['room' => 'Room C-302', 'category' => 'Electrical', 'issue' => 'Balcony light bulb flicker', 'priority' => 'Low', 'status' => 'Open', 'time' => '1 day ago'],
-            ]
+            'maintenanceRequests' => $maintenanceRequests,
         ];
     }
 

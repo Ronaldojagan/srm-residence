@@ -28,7 +28,7 @@
         <!-- Quick Action Shortcut: View Rooms -->
         <li class="d-none d-sm-inline-block me-2">
             <a href="{{ url('/admin/rooms') }}" class="btn btn-sm btn-outline-primary py-1 px-3 font-12" style="border-radius: 20px;">
-                <i class="fas fa-door-open me-1"></i> 23 Rooms
+                <i class="fas fa-door-open me-1"></i> {{ \App\Models\Room::count() }} Rooms
             </a>
         </li>
 
