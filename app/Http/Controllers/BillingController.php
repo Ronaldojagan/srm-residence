@@ -21,9 +21,9 @@ class BillingController extends Controller
     }
 
     /**
-     * Display Bills & Payments Dashboard
+     * Compute current overall & monthly billing statistics
      */
-    public function index(Request $request)
+    public function getStatsData()
     {
         // Update any overdue bills automatically
         Bill::where('status', 'unpaid')
@@ -31,7 +31,6 @@ class BillingController extends Controller
             ->update(['status' => 'overdue']);
 
         $currentMonth = Carbon::now()->format('F Y');
-        $currentMonthValue = Carbon::now()->format('Y-m');
 
         // Overall stats
         $totalBilled = (float) Bill::sum('amount');
@@ -45,18 +44,47 @@ class BillingController extends Controller
             ->whereYear('payment_date', Carbon::now()->year)
             ->sum('amount');
 
-        $activeTenants = Tenant::with(['room', 'bills'])->where('status', 1)->orderBy('name')->get();
-        $rooms = Room::orderBy('room_number')->get();
+        $collectionRate = $totalBilled > 0 ? round(($totalCollected / $totalBilled) * 100, 1) : 0;
 
-        $stats = [
+        return [
             'totalBilled' => $totalBilled,
+            'totalBilledFormatted' => '₹' . number_format($totalBilled),
             'totalCollected' => $totalCollected,
+            'totalCollectedFormatted' => '₹' . number_format($totalCollected),
             'totalDue' => $totalDue,
+            'totalDueFormatted' => '₹' . number_format($totalDue),
             'overdueCount' => $overdueCount,
             'thisMonthBilled' => $thisMonthBilled,
+            'thisMonthBilledFormatted' => '₹' . number_format($thisMonthBilled),
             'thisMonthCollected' => $thisMonthCollected,
-            'collectionRate' => $totalBilled > 0 ? round(($totalCollected / $totalBilled) * 100, 1) : 0,
+            'thisMonthCollectedFormatted' => '₹' . number_format($thisMonthCollected),
+            'collectionRate' => $collectionRate,
         ];
+    }
+
+    /**
+     * AJAX endpoint to return live statistics
+     */
+    public function getStats()
+    {
+        return response()->json([
+            'success' => true,
+            'stats' => $this->getStatsData(),
+        ]);
+    }
+
+    /**
+     * Display Bills & Payments Dashboard
+     */
+    public function index(Request $request)
+    {
+        $currentMonth = Carbon::now()->format('F Y');
+        $currentMonthValue = Carbon::now()->format('Y-m');
+
+        $stats = $this->getStatsData();
+
+        $activeTenants = Tenant::with(['room', 'bills'])->where('status', 1)->orderBy('name')->get();
+        $rooms = Room::orderBy('room_number')->get();
 
         return view('backend.billing.index', compact('stats', 'activeTenants', 'rooms', 'currentMonth', 'currentMonthValue'));
     }
@@ -359,6 +387,7 @@ class BillingController extends Controller
             'success' => true,
             'message' => 'Invoice ' . $bill->bill_number . ' generated successfully!',
             'bill' => $bill->fresh(['tenant', 'room']),
+            'stats' => $this->getStatsData(),
         ]);
     }
 
@@ -439,6 +468,7 @@ class BillingController extends Controller
             'message' => "Successfully generated {$created} rent invoice(s). " . ($skipped > 0 ? "({$skipped} tenant(s) already had invoices for this month)." : ""),
             'created_count' => $created,
             'skipped_count' => $skipped,
+            'stats' => $this->getStatsData(),
         ]);
     }
 
@@ -491,6 +521,7 @@ class BillingController extends Controller
             'message' => 'Payment of ₹' . number_format($payment->amount, 2) . ' recorded successfully!',
             'payment' => $payment->fresh(['bill', 'tenant']),
             'bill' => $bill->fresh(),
+            'stats' => $this->getStatsData(),
         ]);
     }
 
@@ -592,6 +623,7 @@ class BillingController extends Controller
             'success' => true,
             'message' => 'Invoice updated successfully!',
             'bill' => $bill->fresh(),
+            'stats' => $this->getStatsData(),
         ]);
     }
 
@@ -610,6 +642,7 @@ class BillingController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Invoice ' . $billNum . ' and related payments deleted successfully.',
+            'stats' => $this->getStatsData(),
         ]);
     }
 
@@ -631,6 +664,7 @@ class BillingController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Payment receipt ' . $payNum . ' deleted. Invoice balance updated.',
+            'stats' => $this->getStatsData(),
         ]);
     }
 }

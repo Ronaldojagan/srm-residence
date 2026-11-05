@@ -87,6 +87,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'user-access:' . Use
     // Bills & Payments
     Route::controller(BillingController::class)->prefix('billing')->name('billing.')->group(function () {
         Route::get('/', 'index')->name('index');
+        Route::get('/stats', 'getStats')->name('stats');
         Route::get('/bills-data', 'billsData')->name('bills.data');
         Route::get('/payments-data', 'paymentsData')->name('payments.data');
         Route::post('/bills', 'storeBill')->name('bills.store');

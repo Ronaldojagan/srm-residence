@@ -129,7 +129,7 @@
                     <span class="badge bg-primary-subtle text-primary font-12"><i class="fas fa-file-invoice"></i></span>
                 </div>
                 <h3 class="fw-bold my-1 text-dark" id="statTotalBilled">₹{{ number_format($stats['totalBilled']) }}</h3>
-                <small class="text-muted">This Month: ₹{{ number_format($stats['thisMonthBilled']) }}</small>
+                <small class="text-muted">This Month: <span id="statThisMonthBilled">₹{{ number_format($stats['thisMonthBilled']) }}</span></small>
             </div>
         </div>
 
@@ -140,7 +140,7 @@
                     <span class="badge bg-success-subtle text-success font-12"><i class="fas fa-check-double"></i></span>
                 </div>
                 <h3 class="fw-bold my-1 text-success" id="statTotalCollected">₹{{ number_format($stats['totalCollected']) }}</h3>
-                <small class="text-muted">Rate: <span class="fw-bold text-success">{{ $stats['collectionRate'] }}%</span></small>
+                <small class="text-muted">Rate: <span class="fw-bold text-success" id="statCollectionRate">{{ $stats['collectionRate'] }}%</span></small>
             </div>
         </div>
 
@@ -929,6 +929,56 @@
                 });
 
                 // =========================================================================
+                // 0. LIVE STATISTIC CARDS UPDATE
+                // =========================================================================
+                function updateStatsCards(stats) {
+                    if (!stats) return;
+                    if (stats.totalBilledFormatted !== undefined) {
+                        $('#statTotalBilled').text(stats.totalBilledFormatted);
+                    } else if (stats.totalBilled !== undefined) {
+                        $('#statTotalBilled').text('₹' + Math.round(stats.totalBilled).toLocaleString('en-IN'));
+                    }
+
+                    if (stats.thisMonthBilledFormatted !== undefined) {
+                        $('#statThisMonthBilled').text(stats.thisMonthBilledFormatted);
+                    } else if (stats.thisMonthBilled !== undefined) {
+                        $('#statThisMonthBilled').text('₹' + Math.round(stats.thisMonthBilled).toLocaleString('en-IN'));
+                    }
+
+                    if (stats.totalCollectedFormatted !== undefined) {
+                        $('#statTotalCollected').text(stats.totalCollectedFormatted);
+                    } else if (stats.totalCollected !== undefined) {
+                        $('#statTotalCollected').text('₹' + Math.round(stats.totalCollected).toLocaleString('en-IN'));
+                    }
+
+                    if (stats.collectionRate !== undefined) {
+                        $('#statCollectionRate').text(stats.collectionRate + '%');
+                    }
+
+                    if (stats.totalDueFormatted !== undefined) {
+                        $('#statTotalDue').text(stats.totalDueFormatted);
+                    } else if (stats.totalDue !== undefined) {
+                        $('#statTotalDue').text('₹' + Math.round(stats.totalDue).toLocaleString('en-IN'));
+                    }
+
+                    if (stats.overdueCount !== undefined) {
+                        $('#statOverdueCount').text(stats.overdueCount);
+                    }
+                }
+
+                function reloadStats() {
+                    $.ajax({
+                        url: "{{ url('/admin/billing/stats') }}",
+                        type: "GET",
+                        success: function(res) {
+                            if (res.success && res.stats) {
+                                updateStatsCards(res.stats);
+                            }
+                        }
+                    });
+                }
+
+                // =========================================================================
                 // 1. BILLS DATATABLE
                 // =========================================================================
                 var billsTable = $('#billsTable').DataTable({
@@ -1334,6 +1384,11 @@
                                 $('#immediate_payment_fields').addClass('d-none');
                                 billsTable.ajax.reload(null, false);
                                 paymentsTable.ajax.reload(null, false);
+                                if (res.stats) {
+                                    updateStatsCards(res.stats);
+                                } else {
+                                    reloadStats();
+                                }
                                 Toast.fire({ icon: 'success', title: res.message });
                             }
                         },
@@ -1379,6 +1434,11 @@
                             if (res.success) {
                                 $('#quickMonthlyModal').modal('hide');
                                 billsTable.ajax.reload(null, false);
+                                if (res.stats) {
+                                    updateStatsCards(res.stats);
+                                } else {
+                                    reloadStats();
+                                }
                                 Swal.fire({
                                     icon: 'success',
                                     title: 'Rent Bills Generated!',
@@ -1444,6 +1504,11 @@
                                 $('#recordPaymentForm')[0].reset();
                                 billsTable.ajax.reload(null, false);
                                 paymentsTable.ajax.reload(null, false);
+                                if (res.stats) {
+                                    updateStatsCards(res.stats);
+                                } else {
+                                    reloadStats();
+                                }
                                 Toast.fire({ icon: 'success', title: res.message });
                             }
                         },
@@ -1641,6 +1706,11 @@
                             if (res.success) {
                                 $('#editBillModal').modal('hide');
                                 billsTable.ajax.reload(null, false);
+                                if (res.stats) {
+                                    updateStatsCards(res.stats);
+                                } else {
+                                    reloadStats();
+                                }
                                 Toast.fire({ icon: 'success', title: res.message });
                             }
                         },
@@ -1685,6 +1755,11 @@
                                     if (res.success) {
                                         billsTable.ajax.reload(null, false);
                                         paymentsTable.ajax.reload(null, false);
+                                        if (res.stats) {
+                                            updateStatsCards(res.stats);
+                                        } else {
+                                            reloadStats();
+                                        }
                                         Toast.fire({ icon: 'success', title: res.message });
                                     }
                                 }
@@ -1720,6 +1795,11 @@
                                     if (res.success) {
                                         billsTable.ajax.reload(null, false);
                                         paymentsTable.ajax.reload(null, false);
+                                        if (res.stats) {
+                                            updateStatsCards(res.stats);
+                                        } else {
+                                            reloadStats();
+                                        }
                                         Toast.fire({ icon: 'success', title: res.message });
                                     }
                                 }
