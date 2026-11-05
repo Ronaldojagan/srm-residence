@@ -179,20 +179,28 @@
                             </div>
 
                             <!-- Additional Charges based on room -->
-                            <div class="col-md-4">
-                                <label class="form-label fw-semibold">EB Rate (₹ per Unit)</label>
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold">EB Rate (₹/Unit)</label>
                                 <div class="input-group">
                                     <span class="input-group-text fw-bold">₹</span>
                                     <input type="number" step="0.01" name="eb_unit_rate" id="add_eb_unit_rate" class="form-control" placeholder="10.00" value="10.00">
                                 </div>
-                                <small class="text-muted font-11">Cost per electricity unit (kWh)</small>
+                                <small class="text-muted font-11">Cost per unit (kWh)</small>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold">Starting EB Units</label>
+                                <div class="input-group">
+                                    <input type="number" step="0.01" name="eb_start_reading" id="add_eb_start_reading" class="form-control" placeholder="0.00" value="0.00" min="0">
+                                    <span class="input-group-text small">Units</span>
+                                </div>
+                                <small class="text-muted font-11">Initial meter reading</small>
+                            </div>
+                            <div class="col-md-3">
                                 <label class="form-label fw-semibold">Maintenance Charges (₹)</label>
                                 <input type="number" step="0.01" name="maintenance_charges" id="add_maintenance_charges" class="form-control charge-input" placeholder="0.00" value="0.00">
                                 <small class="text-muted font-11">Upkeep & housekeeping</small>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label class="form-label fw-semibold">Other Charges (₹)</label>
                                 <input type="number" step="0.01" name="other_charges" id="add_other_charges" class="form-control charge-input" placeholder="0.00" value="0.00">
                                 <small class="text-muted font-11">Wi-Fi / water / services</small>
@@ -309,20 +317,28 @@
                             </div>
 
                             <!-- Additional Charges based on room -->
-                            <div class="col-md-4">
-                                <label class="form-label fw-semibold">EB Rate (₹ per Unit)</label>
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold">EB Rate (₹/Unit)</label>
                                 <div class="input-group">
                                     <span class="input-group-text fw-bold">₹</span>
                                     <input type="number" step="0.01" id="edit_eb_unit_rate" name="eb_unit_rate" class="form-control" placeholder="10.00">
                                 </div>
-                                <small class="text-muted font-11">Cost per electricity unit (kWh)</small>
+                                <small class="text-muted font-11">Cost per unit (kWh)</small>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold">Starting EB Units</label>
+                                <div class="input-group">
+                                    <input type="number" step="0.01" id="edit_eb_start_reading" name="eb_start_reading" class="form-control" placeholder="0.00" min="0">
+                                    <span class="input-group-text small">Units</span>
+                                </div>
+                                <small class="text-muted font-11">Initial meter reading</small>
+                            </div>
+                            <div class="col-md-3">
                                 <label class="form-label fw-semibold">Maintenance Charges (₹)</label>
                                 <input type="number" step="0.01" id="edit_maintenance_charges" name="maintenance_charges" class="form-control edit-charge-input" placeholder="0.00">
                                 <small class="text-muted font-11">Upkeep & housekeeping</small>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label class="form-label fw-semibold">Other Charges (₹)</label>
                                 <input type="number" step="0.01" id="edit_other_charges" name="other_charges" class="form-control edit-charge-input" placeholder="0.00">
                                 <small class="text-muted font-11">Wi-Fi / water / services</small>
@@ -544,6 +560,7 @@
                                 }
                                 $('#edit_monthly_rent').val(tenant.monthly_rent);
                                 $('#edit_eb_unit_rate').val(tenant.eb_unit_rate !== null && tenant.eb_unit_rate !== undefined ? tenant.eb_unit_rate : '10.00');
+                                $('#edit_eb_start_reading').val(tenant.eb_start_reading !== null && tenant.eb_start_reading !== undefined ? tenant.eb_start_reading : '0.00');
                                 $('#edit_maintenance_charges').val(tenant.maintenance_charges || '0.00');
                                 $('#edit_other_charges').val(tenant.other_charges || '0.00');
                                 $('#edit_security_deposit').val(tenant.security_deposit);

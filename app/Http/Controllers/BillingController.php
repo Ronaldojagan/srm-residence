@@ -45,7 +45,7 @@ class BillingController extends Controller
             ->whereYear('payment_date', Carbon::now()->year)
             ->sum('amount');
 
-        $activeTenants = Tenant::with('room')->where('status', 1)->orderBy('name')->get();
+        $activeTenants = Tenant::with(['room', 'bills'])->where('status', 1)->orderBy('name')->get();
         $rooms = Room::orderBy('room_number')->get();
 
         $stats = [
@@ -278,6 +278,12 @@ class BillingController extends Controller
             'bill_date' => 'required|date',
             'due_date' => 'required|date|after_or_equal:bill_date',
             'amount' => 'required|numeric|min:1',
+            'eb_previous_reading' => 'nullable|numeric|min:0',
+            'eb_current_reading' => 'nullable|numeric|min:0',
+            'eb_consumed_units' => 'nullable|numeric|min:0',
+            'eb_unit_rate' => 'nullable|numeric|min:0',
+            'eb_amount' => 'nullable|numeric|min:0',
+            'items' => 'nullable',
             'notes' => 'nullable|string|max:1000',
             'immediate_payment' => 'nullable|boolean',
             'payment_method' => 'nullable|string|max:50',
@@ -286,6 +292,28 @@ class BillingController extends Controller
 
         $tenant = Tenant::findOrFail($validated['tenant_id']);
         $roomId = $tenant->room_id;
+
+        $items = $request->input('items');
+        if (is_string($items)) {
+            $decoded = json_decode($items, true);
+            if (is_array($decoded)) {
+                $items = $decoded;
+            }
+        }
+
+        $cleanItems = [];
+        if (is_array($items)) {
+            foreach ($items as $item) {
+                if (!empty($item['title'])) {
+                    $cleanItems[] = [
+                        'title' => trim($item['title']),
+                        'type' => $item['type'] ?? 'General',
+                        'amount' => isset($item['amount']) ? (float) $item['amount'] : 0.00,
+                        'details' => $item['details'] ?? null,
+                    ];
+                }
+            }
+        }
 
         $bill = Bill::create([
             'bill_number' => Bill::generateBillNumber(),
@@ -296,6 +324,12 @@ class BillingController extends Controller
             'bill_date' => $validated['bill_date'],
             'due_date' => $validated['due_date'],
             'amount' => $validated['amount'],
+            'eb_previous_reading' => $request->filled('eb_previous_reading') ? (float) $request->input('eb_previous_reading') : null,
+            'eb_current_reading' => $request->filled('eb_current_reading') ? (float) $request->input('eb_current_reading') : null,
+            'eb_consumed_units' => $request->filled('eb_consumed_units') ? (float) $request->input('eb_consumed_units') : null,
+            'eb_unit_rate' => $request->filled('eb_unit_rate') ? (float) $request->input('eb_unit_rate') : null,
+            'eb_amount' => $request->filled('eb_amount') ? (float) $request->input('eb_amount') : null,
+            'items' => !empty($cleanItems) ? $cleanItems : null,
             'paid_amount' => 0.00,
             'due_amount' => $validated['amount'],
             'status' => Carbon::parse($validated['due_date'])->isPast() ? 'overdue' : 'unpaid',
@@ -370,6 +404,16 @@ class BillingController extends Controller
                 $rent = 5000.00; // Default fallback
             }
 
+            $items = [
+                ['title' => 'Room Monthly Rent', 'type' => 'Rent', 'amount' => (float) $t->monthly_rent],
+            ];
+            if ((float) $t->maintenance_charges > 0) {
+                $items[] = ['title' => 'Maintenance Charges', 'type' => 'Maintenance', 'amount' => (float) $t->maintenance_charges];
+            }
+            if ((float) $t->other_charges > 0) {
+                $items[] = ['title' => 'Other Charges', 'type' => 'Other', 'amount' => (float) $t->other_charges];
+            }
+
             Bill::create([
                 'bill_number' => Bill::generateBillNumber(),
                 'tenant_id' => $t->id,
@@ -379,6 +423,7 @@ class BillingController extends Controller
                 'bill_date' => $validated['bill_date'],
                 'due_date' => $validated['due_date'],
                 'amount' => $rent,
+                'items' => $items,
                 'paid_amount' => 0.00,
                 'due_amount' => $rent,
                 'status' => Carbon::parse($validated['due_date'])->isPast() ? 'overdue' : 'unpaid',
@@ -465,6 +510,38 @@ class BillingController extends Controller
                 'amount' => number_format($bill->amount, 2),
                 'paid_amount' => number_format($bill->paid_amount, 2),
                 'due_amount' => number_format($bill->due_amount, 2),
+                'eb_previous_reading' => $bill->eb_previous_reading !== null ? number_format($bill->eb_previous_reading, 2) : null,
+                'eb_current_reading' => $bill->eb_current_reading !== null ? number_format($bill->eb_current_reading, 2) : null,
+                'eb_consumed_units' => $bill->eb_consumed_units !== null ? number_format($bill->eb_consumed_units, 2) : null,
+                'eb_unit_rate' => $bill->eb_unit_rate !== null ? number_format($bill->eb_unit_rate, 2) : null,
+                'eb_amount' => $bill->eb_amount !== null ? number_format($bill->eb_amount, 2) : null,
+            ]
+        ]);
+    }
+
+    /**
+     * Get Tenant Billing Profile & Latest Reading via AJAX
+     */
+    public function getTenantBillingInfo($tenantId)
+    {
+        $tenant = Tenant::with('room')->findOrFail($tenantId);
+
+        return response()->json([
+            'success' => true,
+            'tenant' => [
+                'id' => $tenant->id,
+                'name' => $tenant->name,
+                'phone' => $tenant->phone,
+                'room_id' => $tenant->room_id,
+                'room_number' => $tenant->room ? $tenant->room->room_number : $tenant->room_number,
+                'room_type' => $tenant->room_type,
+                'monthly_rent' => (float) $tenant->monthly_rent,
+                'maintenance_charges' => (float) $tenant->maintenance_charges,
+                'other_charges' => (float) $tenant->other_charges,
+                'total_monthly_due' => (float) $tenant->total_monthly_due,
+                'eb_unit_rate' => (float) ($tenant->eb_unit_rate ?? 10.00),
+                'eb_start_reading' => (float) ($tenant->eb_start_reading ?? 0.00),
+                'eb_previous_reading' => (float) $tenant->last_eb_reading,
             ]
         ]);
     }

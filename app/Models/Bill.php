@@ -20,19 +20,31 @@ class Bill extends Model
         'bill_date',
         'due_date',
         'amount',
+        'eb_previous_reading',
+        'eb_current_reading',
+        'eb_consumed_units',
+        'eb_unit_rate',
+        'eb_amount',
         'paid_amount',
         'due_amount',
         'status',
         'notes',
+        'items',
         'created_by',
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
+        'eb_previous_reading' => 'decimal:2',
+        'eb_current_reading' => 'decimal:2',
+        'eb_consumed_units' => 'decimal:2',
+        'eb_unit_rate' => 'decimal:2',
+        'eb_amount' => 'decimal:2',
         'paid_amount' => 'decimal:2',
         'due_amount' => 'decimal:2',
         'bill_date' => 'date',
         'due_date' => 'date',
+        'items' => 'array',
     ];
 
     public function tenant()

@@ -90,6 +90,7 @@ class TenantController extends Controller
             'room_type' => 'required|string|max:100',
             'monthly_rent' => 'required|numeric|min:0',
             'eb_unit_rate' => 'nullable|numeric|min:0',
+            'eb_start_reading' => 'nullable|numeric|min:0',
             'maintenance_charges' => 'nullable|numeric|min:0',
             'other_charges' => 'nullable|numeric|min:0',
             'security_deposit' => 'nullable|numeric|min:0',
@@ -101,6 +102,7 @@ class TenantController extends Controller
         $room = Room::findOrFail($validated['room_id']);
         $validated['room_number'] = $room->room_number;
         $validated['eb_unit_rate'] = $validated['eb_unit_rate'] ?? 10.00;
+        $validated['eb_start_reading'] = $validated['eb_start_reading'] ?? 0.00;
         $validated['maintenance_charges'] = $validated['maintenance_charges'] ?? 0;
         $validated['other_charges'] = $validated['other_charges'] ?? 0;
         $validated['security_deposit'] = $validated['security_deposit'] ?? 0;
@@ -141,6 +143,7 @@ class TenantController extends Controller
             'room_type' => 'required|string|max:100',
             'monthly_rent' => 'required|numeric|min:0',
             'eb_unit_rate' => 'nullable|numeric|min:0',
+            'eb_start_reading' => 'nullable|numeric|min:0',
             'maintenance_charges' => 'nullable|numeric|min:0',
             'other_charges' => 'nullable|numeric|min:0',
             'security_deposit' => 'nullable|numeric|min:0',
@@ -155,6 +158,7 @@ class TenantController extends Controller
         $newRoom = Room::findOrFail($newRoomId);
         $validated['room_number'] = $newRoom->room_number;
         $validated['eb_unit_rate'] = $validated['eb_unit_rate'] ?? 10.00;
+        $validated['eb_start_reading'] = $validated['eb_start_reading'] ?? 0.00;
         $validated['maintenance_charges'] = $validated['maintenance_charges'] ?? 0;
         $validated['other_charges'] = $validated['other_charges'] ?? 0;
         $validated['security_deposit'] = $validated['security_deposit'] ?? 0;
