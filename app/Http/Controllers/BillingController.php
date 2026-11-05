@@ -83,7 +83,10 @@ class BillingController extends Controller
 
         $stats = $this->getStatsData();
 
-        $activeTenants = Tenant::with(['room', 'bills'])->where('status', 1)->orderBy('name')->get();
+        $activeTenants = Tenant::with(['room', 'bills'])
+            ->where('status', 1)
+            ->orderByRaw('CAST(room_number AS UNSIGNED) ASC, room_number ASC')
+            ->get();
         $rooms = Room::orderBy('room_number')->get();
 
         return view('backend.billing.index', compact('stats', 'activeTenants', 'rooms', 'currentMonth', 'currentMonthValue'));
@@ -402,7 +405,10 @@ class BillingController extends Controller
             'due_date' => 'required|date|after_or_equal:bill_date',
         ]);
 
-        $tenants = Tenant::with('room')->where('status', 1)->get();
+        $tenants = Tenant::with('room')
+            ->where('status', 1)
+            ->orderByRaw('CAST(room_number AS UNSIGNED) ASC, room_number ASC')
+            ->get();
         if ($tenants->isEmpty()) {
             return response()->json([
                 'success' => false,

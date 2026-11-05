@@ -17,9 +17,12 @@ class TenantController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $data = Tenant::with('room')->latest();
+            $data = Tenant::with('room')->orderByRaw('CAST(room_number AS UNSIGNED) ASC, room_number ASC');
 
             return DataTables::of($data)
+                ->orderColumn('room_number', function ($query, $order) {
+                    $query->orderByRaw("CAST(room_number AS UNSIGNED) {$order}, room_number {$order}");
+                })
                 ->addIndexColumn()
                 ->addColumn('name_email', function ($row) {
                     return '<div>

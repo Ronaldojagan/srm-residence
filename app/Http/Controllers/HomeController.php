@@ -201,8 +201,11 @@ class HomeController extends Controller
             }
         }
 
-        // Recent Tenants Check-ins with real status
-        $tenantsList = Tenant::with(['room', 'bills'])->latest()->take(5)->get();
+        // Recent Tenants Check-ins with real status ordered by room number
+        $tenantsList = Tenant::with(['room', 'bills'])
+            ->orderByRaw('CAST(room_number AS UNSIGNED) ASC, room_number ASC')
+            ->take(5)
+            ->get();
         $recentTenants = [];
         foreach ($tenantsList as $t) {
             $hasOverdue = $t->bills ? $t->bills->where('status', 'overdue')->count() > 0 : false;
