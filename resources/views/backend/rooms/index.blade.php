@@ -200,19 +200,36 @@
                                 <input type="number" step="0.01" name="security_deposit" class="form-control" placeholder="10000" value="10000">
                             </div>
 
+                            <div class="col-12">
+                                <div class="d-flex align-items-center gap-3 p-2 bg-light rounded border">
+                                    <span class="fw-bold small text-muted text-uppercase font-11">Rent Structure:</span>
+                                    <div class="form-check form-check-inline mb-0">
+                                        <input class="form-check-input" type="radio" name="add_room_rent_type" id="add_room_rent_type_custom" value="custom" checked>
+                                        <label class="form-check-label fw-semibold font-12" for="add_room_rent_type_custom">Split Charges</label>
+                                    </div>
+                                    <div class="form-check form-check-inline mb-0">
+                                        <input class="form-check-input" type="radio" name="add_room_rent_type" id="add_room_rent_type_fixed" value="fixed">
+                                        <label class="form-check-label fw-bold text-success font-12" for="add_room_rent_type_fixed">
+                                            <i class="fas fa-check-circle me-1"></i> Fixed Rent
+                                        </label>
+                                    </div>
+                                    <small class="text-muted ms-auto d-none d-sm-inline font-11">(Fixed Rent zeroes Maintenance & Other charges)</small>
+                                </div>
+                            </div>
+
                             <div class="col-md-4">
                                 <label class="form-label fw-bold">EB Rate (₹/Unit)</label>
-                                <input type="number" step="0.01" name="eb_unit_rate" class="form-control" placeholder="10.00" value="10.00">
+                                <input type="number" step="0.01" name="eb_unit_rate" id="add_eb_unit_rate" class="form-control" placeholder="10.00" value="10.00">
                                 <small class="text-muted">Electricity cost per unit (kWh)</small>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label fw-bold">Maintenance Charges (₹)</label>
-                                <input type="number" step="0.01" name="maintenance_charges" class="form-control" placeholder="0.00" value="0.00">
+                                <input type="number" step="0.01" name="maintenance_charges" id="add_maintenance_charges" class="form-control" placeholder="0.00" value="0.00">
                                 <small class="text-muted">Room upkeep / cleaning</small>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label fw-bold">Other Charges (₹)</label>
-                                <input type="number" step="0.01" name="other_charges" class="form-control" placeholder="0.00" value="0.00">
+                                <input type="number" step="0.01" name="other_charges" id="add_other_charges" class="form-control" placeholder="0.00" value="0.00">
                                 <small class="text-muted">Wi-Fi, water, or miscellaneous</small>
                             </div>
 
@@ -300,6 +317,23 @@
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Security Deposit (₹)</label>
                                 <input type="number" step="0.01" id="edit_security_deposit" name="security_deposit" class="form-control">
+                            </div>
+
+                            <div class="col-12">
+                                <div class="d-flex align-items-center gap-3 p-2 bg-light rounded border">
+                                    <span class="fw-bold small text-muted text-uppercase font-11">Rent Structure:</span>
+                                    <div class="form-check form-check-inline mb-0">
+                                        <input class="form-check-input" type="radio" name="edit_room_rent_type" id="edit_room_rent_type_custom" value="custom" checked>
+                                        <label class="form-check-label fw-semibold font-12" for="edit_room_rent_type_custom">Split Charges</label>
+                                    </div>
+                                    <div class="form-check form-check-inline mb-0">
+                                        <input class="form-check-input" type="radio" name="edit_room_rent_type" id="edit_room_rent_type_fixed" value="fixed">
+                                        <label class="form-check-label fw-bold text-success font-12" for="edit_room_rent_type_fixed">
+                                            <i class="fas fa-check-circle me-1"></i> Fixed Rent
+                                        </label>
+                                    </div>
+                                    <small class="text-muted ms-auto d-none d-sm-inline font-11">(Fixed Rent zeroes Maintenance & Other charges)</small>
+                                </div>
                             </div>
 
                             <div class="col-md-4">
@@ -416,6 +450,34 @@
                     table.ajax.reload();
                 });
 
+                // Toggle Fixed Rent vs Split Charges in Create Room Modal
+                $(document).on('change', 'input[name="add_room_rent_type"]', function() {
+                    if ($('#add_room_rent_type_fixed').is(':checked')) {
+                        $('#add_maintenance_charges').val('0.00').prop('readonly', true).addClass('bg-light');
+                        $('#add_other_charges').val('0.00').prop('readonly', true).addClass('bg-light');
+                    } else {
+                        $('#add_maintenance_charges').prop('readonly', false).removeClass('bg-light');
+                        $('#add_other_charges').prop('readonly', false).removeClass('bg-light');
+                    }
+                });
+
+                // Toggle Fixed Rent vs Split Charges in Edit Room Modal
+                $(document).on('change', 'input[name="edit_room_rent_type"]', function() {
+                    if ($('#edit_room_rent_type_fixed').is(':checked')) {
+                        $('#edit_maintenance_charges').val('0.00').prop('readonly', true).addClass('bg-light');
+                        $('#edit_other_charges').val('0.00').prop('readonly', true).addClass('bg-light');
+                    } else {
+                        $('#edit_maintenance_charges').prop('readonly', false).removeClass('bg-light');
+                        $('#edit_other_charges').prop('readonly', false).removeClass('bg-light');
+                    }
+                });
+
+                $('#addRoomModal').on('show.bs.modal', function() {
+                    $('#add_room_rent_type_custom').prop('checked', true);
+                    $('#add_maintenance_charges').prop('readonly', false).removeClass('bg-light');
+                    $('#add_other_charges').prop('readonly', false).removeClass('bg-light');
+                });
+
                 // 1. CREATE ROOM VIA AJAX
                 $('#addRoomForm').on('submit', function(e) {
                     e.preventDefault();
@@ -482,8 +544,20 @@
                                 $('#edit_capacity').val(room.capacity);
                                 $('#edit_monthly_rent').val(room.monthly_rent);
                                 $('#edit_eb_unit_rate').val(room.eb_unit_rate || '10.00');
+                                var maint = parseFloat(room.maintenance_charges) || 0;
+                                var other = parseFloat(room.other_charges) || 0;
                                 $('#edit_maintenance_charges').val(room.maintenance_charges || '0.00');
                                 $('#edit_other_charges').val(room.other_charges || '0.00');
+
+                                if (maint === 0 && other === 0) {
+                                    $('#edit_room_rent_type_fixed').prop('checked', true);
+                                    $('#edit_maintenance_charges').prop('readonly', true).addClass('bg-light');
+                                    $('#edit_other_charges').prop('readonly', true).addClass('bg-light');
+                                } else {
+                                    $('#edit_room_rent_type_custom').prop('checked', true);
+                                    $('#edit_maintenance_charges').prop('readonly', false).removeClass('bg-light');
+                                    $('#edit_other_charges').prop('readonly', false).removeClass('bg-light');
+                                }
                                 $('#edit_security_deposit').val(room.security_deposit);
                                 $('#edit_occupancy_status').val(room.occupancy_status);
                                 $('#edit_amenities').val(room.amenities);
