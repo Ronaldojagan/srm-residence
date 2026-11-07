@@ -1,13 +1,18 @@
 <div class="navbar-custom">
-    <!-- Left Logo Brand Box (Starts at left: 0 with zero gap) -->
+    <!-- Left: Hamburger Toggle for Mobile & Tablet -->
+    <button class="button-menu-mobile waves-effect waves-light d-inline-block d-lg-none res-mobile-menu-btn" type="button" aria-label="Toggle navigation">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Left Logo Brand Box -->
     <div class="logo-box">
         <a href="{{ url('/admin/dashboard') }}" class="res-logo-brand">
             <div class="res-logo-icon">
                 <i class="fas fa-hotel"></i>
             </div>
-            <div class="res-logo-details d-none d-lg-flex">
+            <div class="res-logo-details d-none d-sm-flex">
                 <span class="res-logo-title">SRM RESIDENCE</span>
-                <span class="res-logo-subtitle">Student & Living Hub</span>
+                <span class="res-logo-subtitle d-none d-lg-block">Student & Living Hub</span>
             </div>
         </a>
     </div>
@@ -25,6 +30,13 @@
 
     <!-- Right Controls: Profile & Quick Links (Floated Right in UBold architecture) -->
     <ul class="list-unstyled topnav-menu float-end mb-0 d-flex align-items-center">
+        <!-- Download Android APK -->
+        <li class="me-2">
+            <a href="{{ url('download/srm-residence.apk') }}" download class="btn btn-sm btn-outline-success py-1 px-2 font-12" style="border-radius: 20px;" title="Download Android App">
+                <i class="fab fa-android me-1"></i> <span class="d-none d-md-inline">Android App</span>
+            </a>
+        </li>
+
         <!-- Quick Action Shortcut: View Rooms -->
         <li class="d-none d-sm-inline-block me-2">
             <a href="{{ url('/admin/rooms') }}" class="btn btn-sm btn-outline-primary py-1 px-3 font-12" style="border-radius: 20px;">

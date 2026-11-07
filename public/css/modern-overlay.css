@@ -1601,37 +1601,118 @@ body[data-leftbar-size="condensed"] .res-nav-badge {
 }
 
 /* ==========================================================================
-   RESPONSIVE MOBILE OVERRIDES
+   RESPONSIVE MOBILE OVERRIDES & MODERN TOUCH DRAWER
    ========================================================================== */
+.res-mobile-menu-btn {
+  background: transparent !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  color: var(--res-sidebar-bg) !important;
+  font-size: 18px !important;
+  width: 42px !important;
+  height: 42px !important;
+  border-radius: 10px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin-left: 12px !important;
+  margin-right: 6px !important;
+  transition: all 0.2s ease !important;
+  cursor: pointer !important;
+}
+
+.res-mobile-menu-btn:hover, .res-mobile-menu-btn:focus {
+  background: rgba(14, 161, 177, 0.08) !important;
+  color: #0ea1b1 !important;
+  border-color: #0ea1b1 !important;
+}
+
 @media (max-width: 991.98px) {
-  .logo-box, .navbar-custom .logo-dark {
-    width: 65px !important;
-    padding: 0 !important;
-    justify-content: center !important;
+  .navbar-custom {
+    padding: 0 10px !important;
+    display: flex !important;
+    align-items: center !important;
   }
 
-  .res-logo-details {
-    display: none !important;
+  .logo-box, .navbar-custom .logo-dark {
+    width: auto !important;
+    min-width: 50px !important;
+    padding: 0 8px !important;
+    border: none !important;
+    background: transparent !important;
+  }
+
+  .res-logo-brand .res-logo-icon {
+    width: 36px !important;
+    height: 36px !important;
+    font-size: 16px !important;
+  }
+
+  .res-logo-details .res-logo-title {
+    font-size: 14px !important;
+    color: var(--res-sidebar-bg) !important;
+  }
+
+  /* Slide-in Mobile Sidebar Drawer */
+  .left-side-menu {
+    position: fixed !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    width: 280px !important;
+    max-width: 85vw !important;
+    z-index: 1050 !important;
+    transform: translateX(-100%) !important;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.3s ease !important;
+    display: block !important;
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.45) !important;
+    visibility: hidden !important;
+  }
+
+  body.sidebar-enable .left-side-menu {
+    transform: translateX(0) !important;
+    visibility: visible !important;
+  }
+
+  /* Mobile Backdrop Overlay */
+  .res-mobile-backdrop {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 1040;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  body.sidebar-enable .res-mobile-backdrop {
+    display: block;
+    opacity: 1;
   }
 
   .content-page {
     margin-left: 0 !important;
     margin-top: 70px !important;
-    padding: 16px 14px 70px 14px !important;
+    padding: 14px 10px 70px 10px !important;
   }
 
   .res-footer, .footer {
     left: 0 !important;
-    padding: 12px 16px !important;
+    padding: 10px 14px !important;
+    text-align: center !important;
   }
 
-  .res-topbar-pill {
+  .res-topbar-pill, .res-topbar-center {
     display: none !important;
   }
 
   .nav-user {
     padding: 4px 6px !important;
-    margin: 10px 0 !important;
+    margin: 6px 0 !important;
   }
 
   .res-user-meta {
@@ -1640,9 +1721,10 @@ body[data-leftbar-size="condensed"] .res-nav-badge {
 }
 
 @media (max-width: 767.98px) {
+  /* Settings page columns */
   .settings-container {
     flex-direction: column !important;
-    gap: 16px !important;
+    gap: 14px !important;
   }
 
   .settings-sidebar {
@@ -1651,7 +1733,78 @@ body[data-leftbar-size="condensed"] .res-nav-badge {
   }
 
   .page-title-main {
-    font-size: 19px !important;
+    font-size: 18px !important;
+  }
+
+  /* KPI Stat Cards on Mobile */
+  .card-box, .card {
+    padding: 14px 12px !important;
+    margin-bottom: 14px !important;
+  }
+
+  .card-box h3, .card h3 {
+    font-size: 1.4rem !important;
+  }
+
+  /* Responsive Filter Toolbars */
+  .dataTables_filter, .dataTables_length {
+    text-align: left !important;
+    float: none !important;
+    margin-bottom: 10px !important;
+  }
+
+  .dataTables_filter input {
+    width: 100% !important;
+    margin-left: 0 !important;
+  }
+
+  /* Align all filter rows cleanly on mobile */
+  .d-flex.gap-2.align-items-end {
+    flex-wrap: wrap !important;
+  }
+
+  .d-flex.gap-2.align-items-end > * {
+    flex: 1 1 100% !important;
+  }
+
+  /* Table Horizontal Scrolling */
+  .table-responsive {
+    -webkit-overflow-scrolling: touch !important;
+    border: none !important;
+    margin-bottom: 12px !important;
+  }
+
+  table.dataTable {
+    min-width: 600px !important;
+  }
+
+  /* Modals Full Width On Small Devices */
+  .modal-dialog {
+    margin: 8px !important;
+    max-width: calc(100vw - 16px) !important;
+  }
+
+  .modal-content {
+    border-radius: 12px !important;
+  }
+
+  .modal-header, .modal-footer {
+    padding: 12px 14px !important;
+  }
+
+  .modal-body {
+    padding: 14px 12px !important;
+    max-height: 80vh !important;
+    overflow-y: auto !important;
+  }
+
+  /* SweetAlert Mobile Fit */
+  .swal2-container.swal2-top-end > .swal2-toast {
+    top: 75px !important;
+    right: 12px !important;
+    left: 12px !important;
+    max-width: calc(100vw - 24px) !important;
+    width: auto !important;
   }
 }
 

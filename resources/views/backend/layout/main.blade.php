@@ -12,6 +12,9 @@
 
             @include('backend.layout.menu')
 
+            <!-- Mobile Drawer Backdrop -->
+            <div class="res-mobile-backdrop" id="resMobileBackdrop"></div>
+
             <div class="content-page">
                 <div class="content">
                     <div class="container-fluid">
@@ -53,5 +56,10 @@
         @stack('scripts')
         <script src="{{url('assets/js/app.min.js')}}"></script>
         <script src="{{url('assets/js/custom.js')}}"></script>
+        <script>
+            $(document).on('click', '.mobile-menu-close, .res-mobile-backdrop', function() {
+                $('body').removeClass('sidebar-enable');
+            });
+        </script>
     </body>
 </html>

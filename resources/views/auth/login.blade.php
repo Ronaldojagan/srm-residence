@@ -2,11 +2,26 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>Login &bull; {{ config('app.name', 'SRM RESIDENCE') }}</title>
     <link rel="shortcut icon" href="{{ url('img/fev.png') }}">
+    <link rel="apple-touch-icon" href="{{ url('img/icon-192.png') }}">
+    <link rel="manifest" href="{{ url('manifest.json') }}">
+    <meta name="theme-color" content="#0ea1b1">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="SRM Residence">
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('{{ url("sw.js") }}').catch(() => {});
+            });
+        }
+    </script>
 
     <!-- Google Fonts: Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -335,6 +350,14 @@
                             <button class="btn res-btn-submit" type="submit">
                                 <i class="fas fa-arrow-right-to-bracket me-2"></i> Access Dashboard
                             </button>
+                        </div>
+
+                        <!-- Direct APK Download for Mobile Phone -->
+                        <div class="text-center mt-3">
+                            <a href="{{ url('download/srm-residence.apk') }}" download class="btn btn-sm btn-outline-success py-2 px-3 w-100 font-13 d-flex align-items-center justify-content-center gap-2" style="border-radius: 12px; border-style: dashed;">
+                                <i class="fab fa-android font-16 text-success"></i>
+                                <span>Download Android App (.APK)</span>
+                            </a>
                         </div>
                     </form>
 

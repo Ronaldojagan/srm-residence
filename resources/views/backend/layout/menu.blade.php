@@ -1,5 +1,21 @@
 <div class="left-side-menu">
     <div class="h-100" data-simplebar>
+        <!-- Mobile Sidebar Header (Brand + Close Button) -->
+        <div class="d-flex d-lg-none justify-content-between align-items-center px-3 py-3 border-bottom" style="border-color: rgba(255,255,255,0.08) !important;">
+            <div class="d-flex align-items-center gap-2">
+                <div class="res-logo-icon" style="width: 32px; height: 32px; font-size: 15px;">
+                    <i class="fas fa-hotel"></i>
+                </div>
+                <div>
+                    <div class="text-white font-13 fw-bold line-height-1">SRM RESIDENCE</div>
+                    <div class="text-white-50 font-10">Mobile Portal</div>
+                </div>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-light rounded-circle mobile-menu-close p-0" style="width: 30px; height: 30px; line-height: 28px; text-align: center;" aria-label="Close navigation">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
         <div id="sidebar-menu">
             <ul id="side-menu">
                 @if(auth()->user()->type == \App\Enums\UserType::SUPERADMIN)
@@ -90,6 +106,14 @@
                     <span>Active Campus</span>
                     <span class="badge bg-success text-white font-10">v2.4 Live</span>
                 </div>
+            </div>
+
+            <!-- Download Android APK Button in Sidebar -->
+            <div class="px-3 pb-3">
+                <a href="{{ url('download/srm-residence.apk') }}" download class="btn btn-sm w-100 btn-outline-success font-12 d-flex align-items-center justify-content-center gap-2 py-2" style="border-radius: 10px; border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.08);">
+                    <i class="fab fa-android font-15 text-success"></i>
+                    <span class="fw-semibold text-white">Download Android App</span>
+                </a>
             </div>
 
         </div>
