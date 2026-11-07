@@ -79,7 +79,18 @@ class UserService
                 ->rawColumns(['name','image','phone','type', 'status', 'action'])
                 ->make(true);
         }
-        return view('backend.user.user_index');
+        $stats = $this->getStats();
+        return view('backend.user.user_index', compact('stats'));
+    }
+
+    public function getStats()
+    {
+        return [
+            'totalUsers' => User::count(),
+            'activeUsers' => User::where('status', 1)->count(),
+            'adminCount' => User::where('type', 'Admin')->count(),
+            'staffCount' => User::where('type', 'delivery')->count(),
+        ];
     }
 
     public function update(array $data, User $user)
@@ -141,7 +152,8 @@ class UserService
 
             return response()->json([
                 'success' => true,
-                'message' => 'Status updated successfully.'
+                'message' => 'Status updated successfully.',
+                'stats' => $this->getStats(),
             ]);
 
         } catch (\Exception $e) {

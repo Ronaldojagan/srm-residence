@@ -82,7 +82,7 @@
             <div class="card card-shadow">
                 <div class="card-body">
                     <!-- Filters row -->
-                    <div class="row mb-3 g-2 align-items-center">
+                    <div class="row mb-3 g-2 align-items-end">
                         <div class="col-md-3">
                             <label class="form-label small text-muted mb-1">Filter by Room</label>
                             <select id="filterRoom" class="form-select filter-select">
@@ -117,7 +117,7 @@
                                 <option value="Cheque">Cheque</option>
                             </select>
                         </div>
-                        <div class="col-md-3 text-end pt-3">
+                        <div class="col-md-3 text-end">
                             <button id="btnResetFilters" class="btn btn-outline-secondary btn-sm">
                                 <i class="fas fa-undo me-1"></i> Reset Filters
                             </button>

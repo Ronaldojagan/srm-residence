@@ -41,6 +41,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'user-access:' . Use
     // Users
     Route::controller(UserController::class)->prefix('users')->name('users.')->group(function () {
         Route::get('/', 'index')->name('index');
+        Route::get('/stats', 'getStats')->name('stats');
         Route::get('/export', 'export')->name('export');
         Route::post('/', 'store')->name('store');
         Route::get('/{user}/data', 'getUserData')->name('data');
@@ -58,6 +59,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'user-access:' . Use
     // Tenants
     Route::controller(TenantController::class)->prefix('tenants')->name('tenants.')->group(function () {
         Route::get('/', 'index')->name('index');
+        Route::get('/stats', 'getStats')->name('stats');
         Route::get('/export', 'export')->name('export');
         Route::post('/', 'store')->name('store');
         Route::get('/{tenant}/view', 'view')->name('view');

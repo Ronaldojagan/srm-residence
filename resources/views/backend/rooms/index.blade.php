@@ -129,7 +129,7 @@
             <div class="card card-shadow">
                 <div class="card-body">
                     <!-- Filters row -->
-                    <div class="row mb-3 g-2 align-items-center">
+                    <div class="row mb-3 g-2 align-items-end">
                         <div class="col-md-3">
                             <label class="form-label small text-muted mb-1">Filter by Floor</label>
                             <select id="filterFloor" class="form-select filter-select">
@@ -159,7 +159,7 @@
                                 <option value="Executive Suite">Executive Suite</option>
                             </select>
                         </div>
-                        <div class="col-md-3 text-end pt-3">
+                        <div class="col-md-3 text-end">
                             <button id="btnResetFilters" class="btn btn-outline-secondary btn-sm">
                                 <i class="fas fa-undo me-1"></i> Reset Filters
                             </button>
@@ -924,6 +924,7 @@
                         },
                         success: function(data) {
                             if (data.success) {
+                                table.ajax.reload(null, false);
                                 updateStatCards(data.stats);
                                 Toast.fire({ icon: 'success', title: 'Room status updated!' });
                             } else {

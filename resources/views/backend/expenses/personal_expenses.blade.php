@@ -93,7 +93,7 @@
             <div class="card card-shadow">
                 <div class="card-body">
                     <!-- Filters row -->
-                    <div class="row mb-3 g-2 align-items-center">
+                    <div class="row mb-3 g-2 align-items-end">
                         <div class="col-md-4">
                             <label class="form-label small text-muted mb-1"><i class="far fa-calendar-alt me-1 text-primary"></i> Filter by Month</label>
                             <select id="filterMonth" class="form-select filter-select">
@@ -107,7 +107,7 @@
                             <label class="form-label small text-muted mb-1"><i class="fas fa-store me-1 text-info"></i> Paid To / Vendor / Merchant</label>
                             <input type="text" id="filterPaidTo" class="form-control filter-select" placeholder="Search by vendor, supermarket, recipient...">
                         </div>
-                        <div class="col-md-3 text-end pt-3">
+                        <div class="col-md-3 text-end">
                             <button id="btnResetFilters" class="btn btn-outline-secondary btn-sm">
                                 <i class="fas fa-undo me-1"></i> Reset Filters
                             </button>

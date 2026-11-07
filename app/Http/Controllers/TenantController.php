@@ -97,19 +97,52 @@ class TenantController extends Controller
                 ->make(true);
         }
 
-        $stats = [
-            'totalTenants' => Tenant::count(),
-            'activeTenants' => Tenant::where('status', 1)->count(),
-            'totalRent' => (float) (Tenant::where('status', 1)->selectRaw('SUM(monthly_rent + maintenance_charges + other_charges) as total')->value('total') ?? 0),
-            'baseRent' => (float) (Tenant::where('status', 1)->sum('monthly_rent') ?? 0),
-            'totalSecurityDeposit' => (float) (Tenant::where('status', 1)->sum('security_deposit') ?? 0),
-            'allSecurityDeposit' => (float) (Tenant::sum('security_deposit') ?? 0),
-            'occupiedRooms' => Room::where('occupancy_status', 'occupied')->count(),
-        ];
+        $stats = $this->getStatsData();
 
         $rooms = Room::with(['activeTenants', 'currentTenant'])->orderByRaw('CAST(room_number AS UNSIGNED) ASC, room_number ASC')->get();
 
         return view('backend.tenants.index', compact('stats', 'rooms'));
+    }
+
+    /**
+     * Compute current overall tenant and occupancy statistics
+     */
+    public function getStatsData()
+    {
+        $activeTenants = Tenant::where('status', 1)->count();
+        $totalTenants = Tenant::count();
+        $totalRent = (float) (Tenant::where('status', 1)->selectRaw('SUM(monthly_rent + maintenance_charges + other_charges) as total')->value('total') ?? 0);
+        $baseRent = (float) (Tenant::where('status', 1)->sum('monthly_rent') ?? 0);
+        $totalSecurityDeposit = (float) (Tenant::where('status', 1)->sum('security_deposit') ?? 0);
+        $allSecurityDeposit = (float) (Tenant::sum('security_deposit') ?? 0);
+        $occupiedRooms = Room::where('occupancy_status', 'occupied')->count();
+        $avgRent = $activeTenants > 0 ? round($totalRent / $activeTenants) : 0;
+
+        return [
+            'totalTenants' => $totalTenants,
+            'activeTenants' => $activeTenants,
+            'totalRent' => $totalRent,
+            'totalRentFormatted' => '₹' . number_format($totalRent),
+            'baseRent' => $baseRent,
+            'baseRentFormatted' => '₹' . number_format($baseRent),
+            'totalSecurityDeposit' => $totalSecurityDeposit,
+            'totalSecurityDepositFormatted' => '₹' . number_format($totalSecurityDeposit),
+            'allSecurityDeposit' => $allSecurityDeposit,
+            'occupiedRooms' => $occupiedRooms,
+            'avgRent' => $avgRent,
+            'avgRentFormatted' => '₹' . number_format($avgRent),
+        ];
+    }
+
+    /**
+     * AJAX endpoint to fetch live tenant statistics
+     */
+    public function getStats()
+    {
+        return response()->json([
+            'success' => true,
+            'stats' => $this->getStatsData(),
+        ]);
     }
 
     public function store(Request $request)
@@ -215,7 +248,8 @@ class TenantController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Tenant registered and ' . $assignedRooms->count() . ' room(s) assigned successfully!',
-                'tenant' => $tenant
+                'tenant' => $tenant,
+                'stats' => $this->getStatsData(),
             ]);
         }
 
@@ -406,7 +440,8 @@ class TenantController extends Controller
         if ($request->ajax()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Tenant and room allocation updated successfully!'
+                'message' => 'Tenant and room allocation updated successfully!',
+                'stats' => $this->getStatsData(),
             ]);
         }
 
@@ -445,7 +480,8 @@ class TenantController extends Controller
         return response()->json([
             'success' => true,
             'status' => '1',
-            'message' => 'Tenant removed and room occupancy updated!'
+            'message' => 'Tenant removed and room occupancy updated!',
+            'stats' => $this->getStatsData(),
         ]);
     }
 
@@ -487,7 +523,8 @@ class TenantController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Tenant status and room occupancy updated successfully.'
+            'message' => 'Tenant status and room occupancy updated successfully.',
+            'stats' => $this->getStatsData(),
         ]);
     }
 

@@ -34,12 +34,44 @@
         </div>
     </div>
 
-    <div class="row mt-2">
+    <!-- Quick Stats Cards -->
+    <div class="row mt-3 g-3">
+        <div class="col-xl-3 col-md-6 col-sm-6">
+            <div class="room-stat-card border-start border-4 border-primary">
+                <div class="text-muted small text-uppercase fw-bold">Total System Users</div>
+                <h3 class="fw-bold my-1 text-primary" id="statTotalUsers">{{ $stats['totalUsers'] ?? 0 }}</h3>
+                <small class="text-muted">Registered accounts</small>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 col-sm-6">
+            <div class="room-stat-card border-start border-4 border-success">
+                <div class="text-muted small text-uppercase fw-bold">Active Users</div>
+                <h3 class="fw-bold my-1 text-success" id="statActiveUsers">{{ $stats['activeUsers'] ?? 0 }}</h3>
+                <small class="text-muted">Enabled system access</small>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 col-sm-6">
+            <div class="room-stat-card border-start border-4 border-purple" style="border-left-color: #8b5cf6 !important;">
+                <div class="text-muted small text-uppercase fw-bold">Administrators</div>
+                <h3 class="fw-bold my-1 text-purple" style="color: #8b5cf6;" id="statAdminCount">{{ $stats['adminCount'] ?? 0 }}</h3>
+                <small class="text-muted">Full system privilege</small>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6 col-sm-6">
+            <div class="room-stat-card border-start border-4 border-info">
+                <div class="text-muted small text-uppercase fw-bold">Staff & Operational</div>
+                <h3 class="fw-bold my-1 text-info" id="statStaffCount">{{ $stats['staffCount'] ?? 0 }}</h3>
+                <small class="text-muted">Staff / Delivery roles</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-3">
         <div class="col-lg-12">
             <div class="card card-shadow">
                 <div class="card-body">
                     <!-- Filter Row -->
-                    <div class="row mb-3 g-2 align-items-center">
+                    <div class="row mb-3 g-2 align-items-end">
                         <div class="col-md-3">
                             <label class="form-label small text-muted mb-1">Filter by Role</label>
                             <select id="filterUserType" class="form-select filter-select">
@@ -57,7 +89,7 @@
                                 <option value="inactive">Inactive</option>
                             </select>
                         </div>
-                        <div class="col-md-6 text-end pt-3">
+                        <div class="col-md-6 text-end">
                             <button type="button" id="btnResetUserFilters" class="btn btn-outline-secondary btn-sm">
                                 <i class="fas fa-undo me-1"></i> Reset Filters
                             </button>
@@ -250,6 +282,26 @@
                     timerProgressBar: true
                 });
 
+                function updateStatCards(stats) {
+                    if (!stats) return;
+                    if (stats.totalUsers !== undefined) $('#statTotalUsers').text(stats.totalUsers);
+                    if (stats.activeUsers !== undefined) $('#statActiveUsers').text(stats.activeUsers);
+                    if (stats.adminCount !== undefined) $('#statAdminCount').text(stats.adminCount);
+                    if (stats.staffCount !== undefined) $('#statStaffCount').text(stats.staffCount);
+                }
+
+                function reloadStats() {
+                    $.ajax({
+                        url: "{{ url('/admin/users/stats') }}",
+                        type: "GET",
+                        success: function(res) {
+                            if (res.success && res.stats) {
+                                updateStatCards(res.stats);
+                            }
+                        }
+                    });
+                }
+
                 // Filter change triggers
                 $('#filterUserType, #filterUserStatus').on('change', function() {
                     table.ajax.reload();
@@ -297,6 +349,11 @@
                                 $('#addUserModal').modal('hide');
                                 $form[0].reset();
                                 table.ajax.reload(null, false);
+                                if (response.stats) {
+                                    updateStatCards(response.stats);
+                                } else {
+                                    reloadStats();
+                                }
                                 Toast.fire({
                                     icon: 'success',
                                     title: response.message || 'User created successfully!'
@@ -369,6 +426,11 @@
                             if (response.success) {
                                 $('#editUserModal').modal('hide');
                                 table.ajax.reload(null, false);
+                                if (response.stats) {
+                                    updateStatCards(response.stats);
+                                } else {
+                                    reloadStats();
+                                }
                                 Toast.fire({
                                     icon: 'success',
                                     title: response.message || 'User updated successfully!'
@@ -416,6 +478,11 @@
                                 success: function(data) {
                                     if (data.status == 1 || data.success) {
                                         table.ajax.reload(null, false);
+                                        if (data.stats) {
+                                            updateStatCards(data.stats);
+                                        } else {
+                                            reloadStats();
+                                        }
                                         Toast.fire({
                                             icon: 'success',
                                             title: 'User deleted successfully!'
@@ -448,6 +515,12 @@
                         },
                         success: function(data) {
                             if (data.success) {
+                                table.ajax.reload(null, false);
+                                if (data.stats) {
+                                    updateStatCards(data.stats);
+                                } else {
+                                    reloadStats();
+                                }
                                 Toast.fire({ icon: 'success', title: 'User status updated!' });
                             } else {
                                 $this.prop('checked', !$this.prop('checked'));

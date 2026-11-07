@@ -27,6 +27,15 @@ class UserController extends Controller
     {
         return $this->userService->index($request);
     }
+
+    public function getStats()
+    {
+        return response()->json([
+            'success' => true,
+            'stats' => $this->userService->getStats()
+        ]);
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -62,7 +71,8 @@ class UserController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'User created successfully!',
-                'user' => $user
+                'user' => $user,
+                'stats' => $this->userService->getStats()
             ]);
         }
 
@@ -117,7 +127,8 @@ class UserController extends Controller
         if ($request->ajax()) {
             return response()->json([
                 'success' => true,
-                'message' => 'User updated successfully!'
+                'message' => 'User updated successfully!',
+                'stats' => $this->userService->getStats()
             ]);
         }
 
@@ -130,7 +141,8 @@ class UserController extends Controller
         return response()->json([
             'status' => '1',
             'success' => true,
-            'message' => 'User deleted successfully!'
+            'message' => 'User deleted successfully!',
+            'stats' => $this->userService->getStats()
         ]);
     }
     public function view(User $user)

@@ -215,7 +215,7 @@
                         <!-- TAB 1: INVOICES & BILLS -->
                         <div class="tab-pane fade show active" id="billsTabPane" role="tabpanel" aria-labelledby="bills-tab">
                             <!-- Filters for Bills -->
-                            <div class="row g-2 mb-3 align-items-center">
+                            <div class="row g-2 mb-3 align-items-end">
                                 <div class="col-md-3">
                                     <label class="form-label small text-muted mb-1">Filter by Tenant</label>
                                     <select id="filterBillTenant" class="form-select filter-select">
@@ -252,7 +252,7 @@
                                     <label class="form-label small text-muted mb-1">Billing Month</label>
                                     <input type="text" id="filterBillMonth" class="form-control filter-select" placeholder="e.g. November 2026">
                                 </div>
-                                <div class="col-md-2 text-end pt-3">
+                                <div class="col-md-2 text-end">
                                     <button type="button" id="btnResetBillFilters" class="btn btn-outline-secondary btn-sm">
                                         <i class="fas fa-undo me-1"></i> Reset
                                     </button>
@@ -287,7 +287,7 @@
                         <!-- TAB 2: PAYMENT RECORDS -->
                         <div class="tab-pane fade" id="paymentsTabPane" role="tabpanel" aria-labelledby="payments-tab">
                             <!-- Filters for Payments -->
-                            <div class="row g-2 mb-3 align-items-center">
+                            <div class="row g-2 mb-3 align-items-end">
                                 <div class="col-md-4">
                                     <label class="form-label small text-muted mb-1">Filter by Tenant</label>
                                     <select id="filterPayTenant" class="form-select filter-select">
@@ -308,7 +308,7 @@
                                         <option value="Cheque">Cheque</option>
                                     </select>
                                 </div>
-                                <div class="col-md-5 text-end pt-3">
+                                <div class="col-md-5 text-end">
                                     <button type="button" id="btnResetPayFilters" class="btn btn-outline-secondary btn-sm">
                                         <i class="fas fa-undo me-1"></i> Reset Filters
                                     </button>

@@ -81,36 +81,36 @@
         <div class="col-xl col-md-4 col-sm-6">
             <div class="tenant-stat-card border-start border-4 border-primary">
                 <div class="text-muted small text-uppercase fw-bold">Active Tenants</div>
-                <h3 class="fw-bold my-1 text-primary">{{ $stats['activeTenants'] }}</h3>
-                <small class="text-muted">Total registered: {{ $stats['totalTenants'] }}</small>
+                <h3 class="fw-bold my-1 text-primary" id="statActiveTenants">{{ $stats['activeTenants'] }}</h3>
+                <small class="text-muted">Total registered: <span id="statTotalTenants">{{ $stats['totalTenants'] }}</span></small>
             </div>
         </div>
         <div class="col-xl col-md-4 col-sm-6">
             <div class="tenant-stat-card border-start border-4 border-success">
                 <div class="text-muted small text-uppercase fw-bold">Monthly Rent Roll</div>
-                <h3 class="fw-bold my-1 text-success">₹{{ number_format($stats['totalRent']) }}</h3>
-                <small class="text-muted">Base: ₹{{ number_format($stats['baseRent'] ?? 0) }} / mo</small>
+                <h3 class="fw-bold my-1 text-success" id="statTotalRent">{{ $stats['totalRentFormatted'] ?? ('₹' . number_format($stats['totalRent'])) }}</h3>
+                <small class="text-muted">Base: <span id="statBaseRent">₹{{ number_format($stats['baseRent'] ?? 0) }}</span> / mo</small>
             </div>
         </div>
         <div class="col-xl col-md-4 col-sm-6">
             <div class="tenant-stat-card border-start border-4 border-info">
                 <div class="text-muted small text-uppercase fw-bold">Security Deposits</div>
-                <h3 class="fw-bold my-1 text-info">₹{{ number_format($stats['totalSecurityDeposit'] ?? 0) }}</h3>
+                <h3 class="fw-bold my-1 text-info" id="statSecurityDeposit">{{ $stats['totalSecurityDepositFormatted'] ?? ('₹' . number_format($stats['totalSecurityDeposit'] ?? 0)) }}</h3>
                 <small class="text-muted">Held in refundable trust</small>
             </div>
         </div>
         <div class="col-xl col-md-4 col-sm-6">
             <div class="tenant-stat-card border-start border-4 border-purple" style="border-left-color: #8b5cf6 !important;">
                 <div class="text-muted small text-uppercase fw-bold">Occupied Rooms</div>
-                <h3 class="fw-bold my-1 text-purple" style="color: #8b5cf6;">{{ $stats['occupiedRooms'] }}</h3>
+                <h3 class="fw-bold my-1 text-purple" style="color: #8b5cf6;" id="statOccupiedRooms">{{ $stats['occupiedRooms'] }}</h3>
                 <small class="text-muted">Assigned units</small>
             </div>
         </div>
         <div class="col-xl col-md-4 col-sm-6">
             <div class="tenant-stat-card border-start border-4 border-warning">
                 <div class="text-muted small text-uppercase fw-bold">Avg. Rent / Tenant</div>
-                <h3 class="fw-bold my-1 text-warning">
-                    ₹{{ $stats['activeTenants'] > 0 ? number_format(round($stats['totalRent'] / $stats['activeTenants'])) : 0 }}
+                <h3 class="fw-bold my-1 text-warning" id="statAvgRent">
+                    ₹{{ number_format($stats['avgRent'] ?? ($stats['activeTenants'] > 0 ? round($stats['totalRent'] / $stats['activeTenants']) : 0)) }}
                 </h3>
                 <small class="text-muted">Per active lease</small>
             </div>
@@ -123,7 +123,7 @@
             <div class="card card-shadow">
                 <div class="card-body">
                     <!-- Filters Row -->
-                    <div class="row mb-3 g-2 align-items-center">
+                    <div class="row mb-3 g-2 align-items-end">
                         <div class="col-md-3">
                             <label class="form-label small text-muted mb-1">Filter by Room</label>
                             <select id="filterTenantRoom" class="form-select filter-select">
@@ -143,7 +143,7 @@
                                 <option value="inactive">Inactive Residents</option>
                             </select>
                         </div>
-                        <div class="col-md-6 text-end pt-3">
+                        <div class="col-md-6 text-end">
                             <button type="button" id="btnResetTenantFilters" class="btn btn-outline-secondary btn-sm">
                                 <i class="fas fa-undo me-1"></i> Reset Filters
                             </button>
@@ -484,6 +484,45 @@
                     timerProgressBar: true
                 });
 
+                function updateStatCards(stats) {
+                    if (!stats) return;
+                    if (stats.activeTenants !== undefined) $('#statActiveTenants').text(stats.activeTenants);
+                    if (stats.totalTenants !== undefined) $('#statTotalTenants').text(stats.totalTenants);
+                    if (stats.totalRentFormatted !== undefined) {
+                        $('#statTotalRent').text(stats.totalRentFormatted);
+                    } else if (stats.totalRent !== undefined) {
+                        $('#statTotalRent').text('₹' + Number(stats.totalRent).toLocaleString('en-IN'));
+                    }
+                    if (stats.baseRentFormatted !== undefined) {
+                        $('#statBaseRent').text(stats.baseRentFormatted);
+                    } else if (stats.baseRent !== undefined) {
+                        $('#statBaseRent').text('₹' + Number(stats.baseRent).toLocaleString('en-IN'));
+                    }
+                    if (stats.totalSecurityDepositFormatted !== undefined) {
+                        $('#statSecurityDeposit').text(stats.totalSecurityDepositFormatted);
+                    } else if (stats.totalSecurityDeposit !== undefined) {
+                        $('#statSecurityDeposit').text('₹' + Number(stats.totalSecurityDeposit).toLocaleString('en-IN'));
+                    }
+                    if (stats.occupiedRooms !== undefined) $('#statOccupiedRooms').text(stats.occupiedRooms);
+                    if (stats.avgRentFormatted !== undefined) {
+                        $('#statAvgRent').text(stats.avgRentFormatted);
+                    } else if (stats.avgRent !== undefined) {
+                        $('#statAvgRent').text('₹' + Number(stats.avgRent).toLocaleString('en-IN'));
+                    }
+                }
+
+                function reloadStats() {
+                    $.ajax({
+                        url: "{{ url('/admin/tenants/stats') }}",
+                        type: "GET",
+                        success: function(res) {
+                            if (res.success && res.stats) {
+                                updateStatCards(res.stats);
+                            }
+                        }
+                    });
+                }
+
                 // Initialize Select2 multi-room pickers
                 $('#tenant_room_ids').select2({
                     dropdownParent: $('#addTenantModal'),
@@ -649,6 +688,11 @@
                                 $('#tenant_room_ids').val(null).trigger('change.select2');
                                 $form.find('.is-invalid').removeClass('is-invalid');
                                 table.ajax.reload(null, false);
+                                if (response.stats) {
+                                    updateStatCards(response.stats);
+                                } else {
+                                    reloadStats();
+                                }
                                 Toast.fire({
                                     icon: 'success',
                                     title: response.message || 'Tenant registered successfully!'
@@ -805,6 +849,11 @@
                                 $('#editTenantModal').modal('hide');
                                 $form.find('.is-invalid').removeClass('is-invalid');
                                 table.ajax.reload(null, false);
+                                if (response.stats) {
+                                    updateStatCards(response.stats);
+                                } else {
+                                    reloadStats();
+                                }
                                 Toast.fire({
                                     icon: 'success',
                                     title: response.message || 'Tenant updated successfully!'
@@ -855,6 +904,11 @@
                                 success: function(data) {
                                     if (data.status == 1 || data.success) {
                                         table.ajax.reload(null, false);
+                                        if (data.stats) {
+                                            updateStatCards(data.stats);
+                                        } else {
+                                            reloadStats();
+                                        }
                                         Toast.fire({
                                             icon: 'success',
                                             title: 'Tenant removed successfully!'
@@ -887,6 +941,12 @@
                         },
                         success: function(data) {
                             if (data.success) {
+                                table.ajax.reload(null, false);
+                                if (data.stats) {
+                                    updateStatCards(data.stats);
+                                } else {
+                                    reloadStats();
+                                }
                                 Toast.fire({ icon: 'success', title: 'Status updated!' });
                             } else {
                                 $this.prop('checked', !$this.prop('checked'));

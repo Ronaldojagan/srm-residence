@@ -1220,11 +1220,11 @@ table.dataTable tbody td.dataTables_empty::before {
   }
 }
 
-/* Stat Cards (Tenants, Rooms, Expenses) */
-.tenant-stat-card, .room-stat-card, .expense-stat-card {
+/* Stat Cards (Tenants, Rooms, Expenses, Billing) */
+.tenant-stat-card, .room-stat-card, .expense-stat-card, .stat-pill-card {
   background: #ffffff !important;
   border-radius: var(--res-radius-lg) !important;
-  padding: 1.5rem !important;
+  padding: 1.25rem 1.5rem !important;
   box-shadow: var(--res-shadow-md) !important;
   border: 1px solid var(--res-border) !important;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
@@ -1232,7 +1232,7 @@ table.dataTable tbody td.dataTables_empty::before {
   overflow: hidden;
 }
 
-.tenant-stat-card:hover, .room-stat-card:hover, .expense-stat-card:hover {
+.tenant-stat-card:hover, .room-stat-card:hover, .expense-stat-card:hover, .stat-pill-card:hover {
   transform: translateY(-3px) !important;
   box-shadow: var(--res-shadow-lg) !important;
 }
