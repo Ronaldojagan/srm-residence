@@ -225,6 +225,14 @@ class BillingController extends Controller
                 $printBtn = '<a href="' . url('/admin/billing/bills/' . $row->id . '/print') . '" target="_blank" class="btn btn-sm btn-outline-dark" title="Print Invoice (A4)">
                                 <i class="fas fa-print"></i>
                             </a>';
+                $mailBtn = '<button type="button" class="btn btn-sm btn-outline-info btn-send-invoice-mail" 
+                                data-id="' . $row->id . '" 
+                                data-bill="' . e($row->bill_number) . '"
+                                data-tenant="' . e($row->tenant->name ?? 'Tenant') . '" 
+                                data-email="' . e($row->tenant->email ?? '') . '" 
+                                title="Send Invoice via Email">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>';
                 $editBtn = '<button type="button" class="btn btn-sm btn-outline-secondary btn-edit-bill" data-id="' . $row->id . '" title="Edit Bill">
                                 <i class="fas fa-edit"></i>
                             </button>';
@@ -232,7 +240,7 @@ class BillingController extends Controller
                                 <i class="fas fa-trash-alt"></i>
                             </button>';
 
-                return '<div class="btn-group btn-group-sm" role="group">' . $payBtn . $viewBtn . $printBtn . $editBtn . $delBtn . '</div>';
+                return '<div class="btn-group btn-group-sm" role="group">' . $payBtn . $viewBtn . $printBtn . $mailBtn . $editBtn . $delBtn . '</div>';
             })
             ->rawColumns(['bill_number_badge', 'tenant_room', 'bill_type_badge', 'amount_display', 'payment_progress', 'due_date_formatted', 'status_badge', 'action'])
             ->make(true);
@@ -797,6 +805,43 @@ class BillingController extends Controller
             'message' => 'Payment receipt ' . $payNum . ' deleted. Invoice balance updated.',
             'stats' => $this->getStatsData(),
         ]);
+    }
+
+    /**
+     * Send Invoice via Email to Resident
+     */
+    public function sendInvoiceEmail(Request $request, $id)
+    {
+        try {
+            $bill = Bill::with(['tenant.room', 'tenant.rooms', 'room', 'payments'])->findOrFail($id);
+
+            $email = trim($request->input('email', ''));
+            if (empty($email)) {
+                $email = $bill->tenant?->email;
+            }
+
+            if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Please provide a valid recipient email address for this tenant.',
+                ], 422);
+            }
+
+            $settings = app(\App\Service\SettingsService::class)->settingsIndex();
+            \App\Service\SettingsService::configureMailer();
+
+            Mail::to($email)->send(new \App\Mail\InvoiceMail($bill, $settings));
+
+            return response()->json([
+                'success' => true,
+                'message' => "Invoice #{$bill->bill_number} sent successfully to {$email}!",
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to send invoice email: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 }
 

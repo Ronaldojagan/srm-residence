@@ -89,6 +89,31 @@ class SettingsService
         }
     }
 
+    /**
+     * Dynamically configure Laravel's mailer from saved database settings.
+     */
+    public static function configureMailer(): void
+    {
+        try {
+            $settings = app(self::class)->settingsIndex();
+            if (!empty($settings['mail_host']) && !empty($settings['mail_username'])) {
+                config([
+                    'mail.default' => $settings['mail_mailer'] ?: 'smtp',
+                    'mail.mailers.smtp.transport' => 'smtp',
+                    'mail.mailers.smtp.host' => $settings['mail_host'],
+                    'mail.mailers.smtp.port' => (int)($settings['mail_port'] ?: 587),
+                    'mail.mailers.smtp.encryption' => $settings['mail_encryption'] ?: 'tls',
+                    'mail.mailers.smtp.username' => $settings['mail_username'],
+                    'mail.mailers.smtp.password' => $settings['mail_password'],
+                    'mail.from.address' => $settings['mail_from_address'] ?: $settings['mail_username'],
+                    'mail.from.name' => $settings['mail_from_name'] ?: ($settings['residence_name'] ?? 'SRM Residence'),
+                ]);
+            }
+        } catch (\Throwable $e) {
+            // Graceful fallback if database is not reachable yet
+        }
+    }
+
     public function settingsIndex()
     {
         $defaults = [

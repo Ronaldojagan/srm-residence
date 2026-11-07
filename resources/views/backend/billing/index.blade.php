@@ -817,6 +817,9 @@
                 </div>
                 <div class="modal-footer bg-light">
                     <button type="button" class="btn btn-secondary waves-effect" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-info text-white waves-effect waves-light" id="btn_send_modal_invoice_email">
+                        <i class="fas fa-paper-plane me-1"></i> Send via Email
+                    </button>
                     <a href="javascript:void(0)" class="btn button-color text-white waves-effect waves-light" id="btn_open_print_invoice" target="_blank">
                         <i class="fas fa-print me-1"></i> Print Invoice (A4)
                     </a>
@@ -1750,10 +1753,89 @@
                                 }
 
                                 $('#btn_open_print_invoice').attr('href', "{{ url('/admin/billing/bills') }}/" + b.id + "/print");
+                                $('#btn_send_modal_invoice_email').data('id', b.id).data('bill', b.bill_number).data('email', b.tenant && b.tenant.email ? b.tenant.email : '');
                                 $('#viewInvoiceModal').modal('show');
                             }
                         }
                     });
+                });
+
+                // =========================================================================
+                // 7.1 SEND INVOICE VIA EMAIL HANDLER
+                // =========================================================================
+                function triggerSendInvoiceEmail(billId, billNumber, defaultEmail) {
+                    Swal.fire({
+                        title: 'Send Invoice via Email',
+                        html: 'Send Rent Invoice <strong>#' + billNumber + '</strong> directly to resident email:<br><br>' +
+                              '<input id="swal_invoice_email" class="swal2-input font-14" placeholder="Resident Email Address" value="' + (defaultEmail || '') + '">',
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#0a5858',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: '<i class="fas fa-paper-plane me-1"></i> Send Email',
+                        preConfirm: () => {
+                            const email = document.getElementById('swal_invoice_email').value;
+                            if (!email || !email.includes('@')) {
+                                Swal.showValidationMessage('Please enter a valid email address');
+                                return false;
+                            }
+                            return email;
+                        }
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            const targetEmail = result.value;
+                            Swal.fire({
+                                title: 'Sending Invoice...',
+                                html: 'Delivering invoice email to <strong>' + targetEmail + '</strong> via SMTP...',
+                                allowOutsideClick: false,
+                                didOpen: () => {
+                                    Swal.showLoading();
+                                }
+                            });
+
+                            $.ajax({
+                                url: "{{ url('/admin/billing/bills') }}/" + billId + "/send-email",
+                                type: "POST",
+                                data: {
+                                    _token: "{{ csrf_token() }}",
+                                    email: targetEmail
+                                },
+                                success: function(res) {
+                                    if (res.success) {
+                                        Swal.fire({
+                                            title: 'Email Sent!',
+                                            text: res.message,
+                                            icon: 'success',
+                                            confirmButtonColor: '#0a5858'
+                                        });
+                                    } else {
+                                        Swal.fire('Failed', res.message || 'Could not send invoice email.', 'error');
+                                    }
+                                },
+                                error: function(xhr) {
+                                    var errMsg = 'Failed to send invoice email.';
+                                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                                        errMsg = xhr.responseJSON.message;
+                                    }
+                                    Swal.fire('Error', errMsg, 'error');
+                                }
+                            });
+                        }
+                    });
+                }
+
+                $(document).on('click', '.btn-send-invoice-mail', function() {
+                    var billId = $(this).data('id');
+                    var billNumber = $(this).data('bill');
+                    var email = $(this).data('email');
+                    triggerSendInvoiceEmail(billId, billNumber, email);
+                });
+
+                $(document).on('click', '#btn_send_modal_invoice_email', function() {
+                    var billId = $(this).data('id');
+                    var billNumber = $(this).data('bill');
+                    var email = $(this).data('email');
+                    triggerSendInvoiceEmail(billId, billNumber, email);
                 });
 
                 // =========================================================================

@@ -63,5 +63,7 @@ class AppServiceProvider extends ServiceProvider
             'unreadRequestCount' => $unreadRequestCount,
             'recentRequest' => $recentRequest,
         ]);
+
+        \App\Service\SettingsService::configureMailer();
     }
 }
