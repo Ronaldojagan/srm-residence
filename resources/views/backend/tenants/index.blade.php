@@ -187,8 +187,20 @@
                                 <select name="room_ids[]" id="tenant_room_ids" class="form-select select2-rooms" multiple required>
                                     @if(isset($rooms))
                                         @foreach($rooms as $r)
+                                            @php
+                                                $isSelf = $r->is_self || $r->occupancy_status === 'self';
+                                                $isOccupied = $r->occupancy_status === 'occupied' || $r->active_residents->isNotEmpty();
+                                                $isMaint = $r->occupancy_status === 'maintenance';
+                                                $isDisabled = $isSelf || $isOccupied || $isMaint;
+
+                                                $occupantNames = $r->active_residents->isNotEmpty() ? $r->active_residents->pluck('name')->implode(', ') : '';
+                                                $statusLabel = 'Available';
+                                                if ($isSelf) $statusLabel = 'Owner Occupied (Self)';
+                                                elseif ($isOccupied) $statusLabel = 'Occupied' . ($occupantNames ? ' by ' . $occupantNames : '');
+                                                elseif ($isMaint) $statusLabel = 'Under Maintenance';
+                                            @endphp
                                             <option value="{{ $r->id }}" 
-                                                {{ ($r->is_self || $r->occupancy_status === 'self') ? 'disabled' : '' }}
+                                                {{ $isDisabled ? 'disabled' : '' }}
                                                 data-number="{{ $r->room_number }}" 
                                                 data-floor="{{ $r->floor }}" 
                                                 data-type="{{ $r->room_type }}" 
@@ -197,7 +209,7 @@
                                                 data-eb="{{ $r->eb_unit_rate }}"
                                                 data-maintenance="{{ $r->maintenance_charges }}"
                                                 data-other="{{ $r->other_charges }}">
-                                                Room {{ $r->room_number }} ({{ $r->floor }} - {{ $r->room_type }}) [{{ ($r->is_self || $r->occupancy_status === 'self') ? 'Owner Occupied (Self)' : ucfirst($r->occupancy_status) }}]
+                                                Room {{ $r->room_number }} ({{ $r->floor }} - {{ $r->room_type }}) [{{ $statusLabel }}]
                                             </option>
                                         @endforeach
                                     @endif
@@ -339,8 +351,19 @@
                                 <select id="edit_tenant_room_ids" name="room_ids[]" class="form-select select2-rooms" multiple required>
                                     @if(isset($rooms))
                                         @foreach($rooms as $r)
+                                            @php
+                                                $isSelf = $r->is_self || $r->occupancy_status === 'self';
+                                                $isOccupied = $r->occupancy_status === 'occupied' || $r->active_residents->isNotEmpty();
+                                                $isMaint = $r->occupancy_status === 'maintenance';
+                                                $tenantIds = $r->active_residents->pluck('id')->toArray();
+                                                $occupantNames = $r->active_residents->pluck('name')->implode(', ');
+                                            @endphp
                                             <option value="{{ $r->id }}" 
-                                                {{ ($r->is_self || $r->occupancy_status === 'self') ? 'disabled' : '' }}
+                                                data-is-self="{{ $isSelf ? 1 : 0 }}"
+                                                data-is-occupied="{{ $isOccupied ? 1 : 0 }}"
+                                                data-is-maintenance="{{ $isMaint ? 1 : 0 }}"
+                                                data-tenant-ids="{{ json_encode($tenantIds) }}"
+                                                data-occupant-name="{{ $occupantNames }}"
                                                 data-number="{{ $r->room_number }}" 
                                                 data-floor="{{ $r->floor }}" 
                                                 data-type="{{ $r->room_type }}" 
@@ -349,7 +372,7 @@
                                                 data-eb="{{ $r->eb_unit_rate }}"
                                                 data-maintenance="{{ $r->maintenance_charges }}"
                                                 data-other="{{ $r->other_charges }}">
-                                                Room {{ $r->room_number }} ({{ $r->floor }} - {{ $r->room_type }}) [{{ ($r->is_self || $r->occupancy_status === 'self') ? 'Owner Occupied (Self)' : ucfirst($r->occupancy_status) }}]
+                                                Room {{ $r->room_number }} ({{ $r->floor }} - {{ $r->room_type }}) [{{ $isSelf ? 'Owner Occupied (Self)' : ($isOccupied ? 'Occupied' . ($occupantNames ? ' by ' . $occupantNames : '') : ($isMaint ? 'Under Maintenance' : 'Available')) }}]
                                             </option>
                                         @endforeach
                                     @endif
@@ -780,8 +803,45 @@
                                 $('#edit_email').val(tenant.email);
                                 $('#edit_emergency_contact').val(tenant.emergency_contact);
 
-                                isProgrammaticEditChange = true;
                                 var rIds = response.room_ids && response.room_ids.length > 0 ? response.room_ids : (tenant.room_id ? [tenant.room_id] : []);
+                                rIds = rIds.map(function(v) { return parseInt(v); });
+
+                                // Dynamically update room enabled/disabled states for this tenant
+                                $('#edit_tenant_room_ids option').each(function() {
+                                    var $opt = $(this);
+                                    var optId = parseInt($opt.val());
+                                    var isSelf = parseInt($opt.data('is-self')) === 1;
+                                    var isMaint = parseInt($opt.data('is-maintenance')) === 1;
+                                    var isOccupied = parseInt($opt.data('is-occupied')) === 1;
+                                    var rawTenantIds = $opt.attr('data-tenant-ids');
+                                    var optTenantIds = [];
+                                    try {
+                                        optTenantIds = typeof rawTenantIds === 'string' ? JSON.parse(rawTenantIds) : (rawTenantIds || []);
+                                    } catch(e) {
+                                        optTenantIds = [];
+                                    }
+                                    optTenantIds = optTenantIds.map(Number);
+
+                                    var isAssignedToThis = rIds.indexOf(optId) !== -1 || optTenantIds.indexOf(parseInt(tenant.id)) !== -1;
+
+                                    if (isSelf || isMaint) {
+                                        $opt.prop('disabled', true);
+                                    } else if (isOccupied && !isAssignedToThis) {
+                                        $opt.prop('disabled', true);
+                                    } else {
+                                        $opt.prop('disabled', false);
+                                    }
+                                });
+
+                                // Re-initialize Select2 so disabled attributes update in dropdown UI
+                                $('#edit_tenant_room_ids').select2({
+                                    dropdownParent: $('#editTenantModal'),
+                                    placeholder: 'Click to select room(s)...',
+                                    width: '100%',
+                                    closeOnSelect: false
+                                });
+
+                                isProgrammaticEditChange = true;
                                 $('#edit_tenant_room_ids').val(rIds).trigger('change.select2');
                                 $('#editRoomSelectedCount').text(rIds.length > 0 ? rIds.length + ' room(s) selected' : 'Select 1 or more rooms');
                                 isProgrammaticEditChange = false;

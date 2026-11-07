@@ -93,7 +93,7 @@ class TenantController extends Controller
             'occupiedRooms' => Room::where('occupancy_status', 'occupied')->count(),
         ];
 
-        $rooms = Room::orderByRaw('CAST(room_number AS UNSIGNED) ASC, room_number ASC')->get();
+        $rooms = Room::with(['activeTenants', 'currentTenant'])->orderByRaw('CAST(room_number AS UNSIGNED) ASC, room_number ASC')->get();
 
         return view('backend.tenants.index', compact('stats', 'rooms'));
     }
@@ -151,11 +151,35 @@ class TenantController extends Controller
         }
 
         foreach ($assignedRooms as $r) {
-            if ($r->is_self) {
+            if ($r->is_self || $r->occupancy_status === 'self') {
                 return response()->json([
                     'success' => false,
                     'message' => 'Room ' . $r->room_number . ' is marked as Owner/Self-occupied and cannot be assigned to a tenant.',
                     'errors' => ['room_ids' => ['Room ' . $r->room_number . ' is marked as Owner/Self-occupied.']]
+                ], 422);
+            }
+
+            // Restrict already occupied rooms
+            $isOccupied = $r->occupancy_status === 'occupied' || DB::table('tenant_rooms')
+                ->join('tenants', 'tenant_rooms.tenant_id', '=', 'tenants.id')
+                ->where('tenant_rooms.room_id', $r->id)
+                ->where('tenants.status', 1)
+                ->whereNull('tenants.deleted_at')
+                ->exists();
+
+            if ($isOccupied) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Room ' . $r->room_number . ' is already occupied and cannot be assigned to a new tenant.',
+                    'errors' => ['room_ids' => ['Room ' . $r->room_number . ' is already occupied.']]
+                ], 422);
+            }
+
+            if ($r->occupancy_status === 'maintenance') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Room ' . $r->room_number . ' is currently under maintenance and cannot be assigned.',
+                    'errors' => ['room_ids' => ['Room ' . $r->room_number . ' is under maintenance.']]
                 ], 422);
             }
         }
@@ -233,7 +257,7 @@ class TenantController extends Controller
             'dueBills' => $bills->whereIn('status', ['unpaid', 'partially_paid', 'overdue'])->count(),
         ];
 
-        $rooms = Room::orderByRaw('CAST(room_number AS UNSIGNED) ASC, room_number ASC')->get();
+        $rooms = Room::with(['activeTenants', 'currentTenant'])->orderByRaw('CAST(room_number AS UNSIGNED) ASC, room_number ASC')->get();
 
         return view('backend.tenants.view', compact('tenant', 'bills', 'payments', 'stats', 'rooms'));
     }
@@ -288,20 +312,51 @@ class TenantController extends Controller
             ], 422);
         }
 
+        // Get previously assigned rooms for this tenant
+        $oldRoomIds = $tenant->rooms()->pluck('rooms.id')->toArray();
+        if (empty($oldRoomIds) && $tenant->room_id) {
+            $oldRoomIds = [$tenant->room_id];
+        }
+
         foreach ($assignedRooms as $r) {
-            if ($r->is_self) {
+            if ($r->is_self || $r->occupancy_status === 'self') {
                 return response()->json([
                     'success' => false,
                     'message' => 'Room ' . $r->room_number . ' is marked as Owner/Self-occupied and cannot be assigned to a tenant.',
                     'errors' => ['room_ids' => ['Room ' . $r->room_number . ' is marked as Owner/Self-occupied.']]
                 ], 422);
             }
-        }
 
-        // Get previously assigned rooms
-        $oldRoomIds = $tenant->rooms()->pluck('rooms.id')->toArray();
-        if (empty($oldRoomIds) && $tenant->room_id) {
-            $oldRoomIds = [$tenant->room_id];
+            // Check if occupied by ANOTHER active tenant
+            $isOccupiedByOther = DB::table('tenant_rooms')
+                ->join('tenants', 'tenant_rooms.tenant_id', '=', 'tenants.id')
+                ->where('tenant_rooms.room_id', $r->id)
+                ->where('tenants.id', '!=', $tenant->id)
+                ->where('tenants.status', 1)
+                ->whereNull('tenants.deleted_at')
+                ->exists();
+
+            if (!$isOccupiedByOther && $r->occupancy_status === 'occupied') {
+                if (!in_array($r->id, $oldRoomIds)) {
+                    $isOccupiedByOther = true;
+                }
+            }
+
+            if ($isOccupiedByOther) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Room ' . $r->room_number . ' is already occupied by another resident and cannot be assigned.',
+                    'errors' => ['room_ids' => ['Room ' . $r->room_number . ' is already occupied by another resident.']]
+                ], 422);
+            }
+
+            if ($r->occupancy_status === 'maintenance') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Room ' . $r->room_number . ' is currently under maintenance and cannot be assigned.',
+                    'errors' => ['room_ids' => ['Room ' . $r->room_number . ' is under maintenance.']]
+                ], 422);
+            }
         }
 
         $newRoomIds = $assignedRooms->pluck('id')->toArray();

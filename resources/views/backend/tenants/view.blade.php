@@ -640,8 +640,24 @@
                                 <select name="room_ids[]" id="view_edit_tenant_room_ids" class="form-select select2-rooms" multiple required>
                                     @if(isset($rooms))
                                         @foreach($rooms as $r)
+                                            @php
+                                                $isCurrentTenantRoom = in_array($r->id, $assignedRoomIds);
+                                                $isSelf = $r->is_self || $r->occupancy_status === 'self';
+                                                $isMaint = $r->occupancy_status === 'maintenance';
+                                                $otherResidents = $r->active_residents->where('id', '!=', $tenant->id);
+                                                $isOccupiedByOther = !$isCurrentTenantRoom && ($r->occupancy_status === 'occupied' || $otherResidents->isNotEmpty());
+                                                $isDisabled = $isSelf || $isMaint || $isOccupiedByOther;
+
+                                                $occupantNames = $otherResidents->isNotEmpty() ? $otherResidents->pluck('name')->implode(', ') : '';
+                                                $statusLabel = 'Available';
+                                                if ($isSelf) $statusLabel = 'Owner Occupied (Self)';
+                                                elseif ($isCurrentTenantRoom) $statusLabel = 'Assigned to this resident';
+                                                elseif ($isOccupiedByOther) $statusLabel = 'Occupied' . ($occupantNames ? ' by ' . $occupantNames : '');
+                                                elseif ($isMaint) $statusLabel = 'Under Maintenance';
+                                            @endphp
                                             <option value="{{ $r->id }}" 
-                                                {{ in_array($r->id, $assignedRoomIds) ? 'selected' : (($r->is_self || $r->occupancy_status === 'self') ? 'disabled' : '') }}
+                                                {{ $isCurrentTenantRoom ? 'selected' : '' }}
+                                                {{ $isDisabled ? 'disabled' : '' }}
                                                 data-number="{{ $r->room_number }}" 
                                                 data-floor="{{ $r->floor }}" 
                                                 data-type="{{ $r->room_type }}" 
@@ -650,7 +666,7 @@
                                                 data-eb="{{ $r->eb_unit_rate }}"
                                                 data-maintenance="{{ $r->maintenance_charges }}"
                                                 data-other="{{ $r->other_charges }}">
-                                                Room {{ $r->room_number }} ({{ $r->floor }} - {{ $r->room_type }}) [{{ ($r->is_self || $r->occupancy_status === 'self') ? 'Self Occupied' : ucfirst($r->occupancy_status) }}]
+                                                Room {{ $r->room_number }} ({{ $r->floor }} - {{ $r->room_type }}) [{{ $statusLabel }}]
                                             </option>
                                         @endforeach
                                     @endif
