@@ -83,6 +83,46 @@
         </div>
     </div>
 
+    <!-- Room Inventory Financial Summary (Rent Capacity & Deposits) -->
+    <div class="row mt-2 g-3">
+        <div class="col-md-6 col-xl-3">
+            <div class="p-2 px-3 rounded-3 bg-white border d-flex align-items-center justify-content-between shadow-sm">
+                <div>
+                    <span class="text-muted font-11 text-uppercase fw-bold d-block">Total Rent Capacity</span>
+                    <span class="fs-6 fw-bold text-dark" id="statTotalRentCapacity">₹{{ number_format($stats['totalRentCapacity'] ?? 0) }} <small class="text-muted fw-normal font-11">/ mo</small></span>
+                </div>
+                <span class="badge bg-primary-subtle text-primary p-2"><i class="fas fa-coins fa-lg"></i></span>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="p-2 px-3 rounded-3 bg-white border d-flex align-items-center justify-content-between shadow-sm">
+                <div>
+                    <span class="text-muted font-11 text-uppercase fw-bold d-block">Deposit Potential</span>
+                    <span class="fs-6 fw-bold text-dark" id="statTotalDepositCapacity">₹{{ number_format($stats['totalDepositCapacity'] ?? 0) }}</span>
+                </div>
+                <span class="badge bg-info-subtle text-info p-2"><i class="fas fa-shield-alt fa-lg"></i></span>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="p-2 px-3 rounded-3 bg-white border d-flex align-items-center justify-content-between shadow-sm">
+                <div>
+                    <span class="text-muted font-11 text-uppercase fw-bold d-block">Active Leased Rent</span>
+                    <span class="fs-6 fw-bold text-success" id="statOccupiedRent">₹{{ number_format($stats['occupiedRent'] ?? 0) }} <small class="text-muted fw-normal font-11">/ mo</small></span>
+                </div>
+                <span class="badge bg-success-subtle text-success p-2"><i class="fas fa-hand-holding-dollar fa-lg"></i></span>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="p-2 px-3 rounded-3 bg-white border d-flex align-items-center justify-content-between shadow-sm">
+                <div>
+                    <span class="text-muted font-11 text-uppercase fw-bold d-block">Active Deposits Held</span>
+                    <span class="fs-6 fw-bold text-primary" id="statHeldDeposits">₹{{ number_format($stats['heldDeposits'] ?? 0) }}</span>
+                </div>
+                <span class="badge p-2" style="background-color: #f3e8ff; color: #8b5cf6;"><i class="fas fa-vault fa-lg"></i></span>
+            </div>
+        </div>
+    </div>
+
     <!-- Filters & DataTable -->
     <div class="row mt-3">
         <div class="col-lg-12">
@@ -439,6 +479,10 @@
                         $('#statOccupiedRooms').text(stats.occupiedRooms);
                         $('#statSelfRooms').text(stats.selfRooms || 0);
                         $('#statMaintenanceRooms').text(stats.maintenanceRooms);
+                        if (stats.totalRentCapacityFormatted) $('#statTotalRentCapacity').html(stats.totalRentCapacityFormatted + ' <small class="text-muted fw-normal font-11">/ mo</small>');
+                        if (stats.totalDepositCapacityFormatted) $('#statTotalDepositCapacity').text(stats.totalDepositCapacityFormatted);
+                        if (stats.occupiedRentFormatted) $('#statOccupiedRent').html(stats.occupiedRentFormatted + ' <small class="text-muted fw-normal font-11">/ mo</small>');
+                        if (stats.heldDepositsFormatted) $('#statHeldDeposits').text(stats.heldDepositsFormatted);
                     }
                 }
 

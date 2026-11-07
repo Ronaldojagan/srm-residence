@@ -215,6 +215,46 @@
         </div>
     </div>
 
+    <!-- Active Portfolio Rent & Deposits Sub-bar -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-6 col-xl-3">
+            <div class="p-2 px-3 rounded-3 bg-white border d-flex align-items-center justify-content-between shadow-sm">
+                <div>
+                    <span class="text-muted font-11 text-uppercase fw-bold d-block">Scheduled Rent Roll</span>
+                    <span class="fs-6 fw-bold text-dark" id="kpiScheduledDues">₹0 <small class="text-muted fw-normal font-11">/ mo</small></span>
+                </div>
+                <span class="badge bg-primary-subtle text-primary p-2"><i class="fas fa-hand-holding-dollar fa-lg"></i></span>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="p-2 px-3 rounded-3 bg-white border d-flex align-items-center justify-content-between shadow-sm">
+                <div>
+                    <span class="text-muted font-11 text-uppercase fw-bold d-block">Base Monthly Rent</span>
+                    <span class="fs-6 fw-bold text-success" id="kpiMonthlyRent">₹0 <small class="text-muted fw-normal font-11">/ mo</small></span>
+                </div>
+                <span class="badge bg-success-subtle text-success p-2"><i class="fas fa-money-bill-wave fa-lg"></i></span>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="p-2 px-3 rounded-3 bg-white border d-flex align-items-center justify-content-between shadow-sm">
+                <div>
+                    <span class="text-muted font-11 text-uppercase fw-bold d-block">Security Deposits Held</span>
+                    <span class="fs-6 fw-bold text-purple" style="color: #8b5cf6;" id="kpiSecurityDeposits">₹0</span>
+                </div>
+                <span class="badge p-2" style="background-color: #f3e8ff; color: #8b5cf6;"><i class="fas fa-shield-alt fa-lg"></i></span>
+            </div>
+        </div>
+        <div class="col-md-6 col-xl-3">
+            <div class="p-2 px-3 rounded-3 bg-white border d-flex align-items-center justify-content-between shadow-sm">
+                <div>
+                    <span class="text-muted font-11 text-uppercase fw-bold d-block">Inventory Rent Capacity</span>
+                    <span class="fs-6 fw-bold text-info" id="kpiRoomRentCapacity">₹0 <small class="text-muted fw-normal font-11">/ mo</small></span>
+                </div>
+                <span class="badge bg-info-subtle text-info p-2"><i class="fas fa-building fa-lg"></i></span>
+            </div>
+        </div>
+    </div>
+
     <!-- Visual Charts Container (Initially Hidden, Toggleable) -->
     <div id="chartsContainer" class="row mb-4 no-print" style="display: none;">
         <div class="col-lg-8">
@@ -704,6 +744,10 @@
                             $('#kpiExpensesCount').text(c.expenses_count + ' Records');
                             $('#kpiNetCashflow').text(c.net_cashflow_formatted);
                             $('#kpiOccupancyRate').text(c.occupancy_rate);
+                            if (c.total_scheduled_dues_formatted) $('#kpiScheduledDues').html(c.total_scheduled_dues_formatted + ' <small class="text-muted fw-normal font-11">/ mo</small>');
+                            if (c.total_monthly_rent_formatted) $('#kpiMonthlyRent').html(c.total_monthly_rent_formatted + ' <small class="text-muted fw-normal font-11">/ mo</small>');
+                            if (c.total_security_deposits_formatted) $('#kpiSecurityDeposits').text(c.total_security_deposits_formatted);
+                            if (c.total_room_rent_capacity_formatted) $('#kpiRoomRentCapacity').html(c.total_room_rent_capacity_formatted + ' <small class="text-muted fw-normal font-11">/ mo</small>');
                         }
                     }
                 });

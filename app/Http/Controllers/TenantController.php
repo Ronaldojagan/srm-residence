@@ -77,7 +77,10 @@ class TenantController extends Controller
         $stats = [
             'totalTenants' => Tenant::count(),
             'activeTenants' => Tenant::where('status', 1)->count(),
-            'totalRent' => Tenant::where('status', 1)->selectRaw('SUM(monthly_rent + maintenance_charges + other_charges) as total')->value('total') ?? 0,
+            'totalRent' => (float) (Tenant::where('status', 1)->selectRaw('SUM(monthly_rent + maintenance_charges + other_charges) as total')->value('total') ?? 0),
+            'baseRent' => (float) (Tenant::where('status', 1)->sum('monthly_rent') ?? 0),
+            'totalSecurityDeposit' => (float) (Tenant::where('status', 1)->sum('security_deposit') ?? 0),
+            'allSecurityDeposit' => (float) (Tenant::sum('security_deposit') ?? 0),
             'occupiedRooms' => Tenant::where('status', 1)->whereNotNull('room_id')->distinct('room_id')->count('room_id'),
         ];
 

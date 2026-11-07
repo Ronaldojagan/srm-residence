@@ -342,6 +342,57 @@
             </div>
         </div>
 
+        <!-- HIGHLIGHT BAR: Security Deposits Held & Scheduled Monthly Rent Roll -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <div class="res-card p-3 mb-0 border-start border-4 border-info d-flex align-items-center justify-content-between shadow-sm">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="res-icon-box mb-0" style="background: linear-gradient(135deg, #0ea1b1, #0284c7); box-shadow: 0 6px 14px rgba(14, 161, 177, 0.3); width: 48px; height: 48px;">
+                            <i class="fas fa-hand-holding-dollar"></i>
+                        </div>
+                        <div>
+                            <span class="res-kpi-title mb-0 d-block">Scheduled Monthly Rent Roll</span>
+                            <div class="d-flex align-items-baseline gap-2">
+                                <span class="res-kpi-value mb-0 text-dark">₹{{ number_format($residenceData['totalActiveMonthlyDue'] ?? $residenceData['totalActiveRent'] ?? 0) }}</span>
+                                <span class="text-muted small">/ month</span>
+                            </div>
+                            <small class="text-muted font-12">
+                                Base: <span class="fw-bold text-dark">₹{{ number_format($residenceData['totalActiveRent'] ?? 0) }}</span> &bull; 
+                                Total Room Capacity: <span class="fw-bold text-dark">₹{{ number_format($residenceData['totalRoomRentCapacity'] ?? 0) }}</span>
+                            </small>
+                        </div>
+                    </div>
+                    <a href="{{ url('admin/tenants') }}" class="btn btn-sm btn-outline-info rounded-pill px-3">
+                        View Leases <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="res-card p-3 mb-0 border-start border-4 border-purple d-flex align-items-center justify-content-between shadow-sm" style="border-left-color: #8b5cf6 !important;">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="res-icon-box mb-0" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed); box-shadow: 0 6px 14px rgba(139, 92, 246, 0.3); width: 48px; height: 48px;">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <div>
+                            <span class="res-kpi-title mb-0 d-block">Total Security Deposits Held</span>
+                            <div class="d-flex align-items-baseline gap-2">
+                                <span class="res-kpi-value mb-0 text-dark" style="color: #6d28d9 !important;">₹{{ number_format($residenceData['totalSecurityDeposits'] ?? 0) }}</span>
+                                <span class="badge" style="background-color: #f3e8ff; color: #7c3aed;">Refundable Trust</span>
+                            </div>
+                            <small class="text-muted font-12">
+                                Active Leases: <span class="fw-bold text-dark">{{ $residenceData['tenantCount'] ?? 0 }} Tenants</span> &bull; 
+                                Deposit Potential: <span class="fw-bold text-dark">₹{{ number_format($residenceData['totalRoomDepositCapacity'] ?? 0) }}</span>
+                            </small>
+                        </div>
+                    </div>
+                    <a href="{{ url('admin/billing') }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                        Ledger <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
         @php
             $totRooms = $residenceData['totalRooms'] ?? 23;
             $availRooms = $residenceData['availableRooms'] ?? 0;

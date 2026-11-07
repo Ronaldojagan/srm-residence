@@ -208,6 +208,11 @@ class ReportController extends Controller
         }
         $totalTenants = (int) (clone $tenantsQuery)->count();
         $activeTenants = (int) (clone $tenantsQuery)->where('status', 1)->count();
+        $totalSecurityDeposits = (float) (clone $tenantsQuery)->where('status', 1)->sum('security_deposit');
+        $totalMonthlyRent = (float) (clone $tenantsQuery)->where('status', 1)->sum('monthly_rent');
+        $totalScheduledDues = (float) ((clone $tenantsQuery)->where('status', 1)->selectRaw('SUM(monthly_rent + maintenance_charges + other_charges) as total')->value('total') ?? 0);
+        $totalRoomRentCapacity = (float) (clone $roomsQuery)->where('is_self', 0)->sum('monthly_rent');
+        $totalRoomDepositCapacity = (float) (clone $roomsQuery)->where('is_self', 0)->sum('security_deposit');
 
         return response()->json([
             'success' => true,
@@ -238,6 +243,16 @@ class ReportController extends Controller
                 'occupancy_rate' => $occupancyRate . '%',
                 'total_tenants' => $totalTenants,
                 'active_tenants' => $activeTenants,
+                'total_security_deposits' => $totalSecurityDeposits,
+                'total_security_deposits_formatted' => '₹' . number_format($totalSecurityDeposits, 2),
+                'total_monthly_rent' => $totalMonthlyRent,
+                'total_monthly_rent_formatted' => '₹' . number_format($totalMonthlyRent, 2),
+                'total_scheduled_dues' => $totalScheduledDues,
+                'total_scheduled_dues_formatted' => '₹' . number_format($totalScheduledDues, 2),
+                'total_room_rent_capacity' => $totalRoomRentCapacity,
+                'total_room_rent_capacity_formatted' => '₹' . number_format($totalRoomRentCapacity, 2),
+                'total_room_deposit_capacity' => $totalRoomDepositCapacity,
+                'total_room_deposit_capacity_formatted' => '₹' . number_format($totalRoomDepositCapacity, 2),
             ]
         ]);
     }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Room;
+use App\Models\Tenant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -123,6 +124,11 @@ class RoomController extends Controller
 
     private function getStats()
     {
+        $totalRentCapacity = (float) Room::where('is_self', 0)->sum('monthly_rent');
+        $totalDepositCapacity = (float) Room::where('is_self', 0)->sum('security_deposit');
+        $occupiedRent = (float) Tenant::where('status', 1)->sum('monthly_rent');
+        $heldDeposits = (float) Tenant::where('status', 1)->sum('security_deposit');
+
         return [
             'totalRooms' => Room::count(),
             'availableRooms' => Room::where('occupancy_status', 'available')->count(),
@@ -131,6 +137,14 @@ class RoomController extends Controller
                 $q->where('occupancy_status', 'self')->orWhere('is_self', 1);
             })->count(),
             'maintenanceRooms' => Room::where('occupancy_status', 'maintenance')->count(),
+            'totalRentCapacity' => $totalRentCapacity,
+            'totalRentCapacityFormatted' => '₹' . number_format($totalRentCapacity),
+            'totalDepositCapacity' => $totalDepositCapacity,
+            'totalDepositCapacityFormatted' => '₹' . number_format($totalDepositCapacity),
+            'occupiedRent' => $occupiedRent,
+            'occupiedRentFormatted' => '₹' . number_format($occupiedRent),
+            'heldDeposits' => $heldDeposits,
+            'heldDepositsFormatted' => '₹' . number_format($heldDeposits),
         ];
     }
 

@@ -120,20 +120,42 @@
         </div>
     </div>
 
-    <!-- Overview Metric Cards -->
+    <!-- Overview Metric Cards (Rent Amounts & Security Deposits Included) -->
     <div class="row g-3 mt-1">
-        <div class="col-md-3">
+        <div class="col-xl-2 col-md-4 col-sm-6">
+            <div class="stat-pill-card border-start border-4 border-info">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-muted small text-uppercase fw-bold">Scheduled Rent</span>
+                    <span class="badge bg-info-subtle text-info font-12"><i class="fas fa-calendar-check"></i></span>
+                </div>
+                <h3 class="fw-bold my-1 text-info" id="statScheduledRent">₹{{ number_format($stats['scheduledRent'] ?? 0) }}</h3>
+                <small class="text-muted">Active Leases / Mo</small>
+            </div>
+        </div>
+
+        <div class="col-xl-2 col-md-4 col-sm-6">
+            <div class="stat-pill-card border-start border-4 border-purple" style="border-left-color: #8b5cf6 !important;">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-muted small text-uppercase fw-bold">Security Deposits</span>
+                    <span class="badge font-12" style="background-color: #f3e8ff; color: #8b5cf6;"><i class="fas fa-shield-alt"></i></span>
+                </div>
+                <h3 class="fw-bold my-1 text-purple" style="color: #8b5cf6;" id="statTotalSecurityDeposits">₹{{ number_format($stats['totalSecurityDeposits'] ?? 0) }}</h3>
+                <small class="text-muted">Held in Trust</small>
+            </div>
+        </div>
+
+        <div class="col-xl-2 col-md-4 col-sm-6">
             <div class="stat-pill-card border-start border-4 border-primary">
                 <div class="d-flex justify-content-between align-items-center">
                     <span class="text-muted small text-uppercase fw-bold">Total Invoiced</span>
                     <span class="badge bg-primary-subtle text-primary font-12"><i class="fas fa-file-invoice"></i></span>
                 </div>
                 <h3 class="fw-bold my-1 text-dark" id="statTotalBilled">₹{{ number_format($stats['totalBilled']) }}</h3>
-                <small class="text-muted">This Month: <span id="statThisMonthBilled">₹{{ number_format($stats['thisMonthBilled']) }}</span></small>
+                <small class="text-muted">This Mo: <span id="statThisMonthBilled">₹{{ number_format($stats['thisMonthBilled']) }}</span></small>
             </div>
         </div>
 
-        <div class="col-md-3">
+        <div class="col-xl-2 col-md-4 col-sm-6">
             <div class="stat-pill-card border-start border-4 border-success">
                 <div class="d-flex justify-content-between align-items-center">
                     <span class="text-muted small text-uppercase fw-bold">Total Collected</span>
@@ -144,25 +166,25 @@
             </div>
         </div>
 
-        <div class="col-md-3">
+        <div class="col-xl-2 col-md-4 col-sm-6">
             <div class="stat-pill-card border-start border-4 border-warning">
                 <div class="d-flex justify-content-between align-items-center">
                     <span class="text-muted small text-uppercase fw-bold">Outstanding Dues</span>
                     <span class="badge bg-warning-subtle text-warning font-12"><i class="fas fa-clock"></i></span>
                 </div>
                 <h3 class="fw-bold my-1 text-warning" id="statTotalDue">₹{{ number_format($stats['totalDue']) }}</h3>
-                <small class="text-muted">Pending balance to collect</small>
+                <small class="text-muted">Pending balance</small>
             </div>
         </div>
 
-        <div class="col-md-3">
+        <div class="col-xl-2 col-md-4 col-sm-6">
             <div class="stat-pill-card border-start border-4 border-danger">
                 <div class="d-flex justify-content-between align-items-center">
                     <span class="text-muted small text-uppercase fw-bold">Overdue Invoices</span>
                     <span class="badge bg-danger-subtle text-danger font-12"><i class="fas fa-exclamation-circle"></i></span>
                 </div>
                 <h3 class="fw-bold my-1 text-danger" id="statOverdueCount">{{ $stats['overdueCount'] }}</h3>
-                <small class="text-muted">Bills past due date</small>
+                <small class="text-muted">Past due date</small>
             </div>
         </div>
     </div>
@@ -933,6 +955,18 @@
                 // =========================================================================
                 function updateStatsCards(stats) {
                     if (!stats) return;
+                    if (stats.scheduledRentFormatted !== undefined) {
+                        $('#statScheduledRent').text(stats.scheduledRentFormatted);
+                    } else if (stats.scheduledRent !== undefined) {
+                        $('#statScheduledRent').text('₹' + Math.round(stats.scheduledRent).toLocaleString('en-IN'));
+                    }
+
+                    if (stats.totalSecurityDepositsFormatted !== undefined) {
+                        $('#statTotalSecurityDeposits').text(stats.totalSecurityDepositsFormatted);
+                    } else if (stats.totalSecurityDeposits !== undefined) {
+                        $('#statTotalSecurityDeposits').text('₹' + Math.round(stats.totalSecurityDeposits).toLocaleString('en-IN'));
+                    }
+
                     if (stats.totalBilledFormatted !== undefined) {
                         $('#statTotalBilled').text(stats.totalBilledFormatted);
                     } else if (stats.totalBilled !== undefined) {

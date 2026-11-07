@@ -46,6 +46,11 @@ class BillingController extends Controller
 
         $collectionRate = $totalBilled > 0 ? round(($totalCollected / $totalBilled) * 100, 1) : 0;
 
+        // Active Leases & Deposits
+        $scheduledRent = (float) (Tenant::where('status', 1)->selectRaw('SUM(monthly_rent + maintenance_charges + other_charges) as total')->value('total') ?? 0);
+        $baseRent = (float) (Tenant::where('status', 1)->sum('monthly_rent') ?? 0);
+        $totalSecurityDeposits = (float) (Tenant::where('status', 1)->sum('security_deposit') ?? 0);
+
         return [
             'totalBilled' => $totalBilled,
             'totalBilledFormatted' => '₹' . number_format($totalBilled),
@@ -59,6 +64,12 @@ class BillingController extends Controller
             'thisMonthCollected' => $thisMonthCollected,
             'thisMonthCollectedFormatted' => '₹' . number_format($thisMonthCollected),
             'collectionRate' => $collectionRate,
+            'scheduledRent' => $scheduledRent,
+            'scheduledRentFormatted' => '₹' . number_format($scheduledRent),
+            'baseRent' => $baseRent,
+            'baseRentFormatted' => '₹' . number_format($baseRent),
+            'totalSecurityDeposits' => $totalSecurityDeposits,
+            'totalSecurityDepositsFormatted' => '₹' . number_format($totalSecurityDeposits),
         ];
     }
 

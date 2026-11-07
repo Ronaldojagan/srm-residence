@@ -40,34 +40,41 @@
 
     <!-- Quick Stats Cards -->
     <div class="row mt-3 g-3">
-        <div class="col-md-3">
+        <div class="col-xl col-md-4 col-sm-6">
             <div class="tenant-stat-card border-start border-4 border-primary">
                 <div class="text-muted small text-uppercase fw-bold">Active Tenants</div>
                 <h3 class="fw-bold my-1 text-primary">{{ $stats['activeTenants'] }}</h3>
                 <small class="text-muted">Total registered: {{ $stats['totalTenants'] }}</small>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-xl col-md-4 col-sm-6">
             <div class="tenant-stat-card border-start border-4 border-success">
-                <div class="text-muted small text-uppercase fw-bold">Monthly Rent Pipeline</div>
+                <div class="text-muted small text-uppercase fw-bold">Monthly Rent Roll</div>
                 <h3 class="fw-bold my-1 text-success">₹{{ number_format($stats['totalRent']) }}</h3>
-                <small class="text-muted">From active leases</small>
+                <small class="text-muted">Base: ₹{{ number_format($stats['baseRent'] ?? 0) }} / mo</small>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-xl col-md-4 col-sm-6">
             <div class="tenant-stat-card border-start border-4 border-info">
+                <div class="text-muted small text-uppercase fw-bold">Security Deposits</div>
+                <h3 class="fw-bold my-1 text-info">₹{{ number_format($stats['totalSecurityDeposit'] ?? 0) }}</h3>
+                <small class="text-muted">Held in refundable trust</small>
+            </div>
+        </div>
+        <div class="col-xl col-md-4 col-sm-6">
+            <div class="tenant-stat-card border-start border-4 border-purple" style="border-left-color: #8b5cf6 !important;">
                 <div class="text-muted small text-uppercase fw-bold">Occupied Rooms</div>
-                <h3 class="fw-bold my-1 text-info">{{ $stats['occupiedRooms'] }}</h3>
+                <h3 class="fw-bold my-1 text-purple" style="color: #8b5cf6;">{{ $stats['occupiedRooms'] }}</h3>
                 <small class="text-muted">Assigned units</small>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-xl col-md-4 col-sm-6">
             <div class="tenant-stat-card border-start border-4 border-warning">
                 <div class="text-muted small text-uppercase fw-bold">Avg. Rent / Tenant</div>
                 <h3 class="fw-bold my-1 text-warning">
                     ₹{{ $stats['activeTenants'] > 0 ? number_format(round($stats['totalRent'] / $stats['activeTenants'])) : 0 }}
                 </h3>
-                <small class="text-muted">Per room unit</small>
+                <small class="text-muted">Per active lease</small>
             </div>
         </div>
     </div>

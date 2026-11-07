@@ -254,6 +254,14 @@ class HomeController extends Controller
             }
         }
 
+        // Security Deposits & Scheduled Rent Rolls
+        $totalActiveRent = (float) Tenant::where('status', 1)->sum('monthly_rent');
+        $totalActiveMonthlyDue = (float) (Tenant::where('status', 1)->selectRaw('SUM(monthly_rent + maintenance_charges + other_charges) as total')->value('total') ?? 0);
+        $totalSecurityDeposits = (float) Tenant::where('status', 1)->sum('security_deposit');
+        $allSecurityDeposits = (float) Tenant::sum('security_deposit');
+        $totalRoomRentCapacity = (float) Room::where('is_self', 0)->sum('monthly_rent');
+        $totalRoomDepositCapacity = (float) Room::where('is_self', 0)->sum('security_deposit');
+
         return [
             'totalUsers' => $totalUsers,
             'tenantCount' => $tenantCount,
@@ -272,6 +280,12 @@ class HomeController extends Controller
             'profitMargin' => $profitMargin,
             'pendingDues' => $pendingDues,
             'overdueTenants' => $overdueTenantsCount,
+            'totalActiveRent' => $totalActiveRent,
+            'totalActiveMonthlyDue' => $totalActiveMonthlyDue,
+            'totalSecurityDeposits' => $totalSecurityDeposits,
+            'allSecurityDeposits' => $allSecurityDeposits,
+            'totalRoomRentCapacity' => $totalRoomRentCapacity,
+            'totalRoomDepositCapacity' => $totalRoomDepositCapacity,
             'rentPipeline' => $rentPipeline,
             'financialTrends' => [
                 'months' => $trendMonths,
