@@ -19,7 +19,7 @@ class RoomController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $query = Room::with('currentTenant')->orderByRaw('CAST(room_number AS UNSIGNED) ASC, room_number ASC');
+            $query = Room::with(['currentTenant', 'activeTenants'])->orderByRaw('CAST(room_number AS UNSIGNED) ASC, room_number ASC');
 
             if ($request->filled('floor')) {
                 $query->where('floor', $request->floor);
@@ -86,8 +86,10 @@ class RoomController extends Controller
                         return '<span class="badge bg-info-subtle text-info border border-info px-2 py-1"><i class="fas fa-user-shield me-1"></i> Self Occupied</span>';
                     }
                     $tenantHtml = '';
-                    if ($row->currentTenant) {
-                        $tenantHtml = '<div class="mt-1 small text-dark"><i class="fas fa-user-circle text-primary me-1"></i> <span class="fw-semibold">' . e($row->currentTenant->name) . '</span></div>';
+                    $activeResidents = $row->active_residents;
+                    if ($activeResidents->isNotEmpty()) {
+                        $names = $activeResidents->pluck('name')->unique()->implode(', ');
+                        $tenantHtml = '<div class="mt-1 small text-dark"><i class="fas fa-user-circle text-primary me-1"></i> <span class="fw-semibold">' . e($names) . '</span></div>';
                     }
                     if ($row->occupancy_status === 'available') {
                         return '<span class="badge bg-success-subtle text-success border border-success px-2 py-1"><i class="fas fa-check-circle me-1"></i> Available</span>';

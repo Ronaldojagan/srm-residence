@@ -47,6 +47,31 @@ class Room extends Model
         return $this->hasMany(Tenant::class, 'room_id');
     }
 
+    public function assignedTenants()
+    {
+        return $this->belongsToMany(Tenant::class, 'tenant_rooms', 'room_id', 'tenant_id')->withTimestamps();
+    }
+
+    public function activeTenants()
+    {
+        return $this->belongsToMany(Tenant::class, 'tenant_rooms', 'room_id', 'tenant_id')->where('tenants.status', 1);
+    }
+
+    public function getActiveResidentsAttribute()
+    {
+        if ($this->relationLoaded('activeTenants') && $this->activeTenants->isNotEmpty()) {
+            return $this->activeTenants;
+        }
+        $t = $this->activeTenants()->get();
+        if ($t->isNotEmpty()) {
+            return $t;
+        }
+        if ($this->currentTenant) {
+            return collect([$this->currentTenant]);
+        }
+        return collect();
+    }
+
     public function currentTenant()
     {
         return $this->hasOne(Tenant::class, 'room_id')->where('status', 1)->latestOfMany();

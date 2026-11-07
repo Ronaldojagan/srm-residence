@@ -70,6 +70,44 @@ class Tenant extends Model
         return $this->belongsTo(Room::class, 'room_id');
     }
 
+    public function rooms()
+    {
+        return $this->belongsToMany(Room::class, 'tenant_rooms', 'tenant_id', 'room_id')->withTimestamps();
+    }
+
+    public function getAssignedRoomsAttribute()
+    {
+        if ($this->relationLoaded('rooms') && $this->rooms->isNotEmpty()) {
+            return $this->rooms;
+        }
+        $rooms = $this->rooms()->get();
+        if ($rooms->isNotEmpty()) {
+            return $rooms;
+        }
+        if ($this->room) {
+            return collect([$this->room]);
+        }
+        return collect();
+    }
+
+    public function getRoomNumbersDisplayAttribute(): string
+    {
+        $rooms = $this->assigned_rooms;
+        if ($rooms->isNotEmpty()) {
+            return $rooms->sortBy(fn($r) => (int) $r->room_number)->pluck('room_number')->implode(', ');
+        }
+        return $this->room_number ?? 'Unassigned';
+    }
+
+    public function getRoomTypesDisplayAttribute(): string
+    {
+        $rooms = $this->assigned_rooms;
+        if ($rooms->isNotEmpty()) {
+            return $rooms->pluck('room_type')->unique()->filter()->implode(', ');
+        }
+        return $this->room_type ?? 'Standard';
+    }
+
     public function bills()
     {
         return $this->hasMany(Bill::class, 'tenant_id');

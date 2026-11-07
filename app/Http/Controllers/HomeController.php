@@ -205,7 +205,7 @@ class HomeController extends Controller
         }
 
         // Recent Tenants Check-ins with real status ordered by room number
-        $tenantsList = Tenant::with(['room', 'bills'])
+        $tenantsList = Tenant::with(['room', 'rooms', 'bills'])
             ->orderByRaw('CAST(room_number AS UNSIGNED) ASC, room_number ASC')
             ->take(5)
             ->get();
@@ -215,6 +215,7 @@ class HomeController extends Controller
             $hasDue = $t->bills ? $t->bills->whereIn('status', ['unpaid', 'partially_paid'])->count() > 0 : false;
             $rentStatus = $hasOverdue ? 'Overdue' : ($hasDue ? 'Due' : 'Paid');
 
+            $roomDisplay = $t->room_numbers_display;
             $recentTenants[] = [
                 'id' => $t->id,
                 'name' => $t->name,
@@ -222,10 +223,10 @@ class HomeController extends Controller
                 'phone' => $t->phone ?? '-',
                 'emergency_contact' => $t->emergency_contact ?? 'Not provided',
                 'address' => $t->address ?? 'Not provided',
-                'room' => $t->room ? 'Room ' . $t->room->room_number : ($t->room_number ? 'Room ' . $t->room_number : 'Unassigned'),
-                'room_number' => $t->room ? $t->room->room_number : ($t->room_number ?? '-'),
-                'floor' => $t->room ? $t->room->floor : '-',
-                'type' => $t->room ? $t->room->room_type : ($t->room_type ?? 'Standard'),
+                'room' => $roomDisplay !== 'Unassigned' ? 'Room ' . $roomDisplay : ($t->room ? 'Room ' . $t->room->room_number : 'Unassigned'),
+                'room_number' => $roomDisplay !== 'Unassigned' ? $roomDisplay : ($t->room ? $t->room->room_number : '-'),
+                'floor' => $t->assigned_rooms->isNotEmpty() ? $t->assigned_rooms->pluck('floor')->unique()->implode(', ') : ($t->room ? $t->room->floor : '-'),
+                'type' => $t->room_types_display,
                 'rent' => (float) ($t->monthly_rent > 0 ? $t->monthly_rent : ($t->room ? $t->room->total_monthly : 5000)),
                 'base_rent' => (float) $t->monthly_rent,
                 'maintenance' => (float) $t->maintenance_charges,

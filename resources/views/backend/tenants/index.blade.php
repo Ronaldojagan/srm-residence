@@ -4,6 +4,7 @@
         <link href="{{ url('assets/libs/sweetalert2/sweetalert2.min.css') }}" rel="stylesheet" type="text/css" />
         <link href="https://cdn.datatables.net/1.11.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+        <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
         <style>
             .tenant-stat-card {
                 background: #fff;
@@ -21,6 +22,43 @@
                 color: #fff !important;
                 border-color: #0ea1b1 !important;
                 border-radius: 5px;
+            }
+            /* Select2 Custom Multi-select Styling */
+            .select2-container--default .select2-selection--multiple {
+                border: 1px solid #ced4da;
+                border-radius: 0.375rem;
+                min-height: 38px;
+                padding: 3px 6px;
+            }
+            .select2-container--default.select2-container--focus .select2-selection--multiple {
+                border-color: #0ea1b1;
+                box-shadow: 0 0 0 0.25rem rgba(14, 161, 177, 0.25);
+            }
+            .select2-container--default .select2-selection--multiple .select2-selection__choice {
+                background-color: #0ea1b1;
+                color: #ffffff;
+                border: none;
+                border-radius: 4px;
+                padding: 2px 8px;
+                font-size: 12px;
+                font-weight: 600;
+                margin-top: 3px;
+            }
+            .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+                color: #ffffff;
+                margin-right: 5px;
+            }
+            .select2-container--default .select2-selection--multiple .select2-selection__choice__remove:hover {
+                color: #fecdd3;
+            }
+            .select2-dropdown {
+                z-index: 1065 !important;
+                border: 1px solid #cbd5e1;
+                border-radius: 8px;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            }
+            .select2-container--default .select2-results__option--highlighted[aria-selected] {
+                background-color: #0ea1b1;
             }
         </style>
     @endpush
@@ -141,15 +179,18 @@
                                 <input type="tel" name="emergency_contact" class="form-control" placeholder="Parent / Guardian phone" maxlength="15">
                             </div>
 
-                            <div class="col-md-4">
-                                <label class="form-label fw-semibold">Assign Room <span class="text-danger">*</span></label>
-                                <select name="room_id" id="tenant_room_id" class="form-select" required>
-                                    <option value="">Select Room...</option>
+                            <div class="col-md-8">
+                                <label class="form-label fw-semibold d-flex justify-content-between align-items-center mb-1">
+                                    <span>Assign Room(s) <span class="text-danger">*</span></span>
+                                    <span class="badge bg-primary-subtle text-primary font-11" id="addRoomSelectedCount">Select 1 or more rooms</span>
+                                </label>
+                                <select name="room_ids[]" id="tenant_room_ids" class="form-select select2-rooms" multiple required>
                                     @if(isset($rooms))
                                         @foreach($rooms as $r)
                                             <option value="{{ $r->id }}" 
                                                 {{ ($r->is_self || $r->occupancy_status === 'self') ? 'disabled' : '' }}
                                                 data-number="{{ $r->room_number }}" 
+                                                data-floor="{{ $r->floor }}" 
                                                 data-type="{{ $r->room_type }}" 
                                                 data-rent="{{ $r->monthly_rent }}" 
                                                 data-deposit="{{ $r->security_deposit }}"
@@ -162,19 +203,12 @@
                                     @endif
                                 </select>
                                 <input type="hidden" name="room_number" id="tenant_room_number">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label fw-semibold">Room Type <span class="text-danger">*</span></label>
-                                <select name="room_type" class="form-select" required>
-                                    <option value="Single Deluxe" selected>Single Deluxe</option>
-                                    <option value="2-Sharing AC">2-Sharing AC</option>
-                                    <option value="3-Sharing Non-AC">3-Sharing Non-AC</option>
-                                    <option value="Executive Suite">Executive Suite</option>
-                                </select>
+                                <small class="text-muted font-11 d-block mt-1"><i class="fas fa-info-circle me-1"></i> Multi-room selection allowed. Rent and deposits combine automatically.</small>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label fw-semibold">Commence Date <span class="text-danger">*</span></label>
                                 <input type="date" name="commence_date" class="form-control" value="{{ date('Y-m-d') }}" required>
+                                <input type="hidden" name="room_type" id="tenant_room_type" value="Standard">
                             </div>
 
                             <div class="col-md-6">
@@ -297,15 +331,18 @@
                                 <input type="tel" id="edit_emergency_contact" name="emergency_contact" class="form-control" maxlength="15">
                             </div>
 
-                            <div class="col-md-4">
-                                <label class="form-label fw-semibold">Assign Room <span class="text-danger">*</span></label>
-                                <select id="edit_tenant_room_id" name="room_id" class="form-select" required>
-                                    <option value="">Select Room...</option>
+                            <div class="col-md-8">
+                                <label class="form-label fw-semibold d-flex justify-content-between align-items-center mb-1">
+                                    <span>Assign Room(s) <span class="text-danger">*</span></span>
+                                    <span class="badge bg-primary-subtle text-primary font-11" id="editRoomSelectedCount">Select 1 or more rooms</span>
+                                </label>
+                                <select id="edit_tenant_room_ids" name="room_ids[]" class="form-select select2-rooms" multiple required>
                                     @if(isset($rooms))
                                         @foreach($rooms as $r)
                                             <option value="{{ $r->id }}" 
                                                 {{ ($r->is_self || $r->occupancy_status === 'self') ? 'disabled' : '' }}
                                                 data-number="{{ $r->room_number }}" 
+                                                data-floor="{{ $r->floor }}" 
                                                 data-type="{{ $r->room_type }}" 
                                                 data-rent="{{ $r->monthly_rent }}" 
                                                 data-deposit="{{ $r->security_deposit }}"
@@ -318,19 +355,12 @@
                                     @endif
                                 </select>
                                 <input type="hidden" name="room_number" id="edit_tenant_room_number">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label fw-semibold">Room Type <span class="text-danger">*</span></label>
-                                <select id="edit_room_type" name="room_type" class="form-select" required>
-                                    <option value="Single Deluxe">Single Deluxe</option>
-                                    <option value="2-Sharing AC">2-Sharing AC</option>
-                                    <option value="3-Sharing Non-AC">3-Sharing Non-AC</option>
-                                    <option value="Executive Suite">Executive Suite</option>
-                                </select>
+                                <small class="text-muted font-11 d-block mt-1"><i class="fas fa-info-circle me-1"></i> Multi-room selection allowed. Rents and deposits combine automatically.</small>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label fw-semibold">Commence Date</label>
                                 <input type="date" id="edit_commence_date" name="commence_date" class="form-control">
+                                <input type="hidden" name="room_type" id="edit_room_type" value="Standard">
                             </div>
 
                             <div class="col-md-6">
@@ -421,6 +451,7 @@
     @push('footer_content')
         <script src="https://cdn.datatables.net/1.11.4/js/jquery.dataTables.min.js"></script>
         <script src="https://cdn.datatables.net/1.11.4/js/dataTables.bootstrap5.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
         <script src="{{ url('assets/libs/sweetalert2/sweetalert2.all.min.js') }}"></script>
 
         <script type="text/javascript">
@@ -523,75 +554,133 @@
                     calcEditTenantTotal();
                 });
 
+                // Initialize Select2 multi-room pickers
+                $('#tenant_room_ids').select2({
+                    dropdownParent: $('#addTenantModal'),
+                    placeholder: 'Click to select room(s)...',
+                    width: '100%',
+                    closeOnSelect: false
+                });
+
+                $('#edit_tenant_room_ids').select2({
+                    dropdownParent: $('#editTenantModal'),
+                    placeholder: 'Click to select room(s)...',
+                    width: '100%',
+                    closeOnSelect: false
+                });
+
                 $('#addTenantModal').on('show.bs.modal', function() {
                     $('#add_tenant_rent_type_custom').prop('checked', true);
                     $('#add_maintenance_charges').prop('readonly', false).removeClass('bg-light');
                     $('#add_other_charges').prop('readonly', false).removeClass('bg-light');
+                    $('#tenant_room_ids').val(null).trigger('change.select2');
+                    $('#addRoomSelectedCount').text('Select 1 or more rooms');
                 });
 
-                // Auto-fill room details when room is selected
-                $('#tenant_room_id').on('change', function() {
-                    var $opt = $(this).find('option:selected');
-                    $('#tenant_room_number').val($opt.data('number') || '');
-                    if ($opt.data('type')) {
-                        $('#addTenantModal select[name="room_type"]').val($opt.data('type'));
-                    }
-                    if ($opt.data('rent') !== undefined) {
-                        $('#add_monthly_rent').val($opt.data('rent'));
-                    }
-                    if ($opt.data('eb') !== undefined) {
-                        $('#add_eb_unit_rate').val($opt.data('eb'));
+                // Auto-fill combined room details when rooms are selected in Create modal
+                $('#tenant_room_ids').on('change', function() {
+                    var $selected = $(this).find('option:selected');
+                    var count = $selected.length;
+                    $('#addRoomSelectedCount').text(count > 0 ? count + ' room(s) selected' : 'Select 1 or more rooms');
+
+                    if (count === 0) {
+                        $('#tenant_room_number').val('');
+                        $('#tenant_room_type').val('Standard');
+                        return;
                     }
 
-                    var maint = parseFloat($opt.data('maintenance')) || 0;
-                    var other = parseFloat($opt.data('other')) || 0;
+                    var totalRent = 0;
+                    var totalDeposit = 0;
+                    var totalMaint = 0;
+                    var totalOther = 0;
+                    var roomNumbers = [];
+                    var roomTypes = [];
+                    var ebRate = 10.00;
 
-                    if (maint === 0 && other === 0) {
+                    $selected.each(function() {
+                        var $opt = $(this);
+                        totalRent += parseFloat($opt.data('rent')) || 0;
+                        totalDeposit += parseFloat($opt.data('deposit')) || 0;
+                        totalMaint += parseFloat($opt.data('maintenance')) || 0;
+                        totalOther += parseFloat($opt.data('other')) || 0;
+                        if ($opt.data('number')) roomNumbers.push($opt.data('number'));
+                        if ($opt.data('type') && !roomTypes.includes($opt.data('type'))) roomTypes.push($opt.data('type'));
+                        if ($opt.data('eb')) ebRate = parseFloat($opt.data('eb'));
+                    });
+
+                    $('#tenant_room_number').val(roomNumbers.join(', '));
+                    $('#tenant_room_type').val(roomTypes.join(', '));
+                    $('#add_monthly_rent').val(totalRent);
+                    $('#addTenantModal input[name="security_deposit"]').val(totalDeposit);
+                    $('#add_eb_unit_rate').val(ebRate.toFixed(2));
+
+                    if (totalMaint === 0 && totalOther === 0) {
                         $('#add_tenant_rent_type_fixed').prop('checked', true);
                         $('#add_maintenance_charges').val('0.00').prop('readonly', true).addClass('bg-light');
                         $('#add_other_charges').val('0.00').prop('readonly', true).addClass('bg-light');
                     } else {
                         $('#add_tenant_rent_type_custom').prop('checked', true);
-                        $('#add_maintenance_charges').val($opt.data('maintenance') || '0.00').prop('readonly', false).removeClass('bg-light');
-                        $('#add_other_charges').val($opt.data('other') || '0.00').prop('readonly', false).removeClass('bg-light');
-                    }
-
-                    if ($opt.data('deposit') !== undefined) {
-                        $('#addTenantModal input[name="security_deposit"]').val($opt.data('deposit'));
+                        $('#add_maintenance_charges').val(totalMaint.toFixed(2)).prop('readonly', false).removeClass('bg-light');
+                        $('#add_other_charges').val(totalOther.toFixed(2)).prop('readonly', false).removeClass('bg-light');
                     }
                     calcAddTenantTotal();
                 });
 
-                $('#edit_tenant_room_id').on('change', function() {
-                    var $opt = $(this).find('option:selected');
-                    $('#edit_tenant_room_number').val($opt.data('number') || '');
-                    if ($opt.data('type')) {
-                        $('#editTenantModal select[name="room_type"]').val($opt.data('type'));
-                    }
-                    if ($opt.data('rent') !== undefined) {
-                        $('#edit_monthly_rent').val($opt.data('rent'));
-                    }
-                    if ($opt.data('eb') !== undefined) {
-                        $('#edit_eb_unit_rate').val($opt.data('eb'));
+                var isProgrammaticEditChange = false;
+
+                // Auto-fill combined room details when rooms are selected in Edit modal
+                $('#edit_tenant_room_ids').on('change', function() {
+                    var $selected = $(this).find('option:selected');
+                    var count = $selected.length;
+                    $('#editRoomSelectedCount').text(count > 0 ? count + ' room(s) selected' : 'Select 1 or more rooms');
+
+                    if (count === 0) {
+                        $('#edit_tenant_room_number').val('');
+                        return;
                     }
 
-                    var maint = parseFloat($opt.data('maintenance')) || 0;
-                    var other = parseFloat($opt.data('other')) || 0;
+                    var roomNumbers = [];
+                    var roomTypes = [];
+                    $selected.each(function() {
+                        var $opt = $(this);
+                        if ($opt.data('number')) roomNumbers.push($opt.data('number'));
+                        if ($opt.data('type') && !roomTypes.includes($opt.data('type'))) roomTypes.push($opt.data('type'));
+                    });
 
-                    if (maint === 0 && other === 0) {
-                        $('#edit_tenant_rent_type_fixed').prop('checked', true);
-                        $('#edit_maintenance_charges').val('0.00').prop('readonly', true).addClass('bg-light');
-                        $('#edit_other_charges').val('0.00').prop('readonly', true).addClass('bg-light');
-                    } else {
-                        $('#edit_tenant_rent_type_custom').prop('checked', true);
-                        $('#edit_maintenance_charges').val($opt.data('maintenance') || '0.00').prop('readonly', false).removeClass('bg-light');
-                        $('#edit_other_charges').val($opt.data('other') || '0.00').prop('readonly', false).removeClass('bg-light');
-                    }
+                    $('#edit_tenant_room_number').val(roomNumbers.join(', '));
+                    $('#edit_room_type').val(roomTypes.join(', '));
 
-                    if ($opt.data('deposit') !== undefined) {
-                        $('#editTenantModal input[name="security_deposit"]').val($opt.data('deposit'));
+                    if (!isProgrammaticEditChange) {
+                        var totalRent = 0;
+                        var totalDeposit = 0;
+                        var totalMaint = 0;
+                        var totalOther = 0;
+                        var ebRate = 10.00;
+
+                        $selected.each(function() {
+                            var $opt = $(this);
+                            totalRent += parseFloat($opt.data('rent')) || 0;
+                            totalDeposit += parseFloat($opt.data('deposit')) || 0;
+                            totalMaint += parseFloat($opt.data('maintenance')) || 0;
+                            totalOther += parseFloat($opt.data('other')) || 0;
+                            if ($opt.data('eb')) ebRate = parseFloat($opt.data('eb'));
+                        });
+
+                        $('#edit_monthly_rent').val(totalRent);
+                        $('#edit_security_deposit').val(totalDeposit);
+                        $('#edit_eb_unit_rate').val(ebRate.toFixed(2));
+
+                        if (totalMaint === 0 && totalOther === 0) {
+                            $('#edit_tenant_rent_type_fixed').prop('checked', true);
+                            $('#edit_maintenance_charges').val('0.00').prop('readonly', true).addClass('bg-light');
+                            $('#edit_other_charges').val('0.00').prop('readonly', true).addClass('bg-light');
+                        } else {
+                            $('#edit_tenant_rent_type_custom').prop('checked', true);
+                            $('#edit_maintenance_charges').val(totalMaint.toFixed(2)).prop('readonly', false).removeClass('bg-light');
+                            $('#edit_other_charges').val(totalOther.toFixed(2)).prop('readonly', false).removeClass('bg-light');
+                        }
+                        calcEditTenantTotal();
                     }
-                    calcEditTenantTotal();
                 });
 
                 // 1. ADD TENANT VIA AJAX
@@ -619,10 +708,10 @@
                         return;
                     }
 
-                    var roomId = $form.find('#tenant_room_id').val();
-                    if (!roomId) {
-                        $errors.html('Please select a room to assign to this resident.').removeClass('d-none');
-                        $form.find('#tenant_room_id').addClass('is-invalid').focus();
+                    var roomIds = $form.find('#tenant_room_ids').val();
+                    if (!roomIds || roomIds.length === 0) {
+                        $errors.html('Please select at least one room to assign to this resident.').removeClass('d-none');
+                        $form.find('#tenant_room_ids').addClass('is-invalid').focus();
                         return;
                     }
 
@@ -643,6 +732,7 @@
                             if (response.success) {
                                 $('#addTenantModal').modal('hide');
                                 $form[0].reset();
+                                $('#tenant_room_ids').val(null).trigger('change.select2');
                                 $form.find('.is-invalid').removeClass('is-invalid');
                                 table.ajax.reload(null, false);
                                 Toast.fire({
@@ -689,7 +779,13 @@
                                 $('#edit_phone').val(tenant.phone);
                                 $('#edit_email').val(tenant.email);
                                 $('#edit_emergency_contact').val(tenant.emergency_contact);
-                                $('#edit_tenant_room_id').val(tenant.room_id || '');
+
+                                isProgrammaticEditChange = true;
+                                var rIds = response.room_ids && response.room_ids.length > 0 ? response.room_ids : (tenant.room_id ? [tenant.room_id] : []);
+                                $('#edit_tenant_room_ids').val(rIds).trigger('change.select2');
+                                $('#editRoomSelectedCount').text(rIds.length > 0 ? rIds.length + ' room(s) selected' : 'Select 1 or more rooms');
+                                isProgrammaticEditChange = false;
+
                                 $('#edit_tenant_room_number').val(tenant.room_number || '');
                                 $('#edit_room_type').val(tenant.room_type);
                                 if (tenant.commence_date) {
@@ -748,6 +844,13 @@
                     if (!phone || phone.length < 10) {
                         $errors.html('Please enter a valid 10-digit mobile number.').removeClass('d-none');
                         $form.find('#edit_phone').addClass('is-invalid').focus();
+                        return;
+                    }
+
+                    var roomIds = $form.find('#edit_tenant_room_ids').val();
+                    if (!roomIds || roomIds.length === 0) {
+                        $errors.html('Please select at least one room to assign to this resident.').removeClass('d-none');
+                        $form.find('#edit_tenant_room_ids').addClass('is-invalid').focus();
                         return;
                     }
 

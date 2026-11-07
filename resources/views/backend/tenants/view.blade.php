@@ -4,6 +4,7 @@
     @push('head_content')
         <link href="{{ url('assets/libs/sweetalert2/sweetalert2.min.css') }}" rel="stylesheet" type="text/css" />
         <link href="https://cdn.jsdelivr.net/npm/@mdi/font@6.9.96/css/materialdesignicons.min.css" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
         <style>
             .tenant-hero-card {
                 background: linear-gradient(135deg, #0ea1b1 0%, #086d77 100%);
@@ -23,6 +24,32 @@
             }
             .tenant-view-stat:hover {
                 transform: translateY(-2px);
+            }
+            .select2-container--default .select2-selection--multiple {
+                border: 1px solid #ced4da;
+                border-radius: 0.375rem;
+                min-height: 38px;
+                padding: 3px 6px;
+            }
+            .select2-container--default.select2-container--focus .select2-selection--multiple {
+                border-color: #0ea1b1;
+                box-shadow: 0 0 0 0.25rem rgba(14, 161, 177, 0.25);
+            }
+            .select2-container--default .select2-selection--multiple .select2-selection__choice {
+                background-color: #0ea1b1;
+                color: #ffffff;
+                border: none;
+                border-radius: 4px;
+                padding: 2px 8px;
+                font-size: 12px;
+                font-weight: 600;
+                margin-top: 3px;
+            }
+            .select2-dropdown {
+                z-index: 1065 !important;
+                border: 1px solid #cbd5e1;
+                border-radius: 8px;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.1);
             }
             .tenant-avatar-circle {
                 width: 72px;
@@ -125,7 +152,7 @@
                                 @endif
                             </div>
                             <div class="text-white-50 font-13 d-flex flex-wrap gap-3">
-                                <span><i class="mdi mdi-door-closed me-1"></i> Room {{ $tenant->room ? $tenant->room->room_number : $tenant->room_number }} ({{ $tenant->room ? $tenant->room->floor : 'Floor' }})</span>
+                                <span><i class="mdi mdi-door-closed me-1"></i> Room {{ $tenant->room_numbers_display }}</span>
                                 <span><i class="mdi mdi-phone me-1"></i> {{ $tenant->phone }}</span>
                                 <span><i class="mdi mdi-email-outline me-1"></i> {{ $tenant->email ?? 'No email' }}</span>
                                 <span><i class="mdi mdi-calendar-check me-1"></i> Commenced: {{ $tenant->commence_date ? $tenant->commence_date->format('d M Y') : 'N/A' }}</span>
@@ -147,11 +174,11 @@
         <div class="row g-3 mb-4">
             <div class="col-xl-3 col-md-6">
                 <div class="tenant-view-stat border-start border-4 border-primary">
-                    <div class="info-label">Assigned Room</div>
+                    <div class="info-label">Assigned Room(s)</div>
                     <div class="d-flex align-items-center justify-content-between mt-1">
                         <div>
-                            <h4 class="fw-bold text-primary mb-0">Room {{ $tenant->room ? $tenant->room->room_number : $tenant->room_number }}</h4>
-                            <small class="text-muted">{{ $tenant->room_type }}</small>
+                            <h4 class="fw-bold text-primary mb-0">Room {{ $tenant->room_numbers_display }}</h4>
+                            <small class="text-muted">{{ $tenant->room_types_display }}</small>
                         </div>
                         <div class="avatar-sm bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center p-2">
                             <i class="mdi mdi-door-closed fs-4"></i>
@@ -280,41 +307,33 @@
                 <!-- Assigned Room Details -->
                 <div class="card-section mb-3">
                     <div class="card-section-header d-flex align-items-center justify-content-between">
-                        <span><i class="mdi mdi-door-closed text-primary me-2"></i> Allocated Room Unit</span>
-                        <span class="badge bg-primary text-white">Room {{ $tenant->room ? $tenant->room->room_number : $tenant->room_number }}</span>
+                        <span><i class="mdi mdi-door-closed text-primary me-2"></i> Allocated Room Unit(s)</span>
+                        <div class="d-flex flex-wrap gap-1">
+                            @foreach($tenant->assigned_rooms as $ar)
+                                <span class="badge bg-primary text-white">Room {{ $ar->room_number }}</span>
+                            @endforeach
+                        </div>
                     </div>
                     <div class="p-3">
-                        @if($tenant->room)
-                            <div class="row g-2 mb-3">
-                                <div class="col-6">
-                                    <div class="info-label">Floor</div>
-                                    <div class="info-value">{{ $tenant->room->floor }}</div>
-                                </div>
-                                <div class="col-6">
-                                    <div class="info-label">Capacity</div>
-                                    <div class="info-value">{{ $tenant->room->capacity }} Bed(s)</div>
-                                </div>
-                                <div class="col-12 mt-2">
-                                    <div class="info-label">Room Type</div>
-                                    <div class="info-value">{{ $tenant->room->room_type }}</div>
-                                </div>
-                                <div class="col-12 mt-2">
-                                    <div class="info-label">Occupancy Status</div>
-                                    <div class="info-value">
-                                        @if($tenant->room->occupancy_status === 'occupied')
-                                            <span class="badge bg-danger-subtle text-danger border border-danger px-2 py-1"><i class="fas fa-user-lock me-1"></i> Occupied</span>
-                                        @elseif($tenant->room->occupancy_status === 'available')
-                                            <span class="badge bg-success-subtle text-success border border-success px-2 py-1"><i class="fas fa-check-circle me-1"></i> Available</span>
-                                        @else
-                                            <span class="badge bg-warning-subtle text-warning border border-warning px-2 py-1">{{ ucfirst($tenant->room->occupancy_status) }}</span>
-                                        @endif
+                        @php $assignedRooms = $tenant->assigned_rooms; @endphp
+                        @if($assignedRooms->isNotEmpty())
+                            @foreach($assignedRooms as $r)
+                                <div class="p-2 border rounded-3 mb-2 bg-light">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <h6 class="fw-bold text-dark mb-0"><i class="mdi mdi-door-closed text-primary me-1"></i> Room {{ $r->room_number }}</h6>
+                                        <span class="badge bg-info-subtle text-info font-11">{{ $r->floor }}</span>
                                     </div>
+                                    <div class="row g-1 small text-muted">
+                                        <div class="col-6">Type: <span class="fw-semibold text-dark">{{ $r->room_type }}</span></div>
+                                        <div class="col-6">Capacity: <span class="fw-semibold text-dark">{{ $r->capacity }} Bed(s)</span></div>
+                                        <div class="col-6">Base Rent: <span class="fw-semibold text-success">₹{{ number_format($r->monthly_rent) }}</span></div>
+                                        <div class="col-6">Deposit: <span class="fw-semibold text-primary">₹{{ number_format($r->security_deposit) }}</span></div>
+                                    </div>
+                                    @if($r->amenities)
+                                        <div class="mt-1 small text-muted font-11"><i class="fas fa-sparkles me-1"></i> {{ $r->amenities }}</div>
+                                    @endif
                                 </div>
-                                <div class="col-12 mt-2">
-                                    <div class="info-label">Room Amenities</div>
-                                    <div class="small text-muted">{{ $tenant->room->amenities ?? 'Standard amenities provided' }}</div>
-                                </div>
-                            </div>
+                            @endforeach
                         @else
                             <div class="p-3 text-center text-muted bg-light rounded">
                                 <i class="mdi mdi-door-closed-off fs-2 d-block mb-1"></i>
@@ -610,8 +629,34 @@
                                 <input type="number" step="0.01" name="other_charges" class="form-control" value="{{ $tenant->other_charges }}">
                             </div>
 
-                            <!-- Hidden room_id keep same -->
-                            <input type="hidden" name="room_id" value="{{ $tenant->room_id }}">
+                            <div class="col-12">
+                                <label class="form-label fw-semibold d-flex justify-content-between align-items-center mb-1">
+                                    <span>Assign Room(s) <span class="text-danger">*</span></span>
+                                    <span class="badge bg-primary-subtle text-primary font-11">Multiple rooms allowed</span>
+                                </label>
+                                @php
+                                    $assignedRoomIds = $tenant->assigned_rooms->pluck('id')->toArray();
+                                @endphp
+                                <select name="room_ids[]" id="view_edit_tenant_room_ids" class="form-select select2-rooms" multiple required>
+                                    @if(isset($rooms))
+                                        @foreach($rooms as $r)
+                                            <option value="{{ $r->id }}" 
+                                                {{ in_array($r->id, $assignedRoomIds) ? 'selected' : (($r->is_self || $r->occupancy_status === 'self') ? 'disabled' : '') }}
+                                                data-number="{{ $r->room_number }}" 
+                                                data-floor="{{ $r->floor }}" 
+                                                data-type="{{ $r->room_type }}" 
+                                                data-rent="{{ $r->monthly_rent }}" 
+                                                data-deposit="{{ $r->security_deposit }}"
+                                                data-eb="{{ $r->eb_unit_rate }}"
+                                                data-maintenance="{{ $r->maintenance_charges }}"
+                                                data-other="{{ $r->other_charges }}">
+                                                Room {{ $r->room_number }} ({{ $r->floor }} - {{ $r->room_type }}) [{{ ($r->is_self || $r->occupancy_status === 'self') ? 'Self Occupied' : ucfirst($r->occupancy_status) }}]
+                                            </option>
+                                        @endforeach
+                                    @endif
+                                </select>
+                                <small class="text-muted font-11 d-block mt-1"><i class="fas fa-info-circle me-1"></i> Multi-room assignment supported.</small>
+                            </div>
 
                             <div class="col-12">
                                 <label class="form-label fw-semibold">Permanent Address</label>
@@ -632,6 +677,7 @@
     </div>
 
     @push('footer_content')
+        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
         <script src="{{ url('assets/libs/sweetalert2/sweetalert2.min.js') }}"></script>
         <script>
             $(document).ready(function() {
@@ -641,6 +687,13 @@
                     showConfirmButton: false,
                     timer: 3000,
                     timerProgressBar: true
+                });
+
+                $('#view_edit_tenant_room_ids').select2({
+                    dropdownParent: $('#editTenantModal'),
+                    placeholder: 'Click to select room(s)...',
+                    width: '100%',
+                    closeOnSelect: false
                 });
 
                 $('#editTenantForm').on('submit', function(e) {

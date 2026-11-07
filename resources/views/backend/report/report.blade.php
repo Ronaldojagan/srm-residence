@@ -338,7 +338,7 @@
                     <option value="all" selected>All Residents</option>
                     @foreach ($tenants as $tenant)
                         <option value="{{ $tenant->id }}">
-                            {{ $tenant->name }} (Room {{ $tenant->room_number ?? 'N/A' }})
+                            {{ $tenant->name }} (Room {{ $tenant->room_numbers_display }})
                         </option>
                     @endforeach
                 </select>

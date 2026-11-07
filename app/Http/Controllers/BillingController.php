@@ -94,7 +94,7 @@ class BillingController extends Controller
 
         $stats = $this->getStatsData();
 
-        $activeTenants = Tenant::with(['room', 'bills'])
+        $activeTenants = Tenant::with(['room', 'rooms', 'bills'])
             ->where('status', 1)
             ->orderByRaw('CAST(room_number AS UNSIGNED) ASC, room_number ASC')
             ->get();

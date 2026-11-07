@@ -220,7 +220,7 @@
                                     <select id="filterBillTenant" class="form-select filter-select">
                                         <option value="">All Tenants</option>
                                         @foreach($activeTenants as $t)
-                                            <option value="{{ $t->id }}">{{ $t->name }} (Room {{ $t->room ? $t->room->room_number : $t->room_number }})</option>
+                                            <option value="{{ $t->id }}">{{ $t->name }} (Room {{ $t->room_numbers_display }})</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -289,7 +289,7 @@
                                     <select id="filterPayTenant" class="form-select filter-select">
                                         <option value="">All Tenants</option>
                                         @foreach($activeTenants as $t)
-                                            <option value="{{ $t->id }}">{{ $t->name }} (Room {{ $t->room ? $t->room->room_number : $t->room_number }})</option>
+                                            <option value="{{ $t->id }}">{{ $t->name }} (Room {{ $t->room_numbers_display }})</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -371,8 +371,8 @@
                                             data-eb-start="{{ $t->eb_start_reading ?? 0.00 }}"
                                             data-maint="{{ $t->maintenance_charges }}"
                                             data-other="{{ $t->other_charges }}"
-                                            data-room="{{ $t->room ? $t->room->room_number : $t->room_number }}">
-                                            {{ $t->name }} (Room {{ $t->room ? $t->room->room_number : $t->room_number }}) - Rent ₹{{ number_format($t->monthly_rent) }}
+                                            data-room="{{ $t->room_numbers_display }}">
+                                            {{ $t->name }} (Room {{ $t->room_numbers_display }}) - Rent ₹{{ number_format($t->monthly_rent) }}
                                         </option>
                                     @endforeach
                                 </select>
