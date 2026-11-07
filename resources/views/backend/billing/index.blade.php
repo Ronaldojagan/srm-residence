@@ -1353,6 +1353,8 @@
                 // =========================================================================
                 // 4. CREATE BILL AJAX SUBMISSION
                 // =========================================================================
+                // 4. CREATE BILL VIA AJAX
+                // =========================================================================
                 $('#createBillForm').on('submit', function(e) {
                     e.preventDefault();
                     var $form = $(this);
@@ -1361,6 +1363,40 @@
                     var $errors = $('#createBillErrors');
 
                     $errors.addClass('d-none').html('');
+                    $form.find('.is-invalid').removeClass('is-invalid');
+
+                    var tenantId = $form.find('#bill_tenant_id').val();
+                    if (!tenantId) {
+                        $errors.removeClass('d-none').html('Please select a resident to bill.');
+                        $form.find('#bill_tenant_id').addClass('is-invalid').focus();
+                        return false;
+                    }
+
+                    var billDate = $form.find('input[name="bill_date"]').val();
+                    var dueDate = $form.find('input[name="due_date"]').val();
+                    if (billDate && dueDate && dueDate < billDate) {
+                        $errors.removeClass('d-none').html('Due date must be on or after the bill issue date.');
+                        $form.find('input[name="due_date"]').addClass('is-invalid').focus();
+                        return false;
+                    }
+
+                    var prevEb = parseFloat($('#bill_eb_prev_reading').val() || 0);
+                    var currEbVal = $('#bill_eb_curr_reading').val();
+                    if (currEbVal !== '' && !isNaN(parseFloat(currEbVal))) {
+                        var currEb = parseFloat(currEbVal);
+                        if (currEb < prevEb) {
+                            $errors.removeClass('d-none').html('Current meter reading (' + currEb + ') cannot be less than previous reading (' + prevEb + ').');
+                            $('#bill_eb_curr_reading').addClass('is-invalid').focus();
+                            return false;
+                        }
+                    }
+
+                    var totalAmt = parseFloat($('#bill_amount_input').val());
+                    if (isNaN(totalAmt) || totalAmt < 1) {
+                        $errors.removeClass('d-none').html('Invoice total amount must be at least ₹1.00.');
+                        return false;
+                    }
+
                     $btn.prop('disabled', true);
                     $spinner.removeClass('d-none');
 
@@ -1378,6 +1414,7 @@
                             if (res.success) {
                                 $('#createBillModal').modal('hide');
                                 $form[0].reset();
+                                $form.find('.is-invalid').removeClass('is-invalid');
                                 $('#billItemsBody').html('<tr><td colspan="4" class="text-center text-muted py-3"><i class="fas fa-arrow-up me-1"></i> Select a resident above to auto-populate invoice line items.</td></tr>');
                                 $('#displayInvoiceTotal').text('₹0.00');
                                 $('#bill_amount_input').val('0.00');
@@ -1398,6 +1435,9 @@
                             var msg = 'An error occurred while creating the invoice.';
                             if (xhr.responseJSON && xhr.responseJSON.errors) {
                                 msg = Object.values(xhr.responseJSON.errors).flat().join('<br>');
+                                $.each(xhr.responseJSON.errors, function(field, messages) {
+                                    $form.find('[name="' + field + '"]').addClass('is-invalid');
+                                });
                             } else if (xhr.responseJSON && xhr.responseJSON.message) {
                                 msg = xhr.responseJSON.message;
                             }
@@ -1469,7 +1509,7 @@
                     $('#pay_bill_no').text(billNo);
                     $('#pay_tenant_name').text(tenant);
                     $('#pay_due_display').text('₹' + parseFloat(due).toLocaleString('en-IN', { minimumFractionDigits: 2 }));
-                    $('#pay_amount_input').val(due);
+                    $('#pay_amount_input').val(due).data('max-due', due).attr('max', due).removeClass('is-invalid');
 
                     $('#recordPayErrors').addClass('d-none').html('');
                     $('#recordPaymentModal').modal('show');
@@ -1483,6 +1523,23 @@
                     var $errors = $('#recordPayErrors');
 
                     $errors.addClass('d-none').html('');
+                    $('#recordPaymentForm').find('.is-invalid').removeClass('is-invalid');
+
+                    var amount = parseFloat($('#pay_amount_input').val());
+                    var maxDue = parseFloat($('#pay_amount_input').data('max-due') || 0);
+
+                    if (isNaN(amount) || amount < 1) {
+                        $errors.removeClass('d-none').html('Payment amount must be at least ₹1.00.');
+                        $('#pay_amount_input').addClass('is-invalid').focus();
+                        return false;
+                    }
+
+                    if (maxDue > 0 && amount > (maxDue + 0.01)) {
+                        $errors.removeClass('d-none').html('Payment amount (₹' + amount.toFixed(2) + ') cannot exceed the pending due of ₹' + maxDue.toFixed(2) + '.');
+                        $('#pay_amount_input').addClass('is-invalid').focus();
+                        return false;
+                    }
+
                     $btn.prop('disabled', true);
                     $spinner.removeClass('d-none');
 
@@ -1502,6 +1559,7 @@
                             if (res.success) {
                                 $('#recordPaymentModal').modal('hide');
                                 $('#recordPaymentForm')[0].reset();
+                                $('#recordPaymentForm').find('.is-invalid').removeClass('is-invalid');
                                 billsTable.ajax.reload(null, false);
                                 paymentsTable.ajax.reload(null, false);
                                 if (res.stats) {
@@ -1518,6 +1576,9 @@
                             var msg = 'Failed to record payment.';
                             if (xhr.responseJSON && xhr.responseJSON.errors) {
                                 msg = Object.values(xhr.responseJSON.errors).flat().join('<br>');
+                                $.each(xhr.responseJSON.errors, function(field, messages) {
+                                    $('#recordPaymentForm').find('[name="' + field + '"]').addClass('is-invalid');
+                                });
                             } else if (xhr.responseJSON && xhr.responseJSON.message) {
                                 msg = xhr.responseJSON.message;
                             }

@@ -371,6 +371,22 @@
                     var $errors = $('#addExpenseErrors');
 
                     $errors.addClass('d-none').html('');
+                    $form.find('.is-invalid').removeClass('is-invalid');
+
+                    var title = $.trim($form.find('input[name="title"]').val());
+                    if (!title || title.length < 3) {
+                        $errors.html('Expense title must be at least 3 characters.').removeClass('d-none');
+                        $form.find('input[name="title"]').addClass('is-invalid').focus();
+                        return;
+                    }
+
+                    var amount = parseFloat($form.find('input[name="amount"]').val());
+                    if (isNaN(amount) || amount < 1) {
+                        $errors.html('Expense amount must be at least ₹1.00.').removeClass('d-none');
+                        $form.find('input[name="amount"]').addClass('is-invalid').focus();
+                        return;
+                    }
+
                     $btn.prop('disabled', true);
                     $spinner.removeClass('d-none');
 
@@ -388,6 +404,7 @@
                             if (response.success) {
                                 $('#addPersonalExpenseModal').modal('hide');
                                 $form[0].reset();
+                                $form.find('.is-invalid').removeClass('is-invalid');
                                 table.ajax.reload(null, false);
                                 updateStatCards(response.stats);
                                 Toast.fire({
@@ -402,12 +419,20 @@
                             var errorMsg = 'Please verify expense details.';
                             if (xhr.responseJSON && xhr.responseJSON.errors) {
                                 errorMsg = Object.values(xhr.responseJSON.errors).flat().join('<br>');
+                                $.each(xhr.responseJSON.errors, function(field, messages) {
+                                    $form.find('[name="' + field + '"]').addClass('is-invalid');
+                                });
                             } else if (xhr.responseJSON && xhr.responseJSON.message) {
                                 errorMsg = xhr.responseJSON.message;
                             }
                             $errors.html(errorMsg).removeClass('d-none');
                         }
                     });
+                });
+
+                // Clear is-invalid on change
+                $('#addPersonalExpenseForm, #editPersonalExpenseForm').on('input change', 'input, select, textarea', function() {
+                    $(this).removeClass('is-invalid');
                 });
 
                 // 2. OPEN EDIT MODAL VIA AJAX
@@ -451,6 +476,22 @@
                     var $errors = $('#editExpenseErrors');
 
                     $errors.addClass('d-none').html('');
+                    $form.find('.is-invalid').removeClass('is-invalid');
+
+                    var title = $.trim($form.find('#edit_title').val());
+                    if (!title || title.length < 3) {
+                        $errors.html('Expense title must be at least 3 characters.').removeClass('d-none');
+                        $form.find('#edit_title').addClass('is-invalid').focus();
+                        return;
+                    }
+
+                    var amount = parseFloat($form.find('#edit_amount').val());
+                    if (isNaN(amount) || amount < 1) {
+                        $errors.html('Expense amount must be at least ₹1.00.').removeClass('d-none');
+                        $form.find('#edit_amount').addClass('is-invalid').focus();
+                        return;
+                    }
+
                     $btn.prop('disabled', true);
                     $spinner.removeClass('d-none');
 
@@ -467,6 +508,7 @@
 
                             if (response.success) {
                                 $('#editPersonalExpenseModal').modal('hide');
+                                $form.find('.is-invalid').removeClass('is-invalid');
                                 table.ajax.reload(null, false);
                                 updateStatCards(response.stats);
                                 Toast.fire({
@@ -481,6 +523,9 @@
                             var errorMsg = 'Please check the entered fields.';
                             if (xhr.responseJSON && xhr.responseJSON.errors) {
                                 errorMsg = Object.values(xhr.responseJSON.errors).flat().join('<br>');
+                                $.each(xhr.responseJSON.errors, function(field, messages) {
+                                    $form.find('[name="' + field + '"]').addClass('is-invalid');
+                                });
                             } else if (xhr.responseJSON && xhr.responseJSON.message) {
                                 errorMsg = xhr.responseJSON.message;
                             }

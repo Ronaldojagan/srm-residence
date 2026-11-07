@@ -149,14 +149,24 @@ class ExpenseController extends Controller
     {
         $validated = $request->validate([
             'expense_type' => 'required|in:room,personal',
-            'room_id' => 'nullable|exists:rooms,id',
+            'room_id' => 'nullable|required_if:expense_type,room|exists:rooms,id',
             'category' => 'required|string|max:100',
-            'title' => 'required|string|max:255',
-            'amount' => 'required|numeric|min:0.01',
+            'title' => 'required|string|min:3|max:255',
+            'amount' => 'required|numeric|min:1|max:10000000',
             'expense_date' => 'required|date',
             'payment_method' => 'required|string|max:50',
             'paid_to' => 'nullable|string|max:255',
-            'notes' => 'nullable|string',
+            'notes' => 'nullable|string|max:1000',
+        ], [
+            'room_id.required_if' => 'Please select a room for room-specific expenses.',
+            'category.required' => 'Please select an expense category.',
+            'title.required' => 'Expense title/item description is required.',
+            'title.min' => 'Expense title must be at least 3 characters.',
+            'amount.required' => 'Expense amount is required.',
+            'amount.min' => 'Expense amount must be at least ₹1.00.',
+            'amount.max' => 'Expense amount exceeds the allowed maximum limit.',
+            'expense_date.required' => 'Expense date is required.',
+            'payment_method.required' => 'Please select a payment method.',
         ]);
 
         $validated['created_by'] = auth()->id();
@@ -191,12 +201,20 @@ class ExpenseController extends Controller
         $validated = $request->validate([
             'room_id' => 'nullable|exists:rooms,id',
             'category' => 'required|string|max:100',
-            'title' => 'required|string|max:255',
-            'amount' => 'required|numeric|min:0.01',
+            'title' => 'required|string|min:3|max:255',
+            'amount' => 'required|numeric|min:1|max:10000000',
             'expense_date' => 'required|date',
             'payment_method' => 'required|string|max:50',
             'paid_to' => 'nullable|string|max:255',
-            'notes' => 'nullable|string',
+            'notes' => 'nullable|string|max:1000',
+        ], [
+            'category.required' => 'Please select an expense category.',
+            'title.required' => 'Expense title is required.',
+            'title.min' => 'Expense title must be at least 3 characters.',
+            'amount.required' => 'Expense amount is required.',
+            'amount.min' => 'Expense amount must be at least ₹1.00.',
+            'expense_date.required' => 'Expense date is required.',
+            'payment_method.required' => 'Please select a payment method.',
         ]);
 
         $expense->update($validated);

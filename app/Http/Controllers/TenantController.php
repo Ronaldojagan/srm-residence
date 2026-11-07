@@ -90,23 +90,46 @@ class TenantController extends Controller
     {
         $validated = $request->validate([
             'room_id' => 'required|exists:rooms,id',
-            'name' => 'required|string|max:255',
-            'email' => 'nullable|email|max:255',
-            'phone' => 'required|string|max:20',
+            'name' => ['required', 'string', 'min:2', 'max:100', 'regex:/^[\pL\s\.\'-]+$/u'],
+            'email' => 'nullable|email|max:100',
+            'phone' => ['required', 'string', 'regex:/^[0-9+\-\s]{10,15}$/'],
             'room_number' => 'nullable|string|max:50',
             'room_type' => 'required|string|max:100',
             'monthly_rent' => 'required|numeric|min:0',
-            'eb_unit_rate' => 'nullable|numeric|min:0',
+            'eb_unit_rate' => 'nullable|numeric|min:0|max:100',
             'eb_start_reading' => 'nullable|numeric|min:0',
             'maintenance_charges' => 'nullable|numeric|min:0',
             'other_charges' => 'nullable|numeric|min:0',
             'security_deposit' => 'nullable|numeric|min:0',
-            'commence_date' => 'nullable|date',
-            'emergency_contact' => 'nullable|string|max:20',
-            'address' => 'nullable|string',
+            'commence_date' => 'required|date',
+            'emergency_contact' => ['nullable', 'string', 'regex:/^[0-9+\-\s]{7,15}$/'],
+            'address' => 'nullable|string|max:500',
+        ], [
+            'room_id.required' => 'Please select a room to assign.',
+            'room_id.exists' => 'Selected room does not exist.',
+            'name.required' => 'Resident full name is required.',
+            'name.min' => 'Resident name must be at least 2 characters.',
+            'name.regex' => 'Resident name must contain letters and spaces only.',
+            'phone.required' => 'Mobile number is required.',
+            'phone.regex' => 'Please enter a valid 10-digit mobile number.',
+            'email.email' => 'Please enter a valid email address.',
+            'commence_date.required' => 'Move-in / commence date is required.',
+            'monthly_rent.required' => 'Monthly rent is required.',
+            'monthly_rent.min' => 'Monthly rent cannot be negative.',
+            'eb_start_reading.min' => 'Starting EB meter reading cannot be negative.',
+            'emergency_contact.regex' => 'Emergency contact must be a valid phone number.',
         ]);
 
         $room = Room::findOrFail($validated['room_id']);
+
+        if ($room->is_self) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Room ' . $room->room_number . ' is marked as Owner/Self-occupied and cannot be assigned to a tenant.',
+                'errors' => ['room_id' => ['This room is marked as Owner/Self-occupied.']]
+            ], 422);
+        }
+
         $validated['room_number'] = $room->room_number;
         $validated['eb_unit_rate'] = $validated['eb_unit_rate'] ?? 10.00;
         $validated['eb_start_reading'] = $validated['eb_start_reading'] ?? 0.00;
@@ -173,26 +196,44 @@ class TenantController extends Controller
     {
         $validated = $request->validate([
             'room_id' => 'required|exists:rooms,id',
-            'name' => 'required|string|max:255',
-            'email' => 'nullable|email|max:255',
-            'phone' => 'required|string|max:20',
+            'name' => ['required', 'string', 'min:2', 'max:100', 'regex:/^[\pL\s\.\'-]+$/u'],
+            'email' => 'nullable|email|max:100',
+            'phone' => ['required', 'string', 'regex:/^[0-9+\-\s]{10,15}$/'],
             'room_number' => 'nullable|string|max:50',
             'room_type' => 'required|string|max:100',
             'monthly_rent' => 'required|numeric|min:0',
-            'eb_unit_rate' => 'nullable|numeric|min:0',
+            'eb_unit_rate' => 'nullable|numeric|min:0|max:100',
             'eb_start_reading' => 'nullable|numeric|min:0',
             'maintenance_charges' => 'nullable|numeric|min:0',
             'other_charges' => 'nullable|numeric|min:0',
             'security_deposit' => 'nullable|numeric|min:0',
-            'commence_date' => 'nullable|date',
-            'emergency_contact' => 'nullable|string|max:20',
-            'address' => 'nullable|string',
+            'commence_date' => 'required|date',
+            'emergency_contact' => ['nullable', 'string', 'regex:/^[0-9+\-\s]{7,15}$/'],
+            'address' => 'nullable|string|max:500',
+        ], [
+            'name.required' => 'Resident full name is required.',
+            'name.min' => 'Resident name must be at least 2 characters.',
+            'name.regex' => 'Resident name must contain letters and spaces only.',
+            'phone.required' => 'Mobile number is required.',
+            'phone.regex' => 'Please enter a valid mobile number.',
+            'email.email' => 'Please enter a valid email address.',
+            'commence_date.required' => 'Move-in / commence date is required.',
+            'monthly_rent.min' => 'Monthly rent cannot be negative.',
+            'eb_start_reading.min' => 'Starting EB meter reading cannot be negative.',
         ]);
 
         $oldRoomId = $tenant->room_id;
         $newRoomId = $validated['room_id'];
 
         $newRoom = Room::findOrFail($newRoomId);
+
+        if ($newRoom->is_self) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Room ' . $newRoom->room_number . ' is marked as Owner/Self-occupied and cannot be assigned to a tenant.',
+                'errors' => ['room_id' => ['This room is marked as Owner/Self-occupied.']]
+            ], 422);
+        }
         $validated['room_number'] = $newRoom->room_number;
         $validated['eb_unit_rate'] = $validated['eb_unit_rate'] ?? 10.00;
         $validated['eb_start_reading'] = $validated['eb_start_reading'] ?? 0.00;

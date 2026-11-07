@@ -312,17 +312,78 @@ class BillingController extends Controller
             'eb_previous_reading' => 'nullable|numeric|min:0',
             'eb_current_reading' => 'nullable|numeric|min:0',
             'eb_consumed_units' => 'nullable|numeric|min:0',
-            'eb_unit_rate' => 'nullable|numeric|min:0',
+            'eb_unit_rate' => 'nullable|numeric|min:0|max:100',
             'eb_amount' => 'nullable|numeric|min:0',
             'items' => 'nullable',
             'notes' => 'nullable|string|max:1000',
             'immediate_payment' => 'nullable|boolean',
+            'payment_amount' => 'nullable|numeric|min:1',
             'payment_method' => 'nullable|string|max:50',
             'transaction_id' => 'nullable|string|max:100',
+        ], [
+            'tenant_id.required' => 'Please select a resident.',
+            'tenant_id.exists' => 'Selected resident does not exist.',
+            'bill_type.required' => 'Invoice type is required.',
+            'billing_month.required' => 'Billing month is required.',
+            'bill_date.required' => 'Bill date is required.',
+            'due_date.required' => 'Due date is required.',
+            'due_date.after_or_equal' => 'Due date must be on or after the bill issue date.',
+            'amount.required' => 'Invoice total amount is required.',
+            'amount.min' => 'Invoice total amount must be at least ₹1.00.',
+            'eb_previous_reading.min' => 'Previous EB reading cannot be negative.',
+            'eb_current_reading.min' => 'Current EB reading cannot be negative.',
+            'eb_unit_rate.min' => 'EB unit rate cannot be negative.',
+            'payment_amount.min' => 'Payment amount must be at least ₹1.00.',
         ]);
 
         $tenant = Tenant::findOrFail($validated['tenant_id']);
         $roomId = $tenant->room_id;
+
+        // Check EB current vs previous reading
+        if ($request->filled('eb_current_reading') && $request->filled('eb_previous_reading')) {
+            $prev = (float) $request->input('eb_previous_reading');
+            $curr = (float) $request->input('eb_current_reading');
+            if ($curr < $prev) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Current EB meter reading ({$curr}) cannot be less than previous reading ({$prev}).",
+                    'errors' => ['eb_current_reading' => ["Current meter reading ({$curr}) cannot be less than previous reading ({$prev})."]]
+                ], 422);
+            }
+        }
+
+        // Check duplicate invoice for the same resident, bill type, and month
+        $existingInvoice = Bill::where('tenant_id', $tenant->id)
+            ->where('bill_type', $validated['bill_type'])
+            ->where('billing_month', $validated['billing_month'])
+            ->first();
+
+        if ($existingInvoice) {
+            return response()->json([
+                'success' => false,
+                'message' => "An invoice for '{$validated['bill_type']}' for '{$validated['billing_month']}' already exists for {$tenant->name} ({$existingInvoice->bill_number}).",
+                'errors' => ['billing_month' => ["Invoice already exists for {$tenant->name} ({$existingInvoice->bill_number})."]]
+            ], 422);
+        }
+
+        // Immediate payment validation
+        if (!empty($validated['immediate_payment'])) {
+            $paidAmt = (float) $request->input('payment_amount', $validated['amount']);
+            if ($paidAmt <= 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Immediate payment amount must be at least ₹1.00.',
+                    'errors' => ['payment_amount' => ['Payment amount must be at least ₹1.00.']]
+                ], 422);
+            }
+            if ($paidAmt > (float) $validated['amount']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Immediate payment amount cannot exceed the total invoice amount of ₹' . number_format($validated['amount'], 2) . '.',
+                    'errors' => ['payment_amount' => ['Payment amount cannot exceed the total invoice amount.']]
+                ], 422);
+            }
+        }
 
         $items = $request->input('items');
         if (is_string($items)) {
@@ -485,20 +546,38 @@ class BillingController extends Controller
     {
         $validated = $request->validate([
             'bill_id' => 'required|exists:bills,id',
-            'amount' => 'required|numeric|min:0.5',
+            'amount' => 'required|numeric|min:1',
             'payment_date' => 'required|date',
             'payment_method' => 'required|string|max:50',
             'transaction_id' => 'nullable|string|max:100',
             'notes' => 'nullable|string|max:1000',
             'receipt' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+        ], [
+            'bill_id.required' => 'Invoice reference is required.',
+            'bill_id.exists' => 'Selected invoice does not exist.',
+            'amount.required' => 'Payment amount is required.',
+            'amount.min' => 'Payment amount must be at least ₹1.00.',
+            'payment_date.required' => 'Payment date is required.',
+            'payment_method.required' => 'Please select a payment method.',
+            'receipt.mimes' => 'Receipt must be a JPG, PNG, or PDF file.',
+            'receipt.max' => 'Receipt file size may not exceed 5MB.',
         ]);
 
         $bill = Bill::findOrFail($validated['bill_id']);
 
-        if ($bill->status === 'paid' && $bill->due_amount <= 0) {
+        if ($bill->status === 'paid' && $bill->due_amount <= 0.001) {
             return response()->json([
                 'success' => false,
                 'message' => 'This invoice is already fully paid.',
+                'errors' => ['amount' => ['This invoice is already fully paid.']]
+            ], 422);
+        }
+
+        if ((float) $validated['amount'] > ((float) $bill->due_amount + 0.01)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Payment amount (₹' . number_format($validated['amount'], 2) . ') cannot exceed the pending due amount of ₹' . number_format($bill->due_amount, 2) . '.',
+                'errors' => ['amount' => ['Payment amount cannot exceed the pending due amount of ₹' . number_format($bill->due_amount, 2) . '.']]
             ], 422);
         }
 
@@ -606,13 +685,20 @@ class BillingController extends Controller
     public function updateBill(Request $request, $id)
     {
         $bill = Bill::findOrFail($id);
+        $minAmount = max(1, (float) $bill->paid_amount);
 
         $validated = $request->validate([
             'bill_type' => 'required|string|max:100',
             'billing_month' => 'required|string|max:50',
             'due_date' => 'required|date',
-            'amount' => 'required|numeric|min:' . $bill->paid_amount,
+            'amount' => 'required|numeric|min:' . $minAmount,
             'notes' => 'nullable|string|max:1000',
+        ], [
+            'bill_type.required' => 'Invoice type is required.',
+            'billing_month.required' => 'Billing month is required.',
+            'due_date.required' => 'Due date is required.',
+            'amount.required' => 'Invoice amount is required.',
+            'amount.min' => 'Invoice amount cannot be less than the already collected amount of ₹' . number_format($minAmount, 2) . '.',
         ]);
 
         $bill->update([

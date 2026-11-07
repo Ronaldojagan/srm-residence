@@ -28,12 +28,22 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|min:2|max:255',
             'email' => 'required|email|unique:users,email',
-            'phone' => 'nullable|string|max:20',
+            'phone' => ['nullable', 'string', 'regex:/^[0-9+\-\s]{7,15}$/'],
             'password' => 'required|string|min:6',
             'type' => 'required|string',
             'status' => 'nullable'
+        ], [
+            'name.required' => 'Full name is required.',
+            'name.min' => 'Full name must be at least 2 characters.',
+            'email.required' => 'Email address is required.',
+            'email.email' => 'Please enter a valid email address.',
+            'email.unique' => 'A user with this email already exists.',
+            'phone.regex' => 'Please enter a valid phone number.',
+            'password.required' => 'Password is required.',
+            'password.min' => 'Password must be at least 6 characters.',
+            'type.required' => 'User role/type is required.',
         ]);
 
         $user = User::create([
@@ -75,11 +85,20 @@ class UserController extends Controller
     public function update(Request $request, User $user)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|min:2|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
-            'phone' => 'nullable|string|max:20',
+            'phone' => ['nullable', 'string', 'regex:/^[0-9+\-\s]{7,15}$/'],
             'password' => 'nullable|string|min:6',
             'type' => 'required|string',
+        ], [
+            'name.required' => 'Full name is required.',
+            'name.min' => 'Full name must be at least 2 characters.',
+            'email.required' => 'Email address is required.',
+            'email.email' => 'Please enter a valid email address.',
+            'email.unique' => 'A user with this email already exists.',
+            'phone.regex' => 'Please enter a valid phone number.',
+            'password.min' => 'Password must be at least 6 characters.',
+            'type.required' => 'User role/type is required.',
         ]);
 
         $user->name = $validated['name'];

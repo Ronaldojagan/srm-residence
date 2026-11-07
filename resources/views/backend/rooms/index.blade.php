@@ -167,7 +167,7 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Room Number <span class="text-danger">*</span></label>
-                                <input type="text" name="room_number" class="form-control" placeholder="e.g. 101, 204, 305" required>
+                                <input type="text" name="room_number" class="form-control" placeholder="e.g. 101, 204, 305" maxlength="20" required>
                                 <small class="text-muted">Unique unit identification number.</small>
                             </div>
                             <div class="col-md-6">
@@ -196,7 +196,7 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Bed Capacity <span class="text-danger">*</span></label>
-                                <input type="number" name="capacity" class="form-control" value="1" min="1" max="10" required>
+                                <input type="number" name="capacity" class="form-control" value="1" min="1" max="30" required>
                             </div>
 
                             <div class="col-12">
@@ -216,11 +216,11 @@
 
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Monthly Rent (₹) <span class="text-danger">*</span></label>
-                                <input type="number" step="0.01" name="monthly_rent" id="add_monthly_rent" class="form-control" placeholder="8500" value="8500" required>
+                                <input type="number" step="0.01" min="0" name="monthly_rent" id="add_monthly_rent" class="form-control" placeholder="8500" value="8500" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Security Deposit (₹)</label>
-                                <input type="number" step="0.01" name="security_deposit" id="add_security_deposit" class="form-control" placeholder="10000" value="10000">
+                                <input type="number" step="0.01" min="0" name="security_deposit" id="add_security_deposit" class="form-control" placeholder="10000" value="10000">
                             </div>
 
                             <div class="col-12">
@@ -242,17 +242,17 @@
 
                             <div class="col-md-4">
                                 <label class="form-label fw-bold">EB Rate (₹/Unit)</label>
-                                <input type="number" step="0.01" name="eb_unit_rate" id="add_eb_unit_rate" class="form-control" placeholder="10.00" value="10.00">
+                                <input type="number" step="0.01" min="0" max="100" name="eb_unit_rate" id="add_eb_unit_rate" class="form-control" placeholder="10.00" value="10.00">
                                 <small class="text-muted">Electricity cost per unit (kWh)</small>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label fw-bold">Maintenance Charges (₹)</label>
-                                <input type="number" step="0.01" name="maintenance_charges" id="add_maintenance_charges" class="form-control" placeholder="0.00" value="0.00">
+                                <input type="number" step="0.01" min="0" name="maintenance_charges" id="add_maintenance_charges" class="form-control" placeholder="0.00" value="0.00">
                                 <small class="text-muted">Room upkeep / cleaning</small>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label fw-bold">Other Charges (₹)</label>
-                                <input type="number" step="0.01" name="other_charges" id="add_other_charges" class="form-control" placeholder="0.00" value="0.00">
+                                <input type="number" step="0.01" min="0" name="other_charges" id="add_other_charges" class="form-control" placeholder="0.00" value="0.00">
                                 <small class="text-muted">Wi-Fi, water, or miscellaneous</small>
                             </div>
 
@@ -303,7 +303,7 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Room Number <span class="text-danger">*</span></label>
-                                <input type="text" id="edit_room_number" name="room_number" class="form-control" required>
+                                <input type="text" id="edit_room_number" name="room_number" class="form-control" maxlength="20" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Floor <span class="text-danger">*</span></label>
@@ -331,7 +331,7 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Bed Capacity <span class="text-danger">*</span></label>
-                                <input type="number" id="edit_capacity" name="capacity" class="form-control" min="1" max="10" required>
+                                <input type="number" id="edit_capacity" name="capacity" class="form-control" min="1" max="30" required>
                             </div>
 
                             <div class="col-12">
@@ -351,11 +351,11 @@
 
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Monthly Rent (₹) <span class="text-danger">*</span></label>
-                                <input type="number" step="0.01" id="edit_monthly_rent" name="monthly_rent" class="form-control" required>
+                                <input type="number" step="0.01" min="0" id="edit_monthly_rent" name="monthly_rent" class="form-control" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Security Deposit (₹)</label>
-                                <input type="number" step="0.01" id="edit_security_deposit" name="security_deposit" class="form-control">
+                                <input type="number" step="0.01" min="0" id="edit_security_deposit" name="security_deposit" class="form-control">
                             </div>
 
                             <div class="col-12">
@@ -377,16 +377,16 @@
 
                             <div class="col-md-4">
                                 <label class="form-label fw-bold">EB Rate (₹/Unit)</label>
-                                <input type="number" step="0.01" id="edit_eb_unit_rate" name="eb_unit_rate" class="form-control" placeholder="10.00">
+                                <input type="number" step="0.01" min="0" max="100" id="edit_eb_unit_rate" name="eb_unit_rate" class="form-control" placeholder="10.00">
                                 <small class="text-muted">Electricity cost per unit (kWh)</small>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label fw-bold">Maintenance Charges (₹)</label>
-                                <input type="number" step="0.01" id="edit_maintenance_charges" name="maintenance_charges" class="form-control" placeholder="0.00">
+                                <input type="number" step="0.01" min="0" id="edit_maintenance_charges" name="maintenance_charges" class="form-control" placeholder="0.00">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label fw-bold">Other Charges (₹)</label>
-                                <input type="number" step="0.01" id="edit_other_charges" name="other_charges" class="form-control" placeholder="0.00">
+                                <input type="number" step="0.01" min="0" id="edit_other_charges" name="other_charges" class="form-control" placeholder="0.00">
                             </div>
 
                             <div class="col-md-12">
@@ -624,6 +624,22 @@
                     var $errors = $('#addRoomErrors');
 
                     $errors.addClass('d-none').html('');
+                    $form.find('.is-invalid').removeClass('is-invalid');
+
+                    var roomNum = $.trim($form.find('input[name="room_number"]').val());
+                    if (!roomNum) {
+                        $errors.html('Room number is required.').removeClass('d-none');
+                        $form.find('input[name="room_number"]').addClass('is-invalid').focus();
+                        return;
+                    }
+
+                    var capacity = parseInt($form.find('input[name="capacity"]').val(), 10);
+                    if (isNaN(capacity) || capacity < 1) {
+                        $errors.html('Capacity must be at least 1 person.').removeClass('d-none');
+                        $form.find('input[name="capacity"]').addClass('is-invalid').focus();
+                        return;
+                    }
+
                     $btn.prop('disabled', true);
                     $spinner.removeClass('d-none');
 
@@ -641,6 +657,7 @@
                             if (response.success) {
                                 $('#addRoomModal').modal('hide');
                                 $form[0].reset();
+                                $form.find('.is-invalid').removeClass('is-invalid');
                                 table.ajax.reload(null, false);
                                 updateStatCards(response.stats);
                                 Toast.fire({
@@ -655,12 +672,20 @@
                             var errorMsg = 'Please verify room details.';
                             if (xhr.responseJSON && xhr.responseJSON.errors) {
                                 errorMsg = Object.values(xhr.responseJSON.errors).flat().join('<br>');
+                                $.each(xhr.responseJSON.errors, function(field, messages) {
+                                    $form.find('[name="' + field + '"]').addClass('is-invalid');
+                                });
                             } else if (xhr.responseJSON && xhr.responseJSON.message) {
                                 errorMsg = xhr.responseJSON.message;
                             }
                             $errors.html(errorMsg).removeClass('d-none');
                         }
                     });
+                });
+
+                // Clear is-invalid on change
+                $('#addRoomForm, #editRoomForm').on('input change', 'input, select, textarea', function() {
+                    $(this).removeClass('is-invalid');
                 });
 
                 // 2. OPEN EDIT MODAL VIA AJAX
@@ -724,6 +749,22 @@
                     var $errors = $('#editRoomErrors');
 
                     $errors.addClass('d-none').html('');
+                    $form.find('.is-invalid').removeClass('is-invalid');
+
+                    var roomNum = $.trim($form.find('#edit_room_number').val());
+                    if (!roomNum) {
+                        $errors.html('Room number is required.').removeClass('d-none');
+                        $form.find('#edit_room_number').addClass('is-invalid').focus();
+                        return;
+                    }
+
+                    var capacity = parseInt($form.find('#edit_capacity').val(), 10);
+                    if (isNaN(capacity) || capacity < 1) {
+                        $errors.html('Capacity must be at least 1 person.').removeClass('d-none');
+                        $form.find('#edit_capacity').addClass('is-invalid').focus();
+                        return;
+                    }
+
                     $btn.prop('disabled', true);
                     $spinner.removeClass('d-none');
 
@@ -740,6 +781,7 @@
 
                             if (response.success) {
                                 $('#editRoomModal').modal('hide');
+                                $form.find('.is-invalid').removeClass('is-invalid');
                                 table.ajax.reload(null, false);
                                 updateStatCards(response.stats);
                                 Toast.fire({
@@ -754,6 +796,9 @@
                             var errorMsg = 'Please check the entered fields.';
                             if (xhr.responseJSON && xhr.responseJSON.errors) {
                                 errorMsg = Object.values(xhr.responseJSON.errors).flat().join('<br>');
+                                $.each(xhr.responseJSON.errors, function(field, messages) {
+                                    $form.find('[name="' + field + '"]').addClass('is-invalid');
+                                });
                             } else if (xhr.responseJSON && xhr.responseJSON.message) {
                                 errorMsg = xhr.responseJSON.message;
                             }

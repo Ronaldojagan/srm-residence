@@ -118,20 +118,20 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Tenant Full Name <span class="text-danger">*</span></label>
-                                <input type="text" name="name" class="form-control" placeholder="e.g. Rahul Sundaram" required>
+                                <input type="text" name="name" class="form-control" placeholder="e.g. Rahul Sundaram" minlength="2" maxlength="100" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Phone Number <span class="text-danger">*</span></label>
-                                <input type="tel" name="phone" class="form-control" placeholder="10-digit mobile" required>
+                                <input type="tel" name="phone" class="form-control" placeholder="10-digit mobile" pattern="[0-9]{10}" maxlength="15" required>
                             </div>
 
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Email Address</label>
-                                <input type="email" name="email" class="form-control" placeholder="tenant@example.com">
+                                <input type="email" name="email" class="form-control" placeholder="tenant@example.com" maxlength="100">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Emergency Contact</label>
-                                <input type="tel" name="emergency_contact" class="form-control" placeholder="Parent / Guardian phone">
+                                <input type="tel" name="emergency_contact" class="form-control" placeholder="Parent / Guardian phone" maxlength="15">
                             </div>
 
                             <div class="col-md-4">
@@ -274,20 +274,20 @@
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Tenant Full Name <span class="text-danger">*</span></label>
-                                <input type="text" id="edit_name" name="name" class="form-control" required>
+                                <input type="text" id="edit_name" name="name" class="form-control" minlength="2" maxlength="100" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Phone Number <span class="text-danger">*</span></label>
-                                <input type="tel" id="edit_phone" name="phone" class="form-control" required>
+                                <input type="tel" id="edit_phone" name="phone" class="form-control" pattern="[0-9]{10}" maxlength="15" required>
                             </div>
 
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Email Address</label>
-                                <input type="email" id="edit_email" name="email" class="form-control">
+                                <input type="email" id="edit_email" name="email" class="form-control" maxlength="100">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Emergency Contact</label>
-                                <input type="tel" id="edit_emergency_contact" name="emergency_contact" class="form-control">
+                                <input type="tel" id="edit_emergency_contact" name="emergency_contact" class="form-control" maxlength="15">
                             </div>
 
                             <div class="col-md-4">
@@ -596,6 +596,29 @@
                     var $errors = $('#addTenantErrors');
 
                     $errors.addClass('d-none').html('');
+                    $form.find('.is-invalid').removeClass('is-invalid');
+
+                    var name = $.trim($form.find('input[name="name"]').val());
+                    if (!name || name.length < 2) {
+                        $errors.html('Resident name must be at least 2 characters.').removeClass('d-none');
+                        $form.find('input[name="name"]').addClass('is-invalid').focus();
+                        return;
+                    }
+
+                    var phone = $.trim($form.find('input[name="phone"]').val());
+                    if (!phone || phone.length < 10) {
+                        $errors.html('Please enter a valid 10-digit mobile number.').removeClass('d-none');
+                        $form.find('input[name="phone"]').addClass('is-invalid').focus();
+                        return;
+                    }
+
+                    var roomId = $form.find('#tenant_room_id').val();
+                    if (!roomId) {
+                        $errors.html('Please select a room to assign to this resident.').removeClass('d-none');
+                        $form.find('#tenant_room_id').addClass('is-invalid').focus();
+                        return;
+                    }
+
                     $btn.prop('disabled', true);
                     $spinner.removeClass('d-none');
 
@@ -613,6 +636,7 @@
                             if (response.success) {
                                 $('#addTenantModal').modal('hide');
                                 $form[0].reset();
+                                $form.find('.is-invalid').removeClass('is-invalid');
                                 table.ajax.reload(null, false);
                                 Toast.fire({
                                     icon: 'success',
@@ -626,12 +650,20 @@
                             var errorMsg = 'Please check the entered fields.';
                             if (xhr.responseJSON && xhr.responseJSON.errors) {
                                 errorMsg = Object.values(xhr.responseJSON.errors).flat().join('<br>');
+                                $.each(xhr.responseJSON.errors, function(field, messages) {
+                                    $form.find('[name="' + field + '"]').addClass('is-invalid');
+                                });
                             } else if (xhr.responseJSON && xhr.responseJSON.message) {
                                 errorMsg = xhr.responseJSON.message;
                             }
                             $errors.html(errorMsg).removeClass('d-none');
                         }
                     });
+                });
+
+                // Clear is-invalid on change
+                $('#addTenantForm, #editTenantForm').on('input change', 'input, select, textarea', function() {
+                    $(this).removeClass('is-invalid');
                 });
 
                 // 2. OPEN EDIT MODAL & LOAD TENANT VIA AJAX
@@ -696,6 +728,22 @@
                     var $errors = $('#editTenantErrors');
 
                     $errors.addClass('d-none').html('');
+                    $form.find('.is-invalid').removeClass('is-invalid');
+
+                    var name = $.trim($form.find('#edit_name').val());
+                    if (!name || name.length < 2) {
+                        $errors.html('Resident name must be at least 2 characters.').removeClass('d-none');
+                        $form.find('#edit_name').addClass('is-invalid').focus();
+                        return;
+                    }
+
+                    var phone = $.trim($form.find('#edit_phone').val());
+                    if (!phone || phone.length < 10) {
+                        $errors.html('Please enter a valid 10-digit mobile number.').removeClass('d-none');
+                        $form.find('#edit_phone').addClass('is-invalid').focus();
+                        return;
+                    }
+
                     $btn.prop('disabled', true);
                     $spinner.removeClass('d-none');
 
@@ -712,6 +760,7 @@
 
                             if (response.success) {
                                 $('#editTenantModal').modal('hide');
+                                $form.find('.is-invalid').removeClass('is-invalid');
                                 table.ajax.reload(null, false);
                                 Toast.fire({
                                     icon: 'success',
@@ -725,6 +774,9 @@
                             var errorMsg = 'Please check the entered fields.';
                             if (xhr.responseJSON && xhr.responseJSON.errors) {
                                 errorMsg = Object.values(xhr.responseJSON.errors).flat().join('<br>');
+                                $.each(xhr.responseJSON.errors, function(field, messages) {
+                                    $form.find('[name="' + field + '"]').addClass('is-invalid');
+                                });
                             } else if (xhr.responseJSON && xhr.responseJSON.message) {
                                 errorMsg = xhr.responseJSON.message;
                             }

@@ -137,18 +137,35 @@ class RoomController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'room_number' => ['required', 'string', 'max:50', Rule::unique('rooms', 'room_number')->whereNull('deleted_at')],
+            'room_number' => ['required', 'string', 'max:20', Rule::unique('rooms', 'room_number')->whereNull('deleted_at')],
             'floor' => 'required|string|max:50',
             'room_type' => 'required|string|max:100',
-            'capacity' => 'required|integer|min:1|max:10',
+            'capacity' => 'required|integer|min:1|max:30',
             'monthly_rent' => 'required|numeric|min:0',
-            'eb_unit_rate' => 'nullable|numeric|min:0',
+            'eb_unit_rate' => 'nullable|numeric|min:0|max:100',
             'maintenance_charges' => 'nullable|numeric|min:0',
             'other_charges' => 'nullable|numeric|min:0',
             'security_deposit' => 'nullable|numeric|min:0',
             'occupancy_status' => 'required|in:available,occupied,maintenance,self',
             'is_self' => 'nullable|boolean',
-            'amenities' => 'nullable|string',
+            'amenities' => 'nullable|string|max:1000',
+        ], [
+            'room_number.required' => 'Room number is required.',
+            'room_number.unique' => 'Room number already exists. Please enter a unique room number.',
+            'room_number.max' => 'Room number may not be greater than 20 characters.',
+            'floor.required' => 'Please select a floor.',
+            'room_type.required' => 'Please select a room type.',
+            'capacity.required' => 'Bed capacity is required.',
+            'capacity.min' => 'Bed capacity must be at least 1 person.',
+            'capacity.max' => 'Bed capacity cannot exceed 30 persons.',
+            'monthly_rent.required' => 'Monthly rent is required.',
+            'monthly_rent.min' => 'Monthly rent cannot be negative.',
+            'eb_unit_rate.min' => 'EB unit rate cannot be negative.',
+            'eb_unit_rate.max' => 'EB unit rate cannot exceed ₹100 per unit.',
+            'maintenance_charges.min' => 'Maintenance charges cannot be negative.',
+            'other_charges.min' => 'Other charges cannot be negative.',
+            'security_deposit.min' => 'Security deposit cannot be negative.',
+            'occupancy_status.required' => 'Please select an occupancy status.',
         ]);
 
         $isSelf = $request->boolean('is_self') || $request->occupancy_status === 'self';
@@ -190,18 +207,35 @@ class RoomController extends Controller
     public function update(Request $request, Room $room)
     {
         $validated = $request->validate([
-            'room_number' => ['required', 'string', 'max:50', Rule::unique('rooms', 'room_number')->ignore($room->id)->whereNull('deleted_at')],
+            'room_number' => ['required', 'string', 'max:20', Rule::unique('rooms', 'room_number')->ignore($room->id)->whereNull('deleted_at')],
             'floor' => 'required|string|max:50',
             'room_type' => 'required|string|max:100',
-            'capacity' => 'required|integer|min:1|max:10',
+            'capacity' => 'required|integer|min:1|max:30',
             'monthly_rent' => 'required|numeric|min:0',
-            'eb_unit_rate' => 'nullable|numeric|min:0',
+            'eb_unit_rate' => 'nullable|numeric|min:0|max:100',
             'maintenance_charges' => 'nullable|numeric|min:0',
             'other_charges' => 'nullable|numeric|min:0',
             'security_deposit' => 'nullable|numeric|min:0',
             'occupancy_status' => 'required|in:available,occupied,maintenance,self',
             'is_self' => 'nullable|boolean',
-            'amenities' => 'nullable|string',
+            'amenities' => 'nullable|string|max:1000',
+        ], [
+            'room_number.required' => 'Room number is required.',
+            'room_number.unique' => 'Room number already exists on another unit.',
+            'room_number.max' => 'Room number may not be greater than 20 characters.',
+            'floor.required' => 'Please select a floor.',
+            'room_type.required' => 'Please select a room type.',
+            'capacity.required' => 'Bed capacity is required.',
+            'capacity.min' => 'Bed capacity must be at least 1 person.',
+            'capacity.max' => 'Bed capacity cannot exceed 30 persons.',
+            'monthly_rent.required' => 'Monthly rent is required.',
+            'monthly_rent.min' => 'Monthly rent cannot be negative.',
+            'eb_unit_rate.min' => 'EB unit rate cannot be negative.',
+            'eb_unit_rate.max' => 'EB unit rate cannot exceed ₹100 per unit.',
+            'maintenance_charges.min' => 'Maintenance charges cannot be negative.',
+            'other_charges.min' => 'Other charges cannot be negative.',
+            'security_deposit.min' => 'Security deposit cannot be negative.',
+            'occupancy_status.required' => 'Please select an occupancy status.',
         ]);
 
         $isSelf = $request->boolean('is_self') || $request->occupancy_status === 'self';
