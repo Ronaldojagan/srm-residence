@@ -89,8 +89,29 @@ class ExpenseController extends Controller
 
     public function personalExpenses(Request $request)
     {
+        $selectedMonth = $request->input('month', Carbon::now()->format('Y-m'));
+
         if ($request->ajax()) {
-            $query = Expense::where('expense_type', 'personal');
+            $query = Expense::where('expense_type', 'personal')->latest('expense_date');
+
+            if ($request->filled('month')) {
+                $monthVal = $request->month;
+                if ($monthVal !== 'all') {
+                    if (preg_match('/^\d{4}-\d{2}$/', $monthVal)) {
+                        $carbonMonth = Carbon::createFromFormat('Y-m', $monthVal);
+                        $query->where(function ($q) use ($carbonMonth, $monthVal) {
+                            $q->where('expense_month', $carbonMonth->format('F Y'))
+                              ->orWhere('expense_month', $monthVal)
+                              ->orWhere(function ($sub) use ($carbonMonth) {
+                                  $sub->whereYear('expense_date', $carbonMonth->year)
+                                      ->whereMonth('expense_date', $carbonMonth->month);
+                              });
+                        });
+                    } else {
+                        $query->where('expense_month', $monthVal);
+                    }
+                }
+            }
 
             if ($request->filled('category')) {
                 $query->where('category', $request->category);
@@ -108,9 +129,24 @@ class ExpenseController extends Controller
             return DataTables::of($query)
                 ->addIndexColumn()
                 ->addColumn('title_desc', function ($row) {
-                    $notes = $row->notes ? '<small class="text-muted d-block text-wrap" style="max-width:280px;">' . e(Str::limit($row->notes, 50)) . '</small>' : '';
+                    $itemCountBadge = '';
+                    if (!empty($row->items) && is_array($row->items) && count($row->items) > 0) {
+                        $itemCountBadge = '<div class="mt-1">
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-11 cursor-pointer btn-view-items" data-id="' . $row->id . '">
+                                <i class="fas fa-list-ul me-1"></i> ' . count($row->items) . ' line items
+                            </span>
+                        </div>';
+                    }
+
+                    $notes = $row->notes ? '<small class="text-muted d-block text-wrap font-11 mt-1" style="max-width:280px;">' . e(Str::limit($row->notes, 60)) . '</small>' : '';
+                    $monthBadge = $row->expense_month ? '<span class="badge bg-light text-muted border font-10 me-1"><i class="far fa-calendar-alt me-1"></i>' . e($row->expense_month) . '</span>' : '';
+
                     return '<div>
-                        <span class="fw-bold text-dark d-block">' . e($row->title) . '</span>
+                        <div class="d-flex align-items-center gap-1 mb-1 flex-wrap">
+                            ' . $monthBadge . '
+                            <span class="fw-bold text-dark font-13">' . e($row->title) . '</span>
+                        </div>
+                        ' . $itemCountBadge . '
                         ' . $notes . '
                     </div>';
                 })
@@ -130,7 +166,11 @@ class ExpenseController extends Controller
                     return '<span class="fw-semibold text-secondary">' . e($row->paid_to ?? '-') . '</span>';
                 })
                 ->addColumn('action', function ($row) {
+                    $hasItems = !empty($row->items) && is_array($row->items) && count($row->items) > 0;
+                    $itemsBtn = $hasItems ? '<button type="button" class="btn btn-outline-info btn-view-items" data-id="' . $row->id . '" title="View Line Items"><i class="fas fa-list-ul"></i></button>' : '';
+
                     $btn = '<div class="btn-group btn-group-sm" role="group">';
+                    $btn .= $itemsBtn;
                     $btn .= '<button type="button" class="btn btn-outline-primary btn-edit-expense" data-id="' . $row->id . '" title="Edit Expense"><i class="fas fa-edit"></i></button>';
                     $btn .= '<button type="button" class="btn btn-outline-danger btn-delete-expense" data-id="' . $row->id . '" data-title="' . e($row->title) . '" title="Delete Expense"><i class="fas fa-trash-alt"></i></button>';
                     $btn .= '</div>';
@@ -140,9 +180,16 @@ class ExpenseController extends Controller
                 ->make(true);
         }
 
-        $stats = $this->getPersonalExpenseStats();
+        $stats = $this->getPersonalExpenseStats($selectedMonth);
 
-        return view('backend.expenses.personal_expenses', compact('stats'));
+        // Available months for filtering (past 12 months)
+        $availableMonths = [];
+        for ($i = 0; $i < 12; $i++) {
+            $date = Carbon::now()->subMonths($i);
+            $availableMonths[$date->format('Y-m')] = $date->format('F Y');
+        }
+
+        return view('backend.expenses.personal_expenses', compact('stats', 'availableMonths', 'selectedMonth'));
     }
 
     public function store(Request $request)
@@ -151,23 +198,56 @@ class ExpenseController extends Controller
             'expense_type' => 'required|in:room,personal',
             'room_id' => 'nullable|required_if:expense_type,room|exists:rooms,id',
             'category' => 'required|string|max:100',
-            'title' => 'required|string|min:3|max:255',
-            'amount' => 'required|numeric|min:1|max:10000000',
+            'title' => 'required|string|min:2|max:255',
+            'amount' => 'nullable|numeric|min:0|max:10000000',
             'expense_date' => 'required|date',
+            'expense_month' => 'nullable|string|max:50',
             'payment_method' => 'required|string|max:50',
             'paid_to' => 'nullable|string|max:255',
             'notes' => 'nullable|string|max:1000',
+            'items' => 'nullable|array',
+            'items.*.title' => 'nullable|string|max:255',
+            'items.*.amount' => 'nullable|numeric|min:0',
+            'items.*.notes' => 'nullable|string|max:500',
         ], [
             'room_id.required_if' => 'Please select a room for room-specific expenses.',
             'category.required' => 'Please select an expense category.',
             'title.required' => 'Expense title/item description is required.',
-            'title.min' => 'Expense title must be at least 3 characters.',
-            'amount.required' => 'Expense amount is required.',
-            'amount.min' => 'Expense amount must be at least ₹1.00.',
-            'amount.max' => 'Expense amount exceeds the allowed maximum limit.',
             'expense_date.required' => 'Expense date is required.',
             'payment_method.required' => 'Please select a payment method.',
         ]);
+
+        // Process line items if provided
+        $cleanItems = [];
+        if ($request->has('items') && is_array($request->items)) {
+            foreach ($request->items as $item) {
+                if (!empty($item['title']) && isset($item['amount']) && (float)$item['amount'] > 0) {
+                    $cleanItems[] = [
+                        'title' => trim($item['title']),
+                        'amount' => (float)$item['amount'],
+                        'notes' => trim($item['notes'] ?? ''),
+                    ];
+                }
+            }
+        }
+
+        if (!empty($cleanItems)) {
+            $validated['items'] = $cleanItems;
+            $validated['amount'] = array_sum(array_column($cleanItems, 'amount'));
+        } else {
+            $validated['items'] = null;
+            if (empty($validated['amount']) || (float)$validated['amount'] <= 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Please specify an expense amount or add at least one line item with an amount.',
+                ], 422);
+            }
+        }
+
+        // Auto determine expense_month
+        if (empty($validated['expense_month'])) {
+            $validated['expense_month'] = Carbon::parse($validated['expense_date'])->format('F Y');
+        }
 
         $validated['created_by'] = auth()->id();
 
@@ -201,21 +281,53 @@ class ExpenseController extends Controller
         $validated = $request->validate([
             'room_id' => 'nullable|exists:rooms,id',
             'category' => 'required|string|max:100',
-            'title' => 'required|string|min:3|max:255',
-            'amount' => 'required|numeric|min:1|max:10000000',
+            'title' => 'required|string|min:2|max:255',
+            'amount' => 'nullable|numeric|min:0|max:10000000',
             'expense_date' => 'required|date',
+            'expense_month' => 'nullable|string|max:50',
             'payment_method' => 'required|string|max:50',
             'paid_to' => 'nullable|string|max:255',
             'notes' => 'nullable|string|max:1000',
+            'items' => 'nullable|array',
+            'items.*.title' => 'nullable|string|max:255',
+            'items.*.amount' => 'nullable|numeric|min:0',
+            'items.*.notes' => 'nullable|string|max:500',
         ], [
             'category.required' => 'Please select an expense category.',
             'title.required' => 'Expense title is required.',
-            'title.min' => 'Expense title must be at least 3 characters.',
-            'amount.required' => 'Expense amount is required.',
-            'amount.min' => 'Expense amount must be at least ₹1.00.',
             'expense_date.required' => 'Expense date is required.',
             'payment_method.required' => 'Please select a payment method.',
         ]);
+
+        $cleanItems = [];
+        if ($request->has('items') && is_array($request->items)) {
+            foreach ($request->items as $item) {
+                if (!empty($item['title']) && isset($item['amount']) && (float)$item['amount'] > 0) {
+                    $cleanItems[] = [
+                        'title' => trim($item['title']),
+                        'amount' => (float)$item['amount'],
+                        'notes' => trim($item['notes'] ?? ''),
+                    ];
+                }
+            }
+        }
+
+        if (!empty($cleanItems)) {
+            $validated['items'] = $cleanItems;
+            $validated['amount'] = array_sum(array_column($cleanItems, 'amount'));
+        } else {
+            $validated['items'] = null;
+            if (empty($validated['amount']) || (float)$validated['amount'] <= 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Please specify an expense amount or add at least one line item with an amount.',
+                ], 422);
+            }
+        }
+
+        if (empty($validated['expense_month'])) {
+            $validated['expense_month'] = Carbon::parse($validated['expense_date'])->format('F Y');
+        }
 
         $expense->update($validated);
 
@@ -249,6 +361,17 @@ class ExpenseController extends Controller
         ]);
     }
 
+    public function getPersonalStatsAjax(Request $request)
+    {
+        $month = $request->input('month', Carbon::now()->format('Y-m'));
+        $stats = $this->getPersonalExpenseStats($month);
+
+        return response()->json([
+            'success' => true,
+            'stats' => $stats,
+        ]);
+    }
+
     private function getRoomExpenseStats()
     {
         $now = Carbon::now();
@@ -269,26 +392,63 @@ class ExpenseController extends Controller
         ];
     }
 
-    private function getPersonalExpenseStats()
+    private function getPersonalExpenseStats($month = null)
     {
-        $now = Carbon::now();
-        $total = Expense::where('expense_type', 'personal')->sum('amount');
-        $thisMonth = Expense::where('expense_type', 'personal')
-            ->whereMonth('expense_date', $now->month)
-            ->whereYear('expense_date', $now->year)
-            ->sum('amount');
-        $topCategory = Expense::where('expense_type', 'personal')
+        $allTotal = Expense::where('expense_type', 'personal')->sum('amount');
+        $allRecords = Expense::where('expense_type', 'personal')->count();
+
+        $monthQuery = Expense::where('expense_type', 'personal');
+        $monthLabel = 'This Month';
+
+        if (!empty($month) && $month !== 'all') {
+            if (preg_match('/^\d{4}-\d{2}$/', $month)) {
+                $cMonth = Carbon::createFromFormat('Y-m', $month);
+                $monthLabel = $cMonth->format('F Y');
+                $monthQuery->where(function ($q) use ($cMonth, $month) {
+                    $q->where('expense_month', $cMonth->format('F Y'))
+                      ->orWhere('expense_month', $month)
+                      ->orWhere(function ($sub) use ($cMonth) {
+                          $sub->whereYear('expense_date', $cMonth->year)
+                              ->whereMonth('expense_date', $cMonth->month);
+                      });
+                });
+            } else {
+                $monthLabel = $month;
+                $monthQuery->where('expense_month', $month);
+            }
+        } else {
+            $now = Carbon::now();
+            $monthLabel = $now->format('F Y');
+            $monthQuery->whereMonth('expense_date', $now->month)
+                       ->whereYear('expense_date', $now->year);
+        }
+
+        $monthExpenses = (clone $monthQuery)->sum('amount');
+        $monthRecords = (clone $monthQuery)->count();
+
+        $topCategory = (clone $monthQuery)
             ->selectRaw('category, sum(amount) as total')
             ->groupBy('category')
             ->orderByDesc('total')
             ->first();
-        $totalRecords = Expense::where('expense_type', 'personal')->count();
+
+        // Count line items in this month
+        $monthWithItems = (clone $monthQuery)->whereNotNull('items')->get();
+        $lineItemsCount = 0;
+        foreach ($monthWithItems as $mExp) {
+            if (is_array($mExp->items)) {
+                $lineItemsCount += count($mExp->items);
+            }
+        }
 
         return [
-            'totalExpenses' => $total,
-            'thisMonthExpenses' => $thisMonth,
+            'totalExpenses' => $allTotal,
+            'thisMonthExpenses' => $monthExpenses,
+            'monthLabel' => $monthLabel,
             'topCategory' => $topCategory ? $topCategory->category . ' (₹' . number_format($topCategory->total) . ')' : 'None',
-            'totalRecords' => $totalRecords,
+            'monthRecords' => $monthRecords,
+            'lineItemsCount' => $lineItemsCount,
+            'totalRecords' => $allRecords,
         ];
     }
 }

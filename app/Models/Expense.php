@@ -17,10 +17,12 @@ class Expense extends Model
         'title',
         'amount',
         'expense_date',
+        'expense_month',
         'payment_method',
         'paid_to',
         'receipt',
         'notes',
+        'items',
         'status',
         'created_by',
     ];
@@ -28,6 +30,7 @@ class Expense extends Model
     protected $casts = [
         'amount' => 'decimal:2',
         'expense_date' => 'date',
+        'items' => 'array',
         'status' => 'boolean',
     ];
 

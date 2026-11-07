@@ -80,6 +80,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'user-access:' . Use
     Route::controller(ExpenseController::class)->prefix('expenses')->name('expenses.')->group(function () {
         Route::get('/rooms', 'roomExpenses')->name('rooms');
         Route::get('/personal', 'personalExpenses')->name('personal');
+        Route::get('/personal/stats', 'getPersonalStatsAjax')->name('personal.stats');
         Route::post('/', 'store')->name('store');
         Route::get('/{expense}/data', 'getData')->name('data');
         Route::post('/{expense}/update', 'update')->name('update');
