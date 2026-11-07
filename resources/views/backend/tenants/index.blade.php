@@ -444,6 +444,22 @@
                     }
                 });
 
+                // Check URL query parameters (e.g. from Dashboard "View Tenant")
+                var urlParams = new URLSearchParams(window.location.search);
+                var searchQ = urlParams.get('search');
+                var tenantIdParam = urlParams.get('tenant_id');
+                if (searchQ) {
+                    table.search(searchQ).draw();
+                } else if (tenantIdParam) {
+                    table.on('draw', function() {
+                        var $editBtn = $('.btn-edit-tenant[data-id="' + tenantIdParam + '"]');
+                        if ($editBtn.length && !window.tenantModalAutoOpened) {
+                            window.tenantModalAutoOpened = true;
+                            $editBtn.trigger('click');
+                        }
+                    });
+                }
+
                 const Toast = Swal.mixin({
                     toast: true,
                     position: 'top-end',

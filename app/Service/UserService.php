@@ -15,7 +15,7 @@ class UserService
     public function index($request)
     {
         if ($request->ajax()) {
-            $data = User::where('type', UserType::USER)->orderBy('id', 'desc')->get();
+            $data = User::orderBy('id', 'desc')->get();
             return DataTables::of($data)
                 ->addIndexColumn()
                 ->addColumn('date', function ($row) {
@@ -38,8 +38,16 @@ class UserService
                     return $row->phone ? '<a href="tel:' . $row->phone . '" class="text-primary fw-semibold">' . $row->phone . '</a>' : '<span class="text-muted">-</span>';
                 })
                 ->addColumn('type', function ($row) {
-                    $badge = $row->type == 'Admin' ? 'bg-purple text-white' : ($row->type == 'delivery' ? 'bg-info text-white' : 'bg-primary text-white');
-                    $label = $row->type == 'customer' ? 'Tenant / User' : ucfirst($row->type);
+                    if ($row->type == 'Admin' || $row->type == UserType::SUPERADMIN) {
+                        $badge = 'bg-purple text-white';
+                        $label = 'Administrator';
+                    } elseif ($row->type == 'delivery' || strtolower($row->type) == 'staff') {
+                        $badge = 'bg-info text-white';
+                        $label = 'Staff / Manager';
+                    } else {
+                        $badge = 'bg-secondary text-white';
+                        $label = 'Standard User';
+                    }
                     return '<span class="badge rounded-pill ' . $badge . ' px-2 py-1">' . $label . '</span>';
                 })
                 ->addColumn('status', function ($row) {

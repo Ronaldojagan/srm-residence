@@ -216,12 +216,23 @@ class HomeController extends Controller
             $rentStatus = $hasOverdue ? 'Overdue' : ($hasDue ? 'Due' : 'Paid');
 
             $recentTenants[] = [
+                'id' => $t->id,
                 'name' => $t->name,
-                'email' => $t->email,
+                'email' => $t->email ?? 'Not provided',
                 'phone' => $t->phone ?? '-',
+                'emergency_contact' => $t->emergency_contact ?? 'Not provided',
+                'address' => $t->address ?? 'Not provided',
                 'room' => $t->room ? 'Room ' . $t->room->room_number : ($t->room_number ? 'Room ' . $t->room_number : 'Unassigned'),
+                'room_number' => $t->room ? $t->room->room_number : ($t->room_number ?? '-'),
+                'floor' => $t->room ? $t->room->floor : '-',
                 'type' => $t->room ? $t->room->room_type : ($t->room_type ?? 'Standard'),
                 'rent' => (float) ($t->monthly_rent > 0 ? $t->monthly_rent : ($t->room ? $t->room->total_monthly : 5000)),
+                'base_rent' => (float) $t->monthly_rent,
+                'maintenance' => (float) $t->maintenance_charges,
+                'other_charges' => (float) $t->other_charges,
+                'eb_rate' => (float) ($t->eb_unit_rate ?? 10.00),
+                'eb_start_reading' => (float) ($t->eb_start_reading ?? 0.00),
+                'deposit' => (float) ($t->security_deposit ?? 0.00),
                 'status' => $rentStatus,
                 'date' => $t->commence_date ? Carbon::parse($t->commence_date)->format('d M Y') : $t->created_at->format('d M Y'),
             ];

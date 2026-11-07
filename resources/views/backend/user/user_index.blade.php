@@ -24,7 +24,8 @@
 
     <div class="row justify-content-between align-items-center mt-3">
         <div class="col-md-6">
-            <h4 class="page-title-main page">Users & Tenants</h4>
+            <h4 class="page-title-main page">System Users</h4>
+            <p class="text-muted mb-0 font-13">System administrators and operational staff accounts</p>
         </div>
         <div class="col-md-6 text-end">
             <button type="button" class="btn add-btn waves-effect waves-light button-color text-white" data-bs-toggle="modal" data-bs-target="#addUserModal">
@@ -93,9 +94,9 @@
                             <div class="col-md-6">
                                 <label class="form-label">Role <span class="text-danger">*</span></label>
                                 <select name="type" class="form-select" required>
-                                    <option value="customer" selected>Tenant / Customer</option>
-                                    <option value="Admin">Admin</option>
-                                    <option value="delivery">Staff</option>
+                                    <option value="Admin">Administrator</option>
+                                    <option value="delivery">Staff / Manager</option>
+                                    <option value="customer">Standard User</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
@@ -151,9 +152,9 @@
                             <div class="col-md-6">
                                 <label class="form-label">Role <span class="text-danger">*</span></label>
                                 <select id="edit_type" name="type" class="form-select" required>
-                                    <option value="customer">Tenant / Customer</option>
-                                    <option value="Admin">Admin</option>
-                                    <option value="delivery">Staff</option>
+                                    <option value="Admin">Administrator</option>
+                                    <option value="delivery">Staff / Manager</option>
+                                    <option value="customer">Standard User</option>
                                 </select>
                             </div>
                             <div class="col-md-6">

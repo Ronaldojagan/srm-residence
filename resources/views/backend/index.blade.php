@@ -479,7 +479,9 @@
                 <div class="res-card h-100">
                     <div class="res-card-title">
                         <span><i class="fas fa-user-check text-success me-2"></i> Recent Tenant Check-Ins & Allocations</span>
-                        <a href="{{ url('admin/users') }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">View All Tenants</a>
+                        <a href="{{ url('admin/tenants') }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                            <i class="fas fa-users-cog me-1"></i> View All Tenants
+                        </a>
                     </div>
                     <div class="table-responsive">
                         <table class="table res-table">
@@ -527,7 +529,19 @@
                                         @endif
                                     </td>
                                     <td class="text-end">
-                                        <button class="btn btn-sm btn-light border rounded-circle" title="View Tenant"><i class="fas fa-chevron-right text-muted"></i></button>
+                                        <div class="btn-group btn-group-sm">
+                                            <button type="button" 
+                                                class="btn btn-sm btn-outline-primary rounded-pill px-2 py-1 btn-view-tenant-modal" 
+                                                title="View Tenant Profile"
+                                                data-tenant='@json($tenant)'>
+                                                <i class="fas fa-eye me-1"></i> View
+                                            </button>
+                                            <a href="{{ url('admin/tenants?tenant_id=' . $tenant['id']) }}" 
+                                                class="btn btn-sm btn-light border rounded-circle ms-1" 
+                                                title="Open in Tenants Directory">
+                                                <i class="fas fa-external-link-alt text-muted font-11"></i>
+                                            </a>
+                                        </div>
                                     </td>
                                 </tr>
                                 @endforeach
@@ -578,6 +592,94 @@
             </div>
         </div>
 
+    </div>
+
+    <!-- TENANT QUICK VIEW MODAL -->
+    <div class="modal fade" id="tenantDetailsModal" tabindex="-1" aria-labelledby="tenantDetailsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header button-color text-white">
+                    <h5 class="modal-title text-white" id="tenantDetailsModalLabel">
+                        <i class="fas fa-user-circle me-1"></i> <span id="tv_title_name">Resident Details</span>
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <!-- Left: Profile & Room Card -->
+                        <div class="col-md-5">
+                            <div class="p-3 bg-light rounded border h-100 text-center">
+                                <div class="res-avatar mx-auto mb-2" style="width: 60px; height: 60px; font-size: 24px; line-height: 60px;" id="tv_avatar">T</div>
+                                <h5 class="fw-bold text-dark mb-1" id="tv_card_name">Tenant Name</h5>
+                                <span class="badge bg-primary text-white px-2 py-1 mb-1" id="tv_room_badge">Room</span>
+                                <div class="small text-muted mb-3" id="tv_room_type">Room Type</div>
+                                
+                                <hr class="my-2">
+                                <div class="text-start small">
+                                    <div class="mb-2 d-flex justify-content-between">
+                                        <strong class="text-muted">Commenced:</strong> 
+                                        <span class="text-dark fw-semibold" id="tv_date">-</span>
+                                    </div>
+                                    <div class="mb-2 d-flex justify-content-between align-items-center">
+                                        <strong class="text-muted">Rent Status:</strong> 
+                                        <span id="tv_status_badge">-</span>
+                                    </div>
+                                    <div class="mb-0 d-flex justify-content-between">
+                                        <strong class="text-muted">Deposit:</strong> 
+                                        <span class="text-dark fw-semibold" id="tv_deposit">₹0</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right: Breakdown & Contact Details -->
+                        <div class="col-md-7">
+                            <h6 class="fw-bold text-primary mb-2"><i class="fas fa-address-card me-1"></i> Contact Information</h6>
+                            <div class="p-2 px-3 bg-white rounded border mb-3 small">
+                                <div class="mb-1"><strong>Phone:</strong> <a href="#" id="tv_phone_link" class="text-primary ms-1 fw-semibold"><span id="tv_phone">-</span></a></div>
+                                <div class="mb-1"><strong>Email:</strong> <span class="text-dark ms-1" id="tv_email">-</span></div>
+                                <div class="mb-1"><strong>Emergency:</strong> <span class="text-dark ms-1" id="tv_emergency">-</span></div>
+                                <div class="mb-0"><strong>Address:</strong> <span class="text-muted ms-1" id="tv_address">-</span></div>
+                            </div>
+
+                            <h6 class="fw-bold text-success mb-2"><i class="fas fa-file-invoice-dollar me-1"></i> Monthly Package Breakdown</h6>
+                            <div class="table-responsive border rounded">
+                                <table class="table table-sm table-striped mb-0 font-12">
+                                    <tbody>
+                                        <tr>
+                                            <td class="text-muted">Base Room Rent:</td>
+                                            <td class="text-end fw-bold" id="tv_base_rent">₹0.00</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">Maintenance Charges:</td>
+                                            <td class="text-end fw-bold" id="tv_maintenance">₹0.00</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">Other Charges:</td>
+                                            <td class="text-end fw-bold" id="tv_other">₹0.00</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted">EB Electricity Rate:</td>
+                                            <td class="text-end text-muted font-11" id="tv_eb_rate">₹10.00 / unit</td>
+                                        </tr>
+                                        <tr class="table-success">
+                                            <td class="fw-bold text-dark">Total Monthly Package:</td>
+                                            <td class="text-end fw-bold text-success font-14" id="tv_total_rent">₹0.00</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <a href="{{ url('admin/tenants') }}" id="tv_manage_btn" class="btn button-color text-white">
+                        <i class="fas fa-users-cog me-1"></i> Open in Tenants Manager
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
 
     @push('footer_content')
@@ -759,6 +861,45 @@
                         });
                     }
                 }
+
+                // Tenant Quick View Modal Handler
+                $(document).on('click', '.btn-view-tenant-modal', function() {
+                    var t = $(this).data('tenant');
+                    if (!t) return;
+
+                    $('#tv_title_name').text(t.name + ' - Resident Details');
+                    $('#tv_card_name').text(t.name);
+                    $('#tv_avatar').text(t.name.charAt(0).toUpperCase());
+                    $('#tv_room_badge').text(t.room);
+                    $('#tv_room_type').text(t.type + (t.floor && t.floor !== '-' ? ' (' + t.floor + ')' : ''));
+                    $('#tv_date').text(t.date);
+
+                    var statusHtml = '';
+                    if (t.status === 'Paid') {
+                        statusHtml = '<span class="badge bg-success-subtle text-success px-2 py-1"><i class="fas fa-check-circle me-1"></i> Paid</span>';
+                    } else if (t.status === 'Due') {
+                        statusHtml = '<span class="badge bg-warning-subtle text-warning px-2 py-1"><i class="fas fa-clock me-1"></i> Due</span>';
+                    } else {
+                        statusHtml = '<span class="badge bg-danger-subtle text-danger px-2 py-1"><i class="fas fa-exclamation-triangle me-1"></i> Overdue</span>';
+                    }
+                    $('#tv_status_badge').html(statusHtml);
+
+                    $('#tv_deposit').text('₹' + Number(t.deposit || 0).toLocaleString('en-IN'));
+                    $('#tv_phone').text(t.phone);
+                    $('#tv_phone_link').attr('href', t.phone !== '-' ? 'tel:' + t.phone : '#');
+                    $('#tv_email').text(t.email);
+                    $('#tv_emergency').text(t.emergency_contact);
+                    $('#tv_address').text(t.address);
+
+                    $('#tv_base_rent').text('₹' + Number(t.base_rent || 0).toLocaleString('en-IN', {minimumFractionDigits: 2}));
+                    $('#tv_maintenance').text('₹' + Number(t.maintenance || 0).toLocaleString('en-IN', {minimumFractionDigits: 2}));
+                    $('#tv_other').text('₹' + Number(t.other_charges || 0).toLocaleString('en-IN', {minimumFractionDigits: 2}));
+                    $('#tv_eb_rate').text('₹' + Number(t.eb_rate || 0).toFixed(2) + ' / unit (Start: ' + Number(t.eb_start_reading || 0) + ' kWh)');
+                    $('#tv_total_rent').text('₹' + Number(t.rent || 0).toLocaleString('en-IN', {minimumFractionDigits: 2}));
+                    $('#tv_manage_btn').attr('href', "{{ url('admin/tenants') }}?tenant_id=" + t.id);
+
+                    $('#tenantDetailsModal').modal('show');
+                });
             });
         </script>
     @endpush
