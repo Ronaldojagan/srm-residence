@@ -115,6 +115,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'user-access:' . Use
     // Settings
     Route::controller(SettingsController::class)->prefix('settings')->name('settings.')->group(function () {
         Route::get('/', 'settingsIndex')->name('index');
+        Route::post('/save', 'saveSettings')->name('save');
     });
 
     Route::controller(SettingsController::class)->group(function () {

@@ -53,6 +53,11 @@ class SettingsController extends Controller
             'settings' => $settings,
         ]);
     }
+
+    public function saveSettings(Request $request)
+    {
+        return $this->settingsService->saveSettings($request->all(), $request);
+    }
     public function contact(SaveContactRequest $request)
     {
         return $this->settingsService->contact($request->validated());

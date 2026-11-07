@@ -91,78 +91,182 @@ class SettingsService
 
     public function settingsIndex()
     {
-        $settings = [];
-        $terms = Application::where('group', 'Terms and Conditions')->get();
-        foreach ($terms as $key => $value) {
-            if ($value['value'] != null) {
-                $settings[$value['name']] = $value['value'];
+        $defaults = [
+            // General Settings
+            'residence_name' => 'SRM Residence',
+            'residence_tagline' => 'Executive PG & Co-Living Residence',
+            'contact_person' => 'Property Manager',
+            'contact_designation' => 'Resident Warden',
+            'contact_phone' => '+91 98765 43210',
+            'contact_whatsapp' => '+91 98765 43210',
+            'contact_email' => 'contact@srmresidence.com',
+            'emergency_phone' => '+91 98765 00000',
+            'contact_address' => 'SRM Residence, Main Road, Potheri, Kattankulathur, Tamil Nadu 603203',
+            'google_maps_url' => '',
+            'gate_closing_time' => '22:30',
+            'office_hours' => '09:00 AM - 08:00 PM',
+
+            // Billing & Financial Defaults
+            'default_eb_rate' => '10.00',
+            'default_maintenance' => '0.00',
+            'default_other_charges' => '0.00',
+            'default_security_deposit' => '10000.00',
+            'default_rent_type' => 'custom', // custom or fixed
+            'bill_generation_day' => '1',
+            'bill_due_day' => '5',
+            'grace_period_days' => '3',
+            'late_fee_type' => 'fixed', // fixed or per_day
+            'late_fee_amount' => '100.00',
+            'currency_symbol' => '₹',
+
+            // Integrations - Razorpay
+            'razorpay_enabled' => '0',
+            'razorpay_mode' => 'test',
+            'razorpay_key_id' => '',
+            'razorpay_key_secret' => '',
+            'razorpay_webhook_secret' => '',
+            'razorpay_auto_reconcile' => '1',
+
+            // Integrations - UPI & Direct Payment
+            'upi_enabled' => '1',
+            'upi_id' => 'srmresidence@okhdfcbank',
+            'upi_merchant_name' => 'SRM RESIDENCE',
+            'upi_qr_code' => '',
+            'bank_name' => 'HDFC Bank',
+            'bank_account_name' => 'SRM RESIDENCE',
+            'bank_account_number' => '',
+            'bank_ifsc_code' => '',
+            'bank_branch' => 'Potheri Branch',
+
+            // Integrations - Messaging (SMS / WhatsApp)
+            'messaging_enabled' => '0',
+            'messaging_provider' => 'whatsapp_cloud', // whatsapp_cloud, msg91, twilio
+            'messaging_api_key' => '',
+            'messaging_sender_id' => 'SRMRES',
+            'whatsapp_phone_number_id' => '',
+            'notify_bill_generated' => '1',
+            'notify_payment_received' => '1',
+            'notify_due_reminder' => '1',
+            'notify_overdue_alert' => '1',
+
+            // Integrations - SMTP / Mail
+            'mail_mailer' => 'smtp',
+            'mail_host' => 'smtp.gmail.com',
+            'mail_port' => '587',
+            'mail_username' => '',
+            'mail_password' => '',
+            'mail_encryption' => 'tls',
+            'mail_from_address' => 'notifications@srmresidence.com',
+            'mail_from_name' => 'SRM Residence',
+
+            // Notifications & Alerts
+            'admin_alert_email' => 'admin@srmresidence.com',
+            'reminder_days_before_due' => '3',
+            'bill_sms_template' => 'Dear {resident_name}, your room rent bill for {month} of Rs.{amount} has been generated. Due date: {due_date}. - SRM Residence',
+            'payment_receipt_template' => 'Dear {resident_name}, we received your payment of Rs.{amount} on {payment_date}. Receipt #{receipt_no}. Thank you! - SRM Residence',
+
+            // Policies & House Rules
+            'house_rules' => "1. Visitors are allowed only in the common lounge until 8:00 PM.\n2. Main gates close promptly at 10:30 PM.\n3. Keep room and common areas clean.\n4. Loud music and disturbance to other residents is strictly prohibited.\n5. Smoking and alcohol consumption inside premises is strictly not permitted.",
+            'terms_and_condition' => "1. Monthly rent must be cleared by the 5th of each month.\n2. Security deposit is refundable upon clearance of all utility dues at checkout.\n3. Minimum stay duration is 3 months.\n4. Electrical appliances other than laptops/chargers must be declared.",
+            'notice_period_days' => '30',
+            'notice_period_policy' => 'Residents must provide at least 30 days prior written notice before vacating their room. Vacating without notice may forfeit part of the security deposit.',
+            'refund_policy' => 'Security deposit will be processed within 7 business days of checkout after room inspection and electricity meter reconciliation.',
+        ];
+
+        // 1. Fetch from settings table
+        $dbSettings = \App\Models\Setting::getAllAsArray();
+
+        // 2. Fetch from applications table (legacy)
+        $appSettings = [];
+        $apps = Application::all();
+        foreach ($apps as $app) {
+            if ($app->value !== null && $app->value !== '') {
+                $appSettings[$app->name] = $app->value;
             }
         }
 
-        $refund = Application::where('group', 'Refund Policy')->get();
-        foreach ($refund as $key => $value) {
-            if ($value['value'] != null) {
-                $settings[$value['name']] = $value['value'];
+        // Merge defaults < legacy applications < new settings table
+        return array_merge($defaults, $appSettings, $dbSettings);
+    }
+
+    public function saveSettings(array $data, Request $request)
+    {
+        $section = $data['section'] ?? 'general';
+
+        // Handle file uploads (such as UPI QR Code)
+        if ($request->hasFile('upi_qr_code') && $request->file('upi_qr_code')->isValid()) {
+            $qrFile = $request->file('upi_qr_code');
+            $filename = 'upi_qr_' . time() . '.' . $qrFile->getClientOriginalExtension();
+            \Illuminate\Support\Facades\Storage::disk('public')->putFileAs('settings', $qrFile, $filename);
+            \App\Models\Setting::set('upi_qr_code', 'settings/' . $filename, 'UPI QR Code Image');
+        } elseif (isset($data['remove_upi_qr_code']) && $data['remove_upi_qr_code'] == '1') {
+            \App\Models\Setting::set('upi_qr_code', '', 'UPI QR Code Image');
+        }
+
+        // Toggle checkboxes: if unchecked in HTML forms, ensure they are stored as 0
+        $booleanKeys = [
+            'integrations' => [
+                'razorpay_enabled', 'razorpay_auto_reconcile',
+                'upi_enabled',
+                'messaging_enabled',
+                'notify_bill_generated', 'notify_payment_received', 'notify_due_reminder', 'notify_overdue_alert'
+            ],
+            'billing' => [],
+            'general' => [],
+            'notifications' => [
+                'notify_bill_generated', 'notify_payment_received', 'notify_due_reminder', 'notify_overdue_alert'
+            ],
+            'policies' => [],
+        ];
+
+        if (isset($booleanKeys[$section])) {
+            foreach ($booleanKeys[$section] as $bKey) {
+                if (!isset($data[$bKey])) {
+                    $data[$bKey] = '0';
+                }
             }
         }
 
-        $contact = Application::where('group', 'Contact')->get();
-        foreach ($contact as $key => $value) {
-            if ($value['value'] != null) {
-                $settings[$value['name']] = $value['value'];
+        foreach ($data as $key => $value) {
+            if (in_array($key, ['_token', '_method', 'section', 'upi_qr_code', 'remove_upi_qr_code'])) {
+                continue;
+            }
+
+            \App\Models\Setting::set($key, $value);
+
+            // Backward compatibility sync with Application table
+            if (in_array($key, ['terms_and_condition', 'refund_policy', 'contact_phone', 'contact_email', 'contact_address'])) {
+                $group = 'General';
+                if ($key === 'terms_and_condition') $group = 'Terms and Conditions';
+                elseif ($key === 'refund_policy') $group = 'Refund Policy';
+                elseif (str_starts_with($key, 'contact_')) $group = 'Contact';
+
+                Application::updateOrCreate(
+                    ['name' => $key],
+                    ['value' => is_string($value) ? substr($value, 0, 255) : '', 'group' => $group]
+                );
             }
         }
 
-        $customer = Application::where('group', 'Customer')->get();
-        foreach ($customer as $key => $value) {
-            if ($value['value'] != null) {
-                $settings[$value['name']] = $value['value'];
-            }
+        $sectionLabels = [
+            'general' => 'General & Property Settings',
+            'billing' => 'Billing & Rent Defaults',
+            'integrations' => 'Integrations (Payment Gateway, UPI, WhatsApp/SMS, SMTP)',
+            'notifications' => 'Notification Templates & Alerts',
+            'policies' => 'House Rules & Policies',
+        ];
+        $label = $sectionLabels[$section] ?? 'Settings';
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "{$label} updated successfully!",
+                'section' => $section,
+            ]);
         }
 
-        $commission = Application::where('group','Rush Order Commission')->get();
-        foreach ($commission as $key => $value) {
-            if( $value['value']!=null ){
-                $settings[$value['name']]=$value['value'];
-            }
-        }
-
-        $charges = Application::where('group','Shop Radius')->get();
-        foreach ($charges as $key => $value) {
-            if( $value['value']!=null ){
-                $settings[$value['name']]=$value['value'];
-            }
-        }
-
-        $deliveryCharge = Application::where('group','Delivery Charge')->get();
-        foreach ($deliveryCharge as $key => $value) {
-            if( $value['value']!=null ){
-                $settings[$value['name']]=$value['value'];
-            }
-        }
-
-        $returnReplaceDays = Application::where('group','Return Replace Days')->get();
-        foreach ($returnReplaceDays as $key => $value) {
-            if( $value['value']!=null ){
-                $settings[$value['name']]=$value['value'];
-            }
-        }
-
-        $freeDeliveryAmountAbove = Application::where('group','Free Delivery Amount Above')->get();
-        foreach ($freeDeliveryAmountAbove as $key => $value) {
-            if( $value['value']!=null ){
-                $settings[$value['name']]=$value['value'];
-            }
-        }
-
-        $platformFee = Application::where('group','Platform Fee')->get();
-        foreach ($platformFee as $key => $value) {
-            if( $value['value']!=null ){
-                $settings[$value['name']]=$value['value'];
-            }
-        }
-
-        return $settings;
+        session()->flash('success', "{$label} updated successfully!");
+        return redirect('/admin/settings?tab=' . $section);
     }
 
     public function termsConditions(array $data)
