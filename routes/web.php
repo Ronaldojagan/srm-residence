@@ -9,6 +9,7 @@ use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\BannerController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -116,6 +117,16 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'user-access:' . Use
     Route::controller(SettingsController::class)->prefix('settings')->name('settings.')->group(function () {
         Route::get('/', 'settingsIndex')->name('index');
         Route::post('/save', 'saveSettings')->name('save');
+    });
+
+    // Banners & Media
+    Route::controller(BannerController::class)->prefix('banner')->name('banner.')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::post('/', 'store')->name('store');
+        Route::get('/{banner}/edit', 'edit')->name('edit');
+        Route::put('/{banner}', 'update')->name('update');
+        Route::delete('/{banner}', 'destroy')->name('destroy');
+        Route::post('/status', 'updateStatus')->name('status');
     });
 
     Route::controller(SettingsController::class)->group(function () {

@@ -76,7 +76,7 @@ class BannerService
         $banner->save();
         DB::commit();
         session()->flash("success", "Banner has been successfully created!");
-        return redirect('/admin/settings');
+        return redirect('/admin/settings?tab=banners');
     }
 
     public function edit($banner)
@@ -104,7 +104,7 @@ class BannerService
         $banner->save();
         DB::commit();
         session()->flash("success", "Banner has been successfully updated!");
-        return redirect('/admin/settings');
+        return redirect('/admin/settings?tab=banners');
     }
 
     public function destroy(Banner $banner)
