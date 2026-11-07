@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Tenant;
 use App\Models\Room;
+use App\Models\BillPayment;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -25,8 +26,9 @@ class TenantController extends Controller
                 })
                 ->addIndexColumn()
                 ->addColumn('name_email', function ($row) {
+                    $viewUrl = url('/admin/tenants/' . $row->id . '/view');
                     return '<div>
-                        <span class="fw-bold text-dark d-block">' . e($row->name) . '</span>
+                        <a href="' . $viewUrl . '" class="fw-bold text-dark d-block text-decoration-none" title="View Resident Profile">' . e($row->name) . '</a>
                         <small class="text-muted">' . e($row->email ?? 'No email') . '</small>
                     </div>';
                 })
@@ -60,7 +62,9 @@ class TenantController extends Controller
                     </div>';
                 })
                 ->addColumn('action', function ($row) {
+                    $viewUrl = url('/admin/tenants/' . $row->id . '/view');
                     $btn = '<div class="btn-group btn-group-sm" role="group">';
+                    $btn .= '<a href="' . $viewUrl . '" class="btn btn-outline-info" title="View Resident Profile"><i class="fas fa-eye"></i></a>';
                     $btn .= '<button type="button" class="btn btn-outline-primary btn-edit-tenant" data-id="' . $row->id . '" title="Edit Tenant"><i class="fas fa-edit"></i></button>';
                     $btn .= '<button type="button" class="btn btn-outline-danger btn-delete-tenant" data-id="' . $row->id . '" data-name="' . e($row->name) . '" title="Delete Tenant"><i class="fas fa-trash-alt"></i></button>';
                     $btn .= '</div>';
@@ -133,6 +137,36 @@ class TenantController extends Controller
             'success' => true,
             'tenant' => $tenant->load('room')
         ]);
+    }
+
+    public function view(Tenant $tenant)
+    {
+        $tenant->load(['room', 'bills.payments']);
+
+        $bills = $tenant->bills()->orderBy('bill_date', 'desc')->get();
+        $payments = BillPayment::where('tenant_id', $tenant->id)
+            ->with('bill')
+            ->orderBy('payment_date', 'desc')
+            ->get();
+
+        $totalBilled = (float) $bills->sum('amount');
+        $totalPaid = (float) $bills->sum('paid_amount');
+        $outstandingDues = (float) $bills->sum('due_amount');
+        $totalEbUnits = (float) $bills->sum('eb_consumed_units');
+        $totalEbAmount = (float) $bills->sum('eb_amount');
+
+        $stats = [
+            'totalBilled' => $totalBilled,
+            'totalPaid' => $totalPaid,
+            'outstandingDues' => $outstandingDues,
+            'totalEbUnits' => $totalEbUnits,
+            'totalEbAmount' => $totalEbAmount,
+            'totalBills' => $bills->count(),
+            'paidBills' => $bills->where('status', 'paid')->count(),
+            'dueBills' => $bills->whereIn('status', ['unpaid', 'partially_paid', 'overdue'])->count(),
+        ];
+
+        return view('backend.tenants.view', compact('tenant', 'bills', 'payments', 'stats'));
     }
 
     public function update(Request $request, Tenant $tenant)

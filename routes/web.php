@@ -57,6 +57,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'user-access:' . Use
     Route::controller(TenantController::class)->prefix('tenants')->name('tenants.')->group(function () {
         Route::get('/', 'index')->name('index');
         Route::post('/', 'store')->name('store');
+        Route::get('/{tenant}/view', 'view')->name('view');
         Route::get('/{tenant}/data', 'getData')->name('data');
         Route::post('/{tenant}/update', 'update')->name('update');
         Route::delete('/{tenant}', 'destroy')->name('destroy');

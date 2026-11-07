@@ -532,13 +532,13 @@
                                         <div class="btn-group btn-group-sm">
                                             <button type="button" 
                                                 class="btn btn-sm btn-outline-primary rounded-pill px-2 py-1 btn-view-tenant-modal" 
-                                                title="View Tenant Profile"
+                                                title="View Tenant Quick Summary"
                                                 data-tenant='@json($tenant)'>
-                                                <i class="fas fa-eye me-1"></i> View
+                                                <i class="fas fa-eye me-1"></i> Quick View
                                             </button>
-                                            <a href="{{ url('admin/tenants?tenant_id=' . $tenant['id']) }}" 
+                                            <a href="{{ url('admin/tenants/' . $tenant['id'] . '/view') }}" 
                                                 class="btn btn-sm btn-light border rounded-circle ms-1" 
-                                                title="Open in Tenants Directory">
+                                                title="Open Resident Profile Page">
                                                 <i class="fas fa-external-link-alt text-muted font-11"></i>
                                             </a>
                                         </div>
@@ -675,7 +675,7 @@
                 <div class="modal-footer bg-light">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     <a href="{{ url('admin/tenants') }}" id="tv_manage_btn" class="btn button-color text-white">
-                        <i class="fas fa-users-cog me-1"></i> Open in Tenants Manager
+                        <i class="fas fa-user-circle me-1"></i> Open Full Profile Page
                     </a>
                 </div>
             </div>
@@ -896,7 +896,7 @@
                     $('#tv_other').text('₹' + Number(t.other_charges || 0).toLocaleString('en-IN', {minimumFractionDigits: 2}));
                     $('#tv_eb_rate').text('₹' + Number(t.eb_rate || 0).toFixed(2) + ' / unit (Start: ' + Number(t.eb_start_reading || 0) + ' kWh)');
                     $('#tv_total_rent').text('₹' + Number(t.rent || 0).toLocaleString('en-IN', {minimumFractionDigits: 2}));
-                    $('#tv_manage_btn').attr('href', "{{ url('admin/tenants') }}?tenant_id=" + t.id);
+                    $('#tv_manage_btn').attr('href', "{{ url('admin/tenants') }}/" + t.id + "/view");
 
                     $('#tenantDetailsModal').modal('show');
                 });
