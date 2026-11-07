@@ -1316,40 +1316,242 @@ table.dataTable tbody td.dataTables_empty::before {
   border-color: var(--res-primary) !important;
 }
 
-/* SweetAlert2 Modern Styling */
-.swal2-popup {
-  border-radius: 20px !important;
+/* SweetAlert2 Modern Styling - Modals & Confirmation Dialogs */
+.swal2-popup:not(.swal2-toast) {
+  border-radius: 18px !important;
   font-family: var(--res-font-main) !important;
   box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25) !important;
-  padding: 2rem !important;
+  padding: 1.75rem 2rem !important;
+  max-width: 440px !important;
+  border: 1px solid var(--res-border) !important;
 }
 
-.swal2-title {
+.swal2-popup:not(.swal2-toast) .swal2-title {
   font-weight: 700 !important;
-  font-size: 20px !important;
+  font-size: 18px !important;
   color: #0f172a !important;
+  margin-bottom: 0.5rem !important;
 }
 
-.swal2-html-container {
+.swal2-popup:not(.swal2-toast) .swal2-html-container {
   color: #475569 !important;
-  font-size: 14px !important;
+  font-size: 13.5px !important;
+  line-height: 1.5 !important;
+}
+
+.swal2-popup:not(.swal2-toast) .swal2-icon {
+  margin: 1rem auto 0.75rem auto !important;
+  transform: scale(0.85) !important;
 }
 
 .swal2-confirm {
   border-radius: 10px !important;
   font-weight: 600 !important;
   font-size: 13.5px !important;
-  padding: 10px 24px !important;
+  padding: 9px 22px !important;
   background: linear-gradient(135deg, #0ea1b1 0%, #086d77 100%) !important;
   box-shadow: 0 4px 14px rgba(14, 161, 177, 0.3) !important;
+  border: none !important;
 }
 
 .swal2-cancel {
   border-radius: 10px !important;
   font-weight: 600 !important;
   font-size: 13.5px !important;
-  padding: 10px 24px !important;
+  padding: 9px 22px !important;
   background: #64748b !important;
+  border: none !important;
+}
+
+/* ==========================================================================
+   REDESIGNED RESPONSE MESSAGE BADGE / TOAST (Compact, Floating Obsidian Pill)
+   ========================================================================== */
+
+.swal2-container.swal2-top-end,
+.swal2-container.swal2-top-right {
+  top: 75px !important;
+  right: 22px !important;
+  padding: 0 !important;
+  pointer-events: none !important;
+}
+
+.swal2-popup.swal2-toast {
+  pointer-events: auto !important;
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 8px 16px 8px 12px !important;
+  border-radius: 50px !important;
+  background: #0f172a !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 16px 36px -4px rgba(15, 23, 42, 0.45), 0 4px 12px -2px rgba(15, 23, 42, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+  width: auto !important;
+  max-width: 420px !important;
+  min-height: 40px !important;
+  overflow: hidden !important;
+  position: relative !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.swal2-popup.swal2-toast .swal2-header {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  flex-shrink: 0 !important;
+}
+
+.swal2-popup.swal2-toast .swal2-title {
+  color: #f8fafc !important;
+  font-family: var(--res-font-main) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  line-height: 1.35 !important;
+  margin: 0 !important;
+  padding: 0 4px 0 0 !important;
+  letter-spacing: -0.01em !important;
+  flex-grow: 1 !important;
+  text-align: left !important;
+  white-space: normal !important;
+}
+
+.swal2-popup.swal2-toast .swal2-html-container {
+  color: #e2e8f0 !important;
+  font-size: 12.5px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  text-align: left !important;
+}
+
+/* Micro Glowing Status Badge Icons */
+.swal2-popup.swal2-toast .swal2-icon {
+  width: 22px !important;
+  min-width: 22px !important;
+  height: 22px !important;
+  border-radius: 50% !important;
+  margin: 0 4px 0 0 !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: none !important;
+  flex-shrink: 0 !important;
+  position: relative !important;
+}
+
+.swal2-popup.swal2-toast .swal2-icon * {
+  display: none !important;
+}
+
+.swal2-popup.swal2-toast .swal2-icon.swal2-success {
+  background: #10b981 !important;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.5) !important;
+}
+.swal2-popup.swal2-toast .swal2-icon.swal2-success::after {
+  content: '\f00c' !important;
+  font-family: 'Font Awesome 6 Free' !important;
+  font-weight: 900 !important;
+  font-size: 10px !important;
+  color: #ffffff !important;
+  line-height: 1 !important;
+}
+
+.swal2-popup.swal2-toast .swal2-icon.swal2-error {
+  background: #ef4444 !important;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.5) !important;
+}
+.swal2-popup.swal2-toast .swal2-icon.swal2-error::after {
+  content: '\f00d' !important;
+  font-family: 'Font Awesome 6 Free' !important;
+  font-weight: 900 !important;
+  font-size: 10px !important;
+  color: #ffffff !important;
+  line-height: 1 !important;
+}
+
+.swal2-popup.swal2-toast .swal2-icon.swal2-warning {
+  background: #f59e0b !important;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.5) !important;
+}
+.swal2-popup.swal2-toast .swal2-icon.swal2-warning::after {
+  content: '\f12a' !important;
+  font-family: 'Font Awesome 6 Free' !important;
+  font-weight: 900 !important;
+  font-size: 10px !important;
+  color: #ffffff !important;
+  line-height: 1 !important;
+}
+
+.swal2-popup.swal2-toast .swal2-icon.swal2-info {
+  background: #0ea1b1 !important;
+  box-shadow: 0 0 12px rgba(14, 161, 177, 0.5) !important;
+}
+.swal2-popup.swal2-toast .swal2-icon.swal2-info::after {
+  content: '\f129' !important;
+  font-family: 'Font Awesome 6 Free' !important;
+  font-weight: 900 !important;
+  font-size: 10px !important;
+  color: #ffffff !important;
+  line-height: 1 !important;
+}
+
+.swal2-popup.swal2-toast .swal2-timer-progress-bar {
+  height: 2px !important;
+  background: linear-gradient(90deg, #0ea1b1, #10b981) !important;
+  border-radius: 0 0 50px 50px !important;
+  opacity: 0.85 !important;
+}
+
+.swal2-popup.swal2-toast .swal2-close {
+  color: #94a3b8 !important;
+  font-size: 16px !important;
+  width: 20px !important;
+  height: 20px !important;
+  line-height: 20px !important;
+  margin-left: 6px !important;
+  transition: color 0.15s ease !important;
+}
+.swal2-popup.swal2-toast .swal2-close:hover {
+  color: #ffffff !important;
+}
+
+@keyframes swalToastBadgeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.swal2-popup.swal2-toast.swal2-show {
+  animation: swalToastBadgeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+}
+
+/* Modern Compact Alert Boxes (for Form Validation Errors) */
+.alert {
+  border-radius: 12px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  padding: 10px 16px !important;
+  border: 1px solid transparent !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+}
+.alert-danger {
+  background-color: #fef2f2 !important;
+  border-color: #fecaca !important;
+  color: #991b1b !important;
+}
+.alert-success {
+  background-color: #ecfdf5 !important;
+  border-color: #a7f3d0 !important;
+  color: #065f46 !important;
 }
 
 /* ==========================================================================
