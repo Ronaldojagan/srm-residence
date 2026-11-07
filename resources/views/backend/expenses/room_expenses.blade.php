@@ -129,16 +129,16 @@
 
                     <div class="table-responsive table-border">
                         <table class="table table-striped data-table job-table w-100" id="roomExpensesTable">
-                            <thead class="table-theme text-white">
+                            <thead class="table-theme text-white text-nowrap">
                                 <tr>
-                                    <th width="5%">#</th>
-                                    <th>Room & Floor</th>
-                                    <th>Title & Description</th>
-                                    <th>Category</th>
-                                    <th>Amount</th>
-                                    <th>Date</th>
-                                    <th>Paid To / Vendor</th>
-                                    <th width="10%" class="text-center">Action</th>
+                                    <th style="width: 4%;">#</th>
+                                    <th style="min-width: 140px;">Room & Floor</th>
+                                    <th style="min-width: 200px;">Title & Description</th>
+                                    <th style="min-width: 150px;">Category</th>
+                                    <th style="min-width: 130px;" class="text-nowrap">Amount</th>
+                                    <th style="min-width: 110px;" class="text-nowrap">Date</th>
+                                    <th style="min-width: 160px;">Paid To / Vendor</th>
+                                    <th style="min-width: 100px;" class="text-center text-nowrap">Action</th>
                                 </tr>
                             </thead>
                             <tbody>

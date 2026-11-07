@@ -265,17 +265,17 @@
                             <!-- Bills DataTable -->
                             <div class="table-responsive table-border">
                                 <table class="table table-striped data-table job-table w-100" id="billsTable">
-                                    <thead class="table-theme text-white">
+                                    <thead class="table-theme text-white text-nowrap">
                                         <tr>
-                                            <th width="4%">#</th>
-                                            <th width="14%">Invoice No</th>
-                                            <th width="20%">Tenant & Room</th>
-                                            <th width="15%">Type & Month</th>
-                                            <th width="10%">Amount</th>
-                                            <th width="16%">Paid / Due Progress</th>
-                                            <th width="11%">Due Date</th>
-                                            <th width="10%">Status</th>
-                                            <th width="14%" class="text-center">Action</th>
+                                            <th style="width: 4%;">#</th>
+                                            <th style="min-width: 140px;" class="text-nowrap">Invoice No</th>
+                                            <th style="min-width: 180px;">Tenant & Room</th>
+                                            <th style="min-width: 150px;">Type & Month</th>
+                                            <th style="min-width: 130px;" class="text-nowrap">Amount</th>
+                                            <th style="min-width: 170px;" class="text-nowrap">Paid / Due Progress</th>
+                                            <th style="min-width: 110px;" class="text-nowrap">Due Date</th>
+                                            <th style="min-width: 110px;" class="text-nowrap">Status</th>
+                                            <th style="min-width: 150px;" class="text-center text-nowrap">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -321,16 +321,16 @@
                             <!-- Payments DataTable -->
                             <div class="table-responsive table-border">
                                 <table class="table table-striped data-table job-table w-100" id="paymentsTable">
-                                    <thead class="table-theme text-white">
+                                    <thead class="table-theme text-white text-nowrap">
                                         <tr>
-                                            <th width="4%">#</th>
-                                            <th width="16%">Receipt No</th>
-                                            <th width="16%">Invoice Reference</th>
-                                            <th width="20%">Tenant & Room</th>
-                                            <th width="12%">Amount Paid</th>
-                                            <th width="12%">Payment Date</th>
-                                            <th width="12%">Method</th>
-                                            <th width="8%" class="text-center">Action</th>
+                                            <th style="width: 4%;">#</th>
+                                            <th style="min-width: 150px;" class="text-nowrap">Receipt No</th>
+                                            <th style="min-width: 150px;" class="text-nowrap">Invoice Reference</th>
+                                            <th style="min-width: 180px;">Tenant & Room</th>
+                                            <th style="min-width: 130px;" class="text-nowrap">Amount Paid</th>
+                                            <th style="min-width: 120px;" class="text-nowrap">Payment Date</th>
+                                            <th style="min-width: 130px;" class="text-nowrap">Method</th>
+                                            <th style="min-width: 100px;" class="text-center text-nowrap">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>

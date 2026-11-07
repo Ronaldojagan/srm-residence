@@ -1,0 +1,164 @@
+<?php
+
+namespace App\Exports;
+
+use App\Models\Bill;
+use Illuminate\Http\Request;
+use Maatwebsite\Excel\Concerns\FromArray;
+use Maatwebsite\Excel\Concerns\WithEvents;
+use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithTitle;
+use Maatwebsite\Excel\Events\AfterSheet;
+
+class BillsExport implements FromArray, WithHeadings, WithEvents, WithTitle
+{
+    use BaseSRMExport;
+
+    protected $request;
+
+    public function __construct(Request $request)
+    {
+        $this->request = $request;
+    }
+
+    public function array(): array
+    {
+        $query = Bill::with(['tenant.room', 'room', 'creator'])->latest();
+
+        if ($this->request->filled('tenant_id') && $this->request->tenant_id !== 'all') {
+            $query->where('tenant_id', $this->request->tenant_id);
+        }
+        if ($this->request->filled('room_id') && $this->request->room_id !== 'all') {
+            $query->where('room_id', $this->request->room_id);
+        }
+        if ($this->request->filled('bill_type') && $this->request->bill_type !== 'all') {
+            $query->where('bill_type', $this->request->bill_type);
+        }
+        if ($this->request->filled('status') && $this->request->status !== 'all') {
+            $query->where('status', $this->request->status);
+        }
+        if ($this->request->filled('billing_month') && $this->request->billing_month !== 'all') {
+            $query->where('billing_month', 'like', '%' . trim($this->request->billing_month) . '%');
+        }
+        if ($this->request->filled('search')) {
+            $s = trim($this->request->search);
+            $query->where(function ($q) use ($s) {
+                $q->where('bill_number', 'like', "%{$s}%")
+                    ->orWhere('bill_type', 'like', "%{$s}%")
+                    ->orWhere('billing_month', 'like', "%{$s}%")
+                    ->orWhereHas('tenant', fn($tq) => $tq->where('name', 'like', "%{$s}%")->orWhere('phone', 'like', "%{$s}%"));
+            });
+        }
+
+        $bills = $query->get();
+
+        $rows = [];
+        $totalAmount = 0;
+        $totalPaid = 0;
+        $totalDue = 0;
+        $totalEbUnits = 0;
+        $totalEbAmount = 0;
+
+        foreach ($bills as $idx => $bill) {
+            $room = $bill->room ?? ($bill->tenant->room ?? null);
+            $roomNo = $room ? $room->room_number : ($bill->tenant->room_number ?? 'N/A');
+            $floor = $room ? $room->floor : '';
+
+            $amt = (float) $bill->amount;
+            $paid = (float) $bill->paid_amount;
+            $due = (float) $bill->due_amount;
+            $ebUnits = (float) $bill->eb_consumed_units;
+            $ebAmt = (float) $bill->eb_amount;
+
+            $totalAmount += $amt;
+            $totalPaid += $paid;
+            $totalDue += $due;
+            $totalEbUnits += $ebUnits;
+            $totalEbAmount += $ebAmt;
+
+            $rows[] = [
+                $idx + 1,
+                $bill->bill_number,
+                $bill->billing_month,
+                $bill->bill_date ? $bill->bill_date->format('Y-m-d') : '',
+                $bill->due_date ? $bill->due_date->format('Y-m-d') : '',
+                $bill->tenant ? $bill->tenant->name : 'Former Resident',
+                $bill->tenant ? $bill->tenant->phone : '-',
+                $roomNo,
+                $floor,
+                $bill->bill_type,
+                number_format($amt, 2, '.', ''),
+                number_format($paid, 2, '.', ''),
+                number_format($due, 2, '.', ''),
+                ucfirst(str_replace('_', ' ', $bill->status)),
+                $bill->eb_consumed_units ?: '0',
+                number_format($ebAmt, 2, '.', ''),
+                $bill->creator ? $bill->creator->name : 'System',
+                $bill->notes ?: '',
+            ];
+        }
+
+        // LAST ROW: TOTAL AMOUNTS
+        $rows[] = [
+            'TOTAL',
+            count($bills) . ' Invoices',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            number_format($totalAmount, 2, '.', ''),
+            number_format($totalPaid, 2, '.', ''),
+            number_format($totalDue, 2, '.', ''),
+            '',
+            number_format($totalEbUnits, 2, '.', ''),
+            number_format($totalEbAmount, 2, '.', ''),
+            '',
+            '',
+        ];
+
+        return $rows;
+    }
+
+    public function headings(): array
+    {
+        return [
+            'S.No',
+            'Invoice Number',
+            'Billing Month',
+            'Bill Date',
+            'Due Date',
+            'Resident Name',
+            'Resident Phone',
+            'Room Number',
+            'Floor',
+            'Bill Type',
+            'Total Invoiced (INR)',
+            'Paid Amount (INR)',
+            'Due Balance (INR)',
+            'Payment Status',
+            'EB Consumed Units',
+            'EB Amount (INR)',
+            'Generated By',
+            'Notes',
+        ];
+    }
+
+    public function registerEvents(): array
+    {
+        return [
+            AfterSheet::class => function (AfterSheet $event) {
+                $sheet = $event->sheet->getDelegate();
+                $this->formatSheet($sheet, $sheet->getHighestRow(), $sheet->getHighestColumn());
+            },
+        ];
+    }
+
+    public function title(): string
+    {
+        return 'Invoices & Bills';
+    }
+}

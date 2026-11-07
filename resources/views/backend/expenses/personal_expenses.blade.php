@@ -119,15 +119,15 @@
 
                     <div class="table-responsive table-border">
                         <table class="table table-striped data-table job-table w-100" id="personalExpensesTable">
-                            <thead class="table-theme text-white">
+                            <thead class="table-theme text-white text-nowrap">
                                 <tr>
-                                    <th width="5%">#</th>
-                                    <th width="32%">Title, Month & Notes</th>
-                                    <th width="20%">Line Items Breakdown</th>
-                                    <th width="15%">Total Amount</th>
-                                    <th width="12%">Date</th>
-                                    <th width="16%">Paid To / Vendor</th>
-                                    <th width="10%" class="text-center">Action</th>
+                                    <th style="width: 4%;">#</th>
+                                    <th style="min-width: 250px;">Title, Month & Notes</th>
+                                    <th style="min-width: 200px;">Line Items Breakdown</th>
+                                    <th style="min-width: 140px;" class="text-nowrap">Total Amount</th>
+                                    <th style="min-width: 110px;" class="text-nowrap">Date</th>
+                                    <th style="min-width: 160px;">Paid To / Vendor</th>
+                                    <th style="width: 100px;" class="text-center text-nowrap">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -141,7 +141,7 @@
 
     <!-- ADD PERSONAL EXPENSE MODAL -->
     <div class="modal fade" id="addPersonalExpenseModal" tabindex="-1" aria-labelledby="addPersonalExpenseModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
             <div class="modal-content border-0 shadow">
                 <div class="modal-header button-color text-white">
                     <h5 class="modal-title text-white" id="addPersonalExpenseModalLabel">
@@ -199,15 +199,15 @@
                                     <div class="card-body p-2 bg-white">
                                         <div class="table-responsive">
                                             <table class="table table-sm table-bordered align-middle mb-0" id="addItemsTable">
-                                                <thead class="table-light font-12">
+                                                <thead class="table-light font-12 text-nowrap">
                                                     <tr>
-                                                        <th style="width: 5%; text-align: center;">S.No</th>
-                                                        <th style="width: 30%;">Item Title <span class="text-danger">*</span></th>
-                                                        <th style="width: 12%; text-align: center;">Quantity</th>
-                                                        <th style="width: 16%; text-align: right;">Per Rate (₹)</th>
-                                                        <th style="width: 16%; text-align: right;">Amount (₹) <span class="text-danger">*</span></th>
-                                                        <th style="width: 16%;">Short Notes</th>
-                                                        <th style="width: 5%; text-align: center;"></th>
+                                                        <th style="width: 60px; text-align: center;">S.No</th>
+                                                        <th style="min-width: 220px;">Item Title <span class="text-danger">*</span></th>
+                                                        <th style="width: 120px; text-align: center;">Quantity</th>
+                                                        <th style="width: 150px; text-align: right;">Per Rate (₹)</th>
+                                                        <th style="width: 160px; text-align: right;">Amount (₹) <span class="text-danger">*</span></th>
+                                                        <th style="min-width: 200px;">Short Notes / Details</th>
+                                                        <th style="width: 50px; text-align: center;"></th>
                                                     </tr>
                                                 </thead>
                                                 <tbody id="addItemsBody">
@@ -246,7 +246,7 @@
 
     <!-- EDIT PERSONAL EXPENSE MODAL -->
     <div class="modal fade" id="editPersonalExpenseModal" tabindex="-1" aria-labelledby="editPersonalExpenseModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
             <div class="modal-content border-0 shadow">
                 <div class="modal-header button-color text-white">
                     <h5 class="modal-title text-white" id="editPersonalExpenseModalLabel">
@@ -303,15 +303,15 @@
                                     <div class="card-body p-2 bg-white">
                                         <div class="table-responsive">
                                             <table class="table table-sm table-bordered align-middle mb-0" id="editItemsTable">
-                                                <thead class="table-light font-12">
+                                                <thead class="table-light font-12 text-nowrap">
                                                     <tr>
-                                                        <th style="width: 5%; text-align: center;">S.No</th>
-                                                        <th style="width: 30%;">Item Title <span class="text-danger">*</span></th>
-                                                        <th style="width: 12%; text-align: center;">Quantity</th>
-                                                        <th style="width: 16%; text-align: right;">Per Rate (₹)</th>
-                                                        <th style="width: 16%; text-align: right;">Amount (₹) <span class="text-danger">*</span></th>
-                                                        <th style="width: 16%;">Short Notes</th>
-                                                        <th style="width: 5%; text-align: center;"></th>
+                                                        <th style="width: 60px; text-align: center;">S.No</th>
+                                                        <th style="min-width: 220px;">Item Title <span class="text-danger">*</span></th>
+                                                        <th style="width: 120px; text-align: center;">Quantity</th>
+                                                        <th style="width: 150px; text-align: right;">Per Rate (₹)</th>
+                                                        <th style="width: 160px; text-align: right;">Amount (₹) <span class="text-danger">*</span></th>
+                                                        <th style="min-width: 200px;">Short Notes / Details</th>
+                                                        <th style="width: 50px; text-align: center;"></th>
                                                     </tr>
                                                 </thead>
                                                 <tbody id="editItemsBody">

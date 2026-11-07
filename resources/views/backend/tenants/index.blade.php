@@ -155,16 +155,16 @@
 
                     <div class="table-responsive table-border">
                         <table class="table table-striped data-table job-table w-100">
-                            <thead class="table-theme text-white">
+                            <thead class="table-theme text-white text-nowrap">
                                 <tr>
-                                    <th width="5%">#</th>
-                                    <th>Tenant & Email</th>
-                                    <th>Phone</th>
-                                    <th>Room & Type</th>
-                                    <th>Monthly Rent</th>
-                                    <th>Commence Date</th>
-                                    <th>Status</th>
-                                    <th width="12%" class="text-center">Action</th>
+                                    <th style="width: 4%;">#</th>
+                                    <th style="min-width: 180px;">Tenant & Email</th>
+                                    <th style="min-width: 130px;" class="text-nowrap">Phone</th>
+                                    <th style="min-width: 180px;">Room & Type</th>
+                                    <th style="min-width: 140px;" class="text-nowrap">Monthly Rent</th>
+                                    <th style="min-width: 130px;" class="text-nowrap">Commence Date</th>
+                                    <th style="min-width: 100px;" class="text-nowrap">Status</th>
+                                    <th style="min-width: 120px;" class="text-center text-nowrap">Action</th>
                                 </tr>
                             </thead>
                             <tbody>

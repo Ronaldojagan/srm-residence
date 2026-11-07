@@ -44,7 +44,7 @@
 
         /* Screen Toolbar */
         .no-print-bar {
-            max-width: 850px;
+            max-width: 900px;
             margin: 0 auto 20px auto;
             background: #fff;
             padding: 12px 20px;
@@ -93,7 +93,7 @@
 
         /* Main Invoice Sheet */
         .invoice-sheet {
-            max-width: 850px;
+            max-width: 900px;
             margin: 0 auto;
             background: #fff;
             padding: 40px;
@@ -391,9 +391,15 @@
         .summary-row {
             display: flex;
             justify-content: space-between;
-            padding: 10px 16px;
+            align-items: center;
+            padding: 11px 18px;
             font-size: 13px;
             border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        .summary-row span {
+            white-space: nowrap;
         }
 
         .summary-row.total-row {

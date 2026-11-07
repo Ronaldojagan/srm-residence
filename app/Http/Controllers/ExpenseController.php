@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\PersonalExpensesExport;
+use App\Exports\RoomExpensesExport;
 use App\Models\Expense;
 use App\Models\Room;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use Maatwebsite\Excel\Facades\Excel;
 use Yajra\DataTables\Facades\DataTables;
 
 class ExpenseController extends Controller
@@ -525,220 +527,20 @@ class ExpenseController extends Controller
     }
 
     /**
-     * Export Room Expenses to CSV with UTF-8 BOM respecting active filters
+     * Export Room Expenses to Excel (.xlsx) with wide auto-sized columns and total amounts in the last row
      */
-    public function exportRoomExpenses(Request $request): StreamedResponse
+    public function exportRoomExpenses(Request $request)
     {
-        $fileName = 'srm_residence_room_expenses_' . date('Ymd_His') . '.csv';
-        $headers = [
-            'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
-            'Pragma' => 'no-cache',
-            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
-            'Expires' => '0',
-        ];
-
-        $callback = function () use ($request) {
-            $handle = fopen('php://output', 'w');
-            fputs($handle, "\xEF\xBB\xBF"); // UTF-8 BOM
-
-            fputcsv($handle, [
-                'S.No',
-                'Expense Date',
-                'Room Number',
-                'Floor',
-                'Category',
-                'Title / Purpose',
-                'Amount (INR)',
-                'Payment Method',
-                'Paid To / Vendor',
-                'Recorded By',
-                'Notes',
-            ]);
-
-            $query = Expense::where('expense_type', 'room')->with(['room', 'creator'])->latest('expense_date');
-
-            if ($request->filled('room_id') && $request->room_id !== 'all') {
-                $query->where('room_id', $request->room_id);
-            }
-            if ($request->filled('category') && $request->category !== 'all') {
-                $query->where('category', $request->category);
-            }
-            if ($request->filled('payment_method') && $request->payment_method !== 'all') {
-                $query->where('payment_method', $request->payment_method);
-            }
-            if ($request->filled('start_date')) {
-                $query->whereDate('expense_date', '>=', $request->start_date);
-            }
-            if ($request->filled('end_date')) {
-                $query->whereDate('expense_date', '<=', $request->end_date);
-            }
-            if ($request->filled('search')) {
-                $s = trim($request->search);
-                $query->where(function ($q) use ($s) {
-                    $q->where('title', 'like', "%{$s}%")
-                        ->orWhere('category', 'like', "%{$s}%")
-                        ->orWhere('paid_to', 'like', "%{$s}%")
-                        ->orWhere('notes', 'like', "%{$s}%")
-                        ->orWhereHas('room', fn($rq) => $rq->where('room_number', 'like', "%{$s}%"));
-                });
-            }
-
-            $index = 1;
-            $query->chunk(100, function ($expenses) use ($handle, &$index) {
-                foreach ($expenses as $e) {
-                    fputcsv($handle, [
-                        $index++,
-                        $e->expense_date ? $e->expense_date->format('Y-m-d') : '',
-                        $e->room ? $e->room->room_number : 'Common Area',
-                        $e->room ? $e->room->floor : '',
-                        $e->category ?: 'General',
-                        $e->title,
-                        number_format($e->amount, 2, '.', ''),
-                        $e->payment_method ?: 'Cash',
-                        $e->paid_to ?: '',
-                        $e->creator ? $e->creator->name : 'Admin',
-                        $e->notes ?: '',
-                    ]);
-                }
-            });
-
-            fclose($handle);
-        };
-
-        return response()->stream($callback, 200, $headers);
+        $fileName = 'srm_residence_room_expenses_' . date('Ymd_His') . '.xlsx';
+        return Excel::download(new RoomExpensesExport($request), $fileName);
     }
 
     /**
-     * Export Personal Expenses to CSV with Itemized Line Items & UTF-8 BOM respecting active filters
+     * Export Personal Expenses with Itemized Line Items to Excel (.xlsx) with wide auto-sized columns and total amounts in the last row
      */
-    public function exportPersonalExpenses(Request $request): StreamedResponse
+    public function exportPersonalExpenses(Request $request)
     {
-        $fileName = 'srm_residence_personal_expenses_' . date('Ymd_His') . '.csv';
-        $headers = [
-            'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
-            'Pragma' => 'no-cache',
-            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
-            'Expires' => '0',
-        ];
-
-        $callback = function () use ($request) {
-            $handle = fopen('php://output', 'w');
-            fputs($handle, "\xEF\xBB\xBF"); // UTF-8 BOM
-
-            fputcsv($handle, [
-                'S.No',
-                'Expense Month',
-                'Expense Date',
-                'Main Title / Summary',
-                'Paid To / Beneficiary',
-                'Item S.No',
-                'Line Item Title',
-                'Quantity',
-                'Unit Rate (INR)',
-                'Line Item Amount (INR)',
-                'Line Item Notes',
-                'Expense Total (INR)',
-                'General Remarks',
-                'Recorded By',
-            ]);
-
-            $query = Expense::where('expense_type', 'personal')->with('creator')->latest('expense_date');
-
-            if ($request->filled('month')) {
-                $monthVal = $request->month;
-                if ($monthVal !== 'all') {
-                    if (preg_match('/^\d{4}-\d{2}$/', $monthVal)) {
-                        $carbonMonth = Carbon::createFromFormat('Y-m', $monthVal);
-                        $query->where(function ($q) use ($carbonMonth, $monthVal) {
-                            $q->where('expense_month', $carbonMonth->format('F Y'))
-                                ->orWhere('expense_month', $monthVal)
-                                ->orWhere(function ($sub) use ($carbonMonth) {
-                                    $sub->whereYear('expense_date', $carbonMonth->year)
-                                        ->whereMonth('expense_date', $carbonMonth->month);
-                                });
-                        });
-                    } else {
-                        $query->where('expense_month', $monthVal);
-                    }
-                }
-            }
-
-            if ($request->filled('paid_to')) {
-                $query->where('paid_to', 'like', '%' . trim($request->paid_to) . '%');
-            }
-            if ($request->filled('start_date')) {
-                $query->whereDate('expense_date', '>=', $request->start_date);
-            }
-            if ($request->filled('end_date')) {
-                $query->whereDate('expense_date', '<=', $request->end_date);
-            }
-            if ($request->filled('search')) {
-                $s = trim($request->search);
-                $query->where(function ($q) use ($s) {
-                    $q->where('title', 'like', "%{$s}%")
-                        ->orWhere('paid_to', 'like', "%{$s}%")
-                        ->orWhere('expense_month', 'like', "%{$s}%")
-                        ->orWhere('notes', 'like', "%{$s}%");
-                });
-            }
-
-            $index = 1;
-            $query->chunk(100, function ($expenses) use ($handle, &$index) {
-                foreach ($expenses as $e) {
-                    $hasItems = is_array($e->items) && count($e->items) > 0;
-
-                    if ($hasItems) {
-                        foreach ($e->items as $idx => $it) {
-                            $lineSno = !empty($it['sno']) ? $it['sno'] : ($idx + 1);
-                            $lineTitle = $it['title'] ?? '-';
-                            $lineQty = $it['qty'] ?? '1';
-                            $lineRate = isset($it['rate']) ? number_format((float)$it['rate'], 2, '.', '') : '-';
-                            $lineAmt = isset($it['amount']) ? number_format((float)$it['amount'], 2, '.', '') : '0.00';
-                            $lineNotes = $it['notes'] ?? '';
-
-                            fputcsv($handle, [
-                                $index++,
-                                $e->expense_month ?: ($e->expense_date ? $e->expense_date->format('F Y') : ''),
-                                $e->expense_date ? $e->expense_date->format('Y-m-d') : '',
-                                $e->title,
-                                $e->paid_to ?: '',
-                                $lineSno,
-                                $lineTitle,
-                                $lineQty,
-                                $lineRate,
-                                $lineAmt,
-                                $lineNotes,
-                                number_format($e->amount, 2, '.', ''),
-                                $e->notes ?: '',
-                                $e->creator ? $e->creator->name : 'Admin',
-                            ]);
-                        }
-                    } else {
-                        fputcsv($handle, [
-                            $index++,
-                            $e->expense_month ?: ($e->expense_date ? $e->expense_date->format('F Y') : ''),
-                            $e->expense_date ? $e->expense_date->format('Y-m-d') : '',
-                            $e->title,
-                            $e->paid_to ?: '',
-                            '-',
-                            $e->title,
-                            '1',
-                            number_format($e->amount, 2, '.', ''),
-                            number_format($e->amount, 2, '.', ''),
-                            '',
-                            number_format($e->amount, 2, '.', ''),
-                            $e->notes ?: '',
-                            $e->creator ? $e->creator->name : 'Admin',
-                        ]);
-                    }
-                }
-            });
-
-            fclose($handle);
-        };
-
-        return response()->stream($callback, 200, $headers);
+        $fileName = 'srm_residence_personal_expenses_' . date('Ymd_His') . '.xlsx';
+        return Excel::download(new PersonalExpensesExport($request), $fileName);
     }
 }

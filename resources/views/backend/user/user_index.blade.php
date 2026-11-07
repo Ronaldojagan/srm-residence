@@ -69,15 +69,15 @@
 
                     <div class="table-responsive table-border">
                         <table class="table table-striped data-table job-table w-100">
-                            <thead class="table-theme text-white">
+                            <thead class="table-theme text-white text-nowrap">
                                 <tr>
-                                    <th width="5%">S.No</th>
-                                    <th width="8%">Avatar</th>
-                                    <th>Name & Email</th>
-                                    <th>Phone</th>
-                                    <th>Role</th>
-                                    <th>Status</th>
-                                    <th width="15%" class="text-center">Action</th>
+                                    <th style="width: 5%;">S.No</th>
+                                    <th style="width: 80px;" class="text-center">Avatar</th>
+                                    <th style="min-width: 200px;">Name & Email</th>
+                                    <th style="min-width: 140px;" class="text-nowrap">Phone</th>
+                                    <th style="min-width: 130px;" class="text-nowrap">Role</th>
+                                    <th style="min-width: 100px;" class="text-nowrap">Status</th>
+                                    <th style="min-width: 130px;" class="text-center text-nowrap">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
