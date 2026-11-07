@@ -357,7 +357,7 @@
             <!-- 1. GENERAL SETTINGS TAB                   -->
             <!-- ========================================== -->
             <div class="tab-content active" id="general-tab">
-                <form class="settings-form" action="{{ route('settings.save') }}" method="POST">
+                <form class="settings-form" action="{{ route('settings.save') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <input type="hidden" name="section" value="general">
 
@@ -391,6 +391,34 @@
                                     <label class="form-label">Designation / Role</label>
                                     <input type="text" name="contact_designation" class="form-control" 
                                            value="{{ $settings['contact_designation'] ?? 'Resident Warden' }}">
+                                </div>
+
+                                <div class="col-md-12 pt-3 border-top mt-3">
+                                    <label class="form-label fw-bold">Residence Official Seal / Rubber Stamp</label>
+                                    <div class="row align-items-center g-3">
+                                        <div class="col-auto">
+                                            <div class="p-2 border rounded bg-white text-center shadow-sm" style="width: 125px; height: 125px; display: flex; align-items: center; justify-content: center; background: #fff;">
+                                                @include('backend.partials.residence_stamp', ['width' => 105, 'height' => 105, 'rotation' => '-5deg'])
+                                            </div>
+                                        </div>
+                                        <div class="col">
+                                            <div class="form-text mb-2">
+                                                This official seal is automatically placed above the Authorized Signatory on all invoices, rent bills, and payment receipts.
+                                            </div>
+                                            <div class="input-group input-group-sm mb-2" style="max-width: 440px;">
+                                                <input type="file" name="residence_stamp" class="form-control" accept="image/*" id="residence_stamp_input">
+                                            </div>
+                                            <div class="text-muted font-11">
+                                                By default, the built-in SVG official seal is used. You can optionally upload a custom scanned stamp image (transparent PNG recommended).
+                                            </div>
+                                            @if(!empty($settings['residence_stamp']))
+                                                <div class="form-check mt-2">
+                                                    <input class="form-check-input" type="checkbox" name="remove_residence_stamp" value="1" id="remove_stamp">
+                                                    <label class="form-check-label font-12 text-danger" for="remove_stamp">Remove custom image (revert to built-in official seal)</label>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -466,7 +494,7 @@
             <!-- 2. BILLING & RENT DEFAULTS TAB            -->
             <!-- ========================================== -->
             <div class="tab-content" id="billing-tab">
-                <form class="settings-form" action="{{ route('settings.save') }}" method="POST">
+                <form class="settings-form" action="{{ route('settings.save') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <input type="hidden" name="section" value="billing">
 
@@ -997,7 +1025,7 @@
             <!-- 4. NOTIFICATIONS & ALERTS TAB             -->
             <!-- ========================================== -->
             <div class="tab-content" id="notifications-tab">
-                <form class="settings-form" action="{{ route('settings.save') }}" method="POST">
+                <form class="settings-form" action="{{ route('settings.save') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <input type="hidden" name="section" value="notifications">
 
@@ -1052,7 +1080,7 @@
             <!-- 5. RULES & POLICIES TAB                   -->
             <!-- ========================================== -->
             <div class="tab-content" id="policies-tab">
-                <form class="settings-form" action="{{ route('settings.save') }}" method="POST">
+                <form class="settings-form" action="{{ route('settings.save') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <input type="hidden" name="section" value="policies">
 

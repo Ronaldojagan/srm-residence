@@ -7,7 +7,7 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <style>
@@ -462,21 +462,62 @@
         }
 
         .signatory-block {
+            position: relative;
             text-align: center;
-            width: 180px;
+            width: 190px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .stamp-and-sign-area {
+            position: relative;
+            width: 100%;
+            height: 75px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        .official-stamp-mark {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            pointer-events: none;
+            opacity: 0.90;
+            z-index: 1;
+        }
+
+        .hand-signature {
+            font-family: 'Caveat', cursive, 'Brush Script MT', sans-serif;
+            font-size: 21px;
+            color: #0f172a;
+            position: relative;
+            z-index: 2;
+            transform: rotate(-3deg);
+            margin-bottom: 2px;
+            font-weight: 700;
+            line-height: 1;
+            white-space: nowrap;
         }
 
         .signatory-line {
-            height: 45px;
-            border-bottom: 1px solid #64748b;
+            width: 100%;
+            border-bottom: 1.5px solid #475569;
             margin-bottom: 6px;
+            position: relative;
+            z-index: 2;
         }
 
         .signatory-label {
             font-size: 11px;
-            font-weight: 700;
-            color: #334155;
+            font-weight: 800;
+            color: #0f172a;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: relative;
+            z-index: 2;
         }
 
         /* Amount in Words */
@@ -812,6 +853,14 @@
             </div>
 
             <div class="signatory-block">
+                <div class="stamp-and-sign-area">
+                    <div class="official-stamp-mark">
+                        @include('backend.partials.residence_stamp', ['width' => 110, 'height' => 110, 'rotation' => '-6deg'])
+                    </div>
+                    <div class="hand-signature">
+                        {{ $settings['residence_name'] ?? 'SRM Residence' }}
+                    </div>
+                </div>
                 <div class="signatory-line"></div>
                 <div class="signatory-label">Authorized Signatory</div>
                 <div style="font-size: 10px; color: #64748b;">{{ $settings['residence_name'] ?? 'SRM Residence' }}</div>

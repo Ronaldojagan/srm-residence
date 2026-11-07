@@ -105,6 +105,7 @@ class SettingsService
             'google_maps_url' => '',
             'gate_closing_time' => '22:30',
             'office_hours' => '09:00 AM - 08:00 PM',
+            'residence_stamp' => '',
 
             // Billing & Financial Defaults
             'default_eb_rate' => '10.00',
@@ -208,6 +209,16 @@ class SettingsService
             \App\Models\Setting::set('upi_qr_code', '', 'UPI QR Code Image');
         }
 
+        // Handle Residence Official Stamp upload
+        if ($request->hasFile('residence_stamp') && $request->file('residence_stamp')->isValid()) {
+            $stampFile = $request->file('residence_stamp');
+            $filename = 'stamp_' . time() . '.' . $stampFile->getClientOriginalExtension();
+            \Illuminate\Support\Facades\Storage::disk('public')->putFileAs('settings', $stampFile, $filename);
+            \App\Models\Setting::set('residence_stamp', 'settings/' . $filename, 'Residence Official Stamp');
+        } elseif (isset($data['remove_residence_stamp']) && $data['remove_residence_stamp'] == '1') {
+            \App\Models\Setting::set('residence_stamp', '', 'Residence Official Stamp');
+        }
+
         // Toggle checkboxes: if unchecked in HTML forms, ensure they are stored as 0
         $booleanKeys = [
             'integrations' => [
@@ -233,7 +244,7 @@ class SettingsService
         }
 
         foreach ($data as $key => $value) {
-            if (in_array($key, ['_token', '_method', 'section', 'upi_qr_code', 'remove_upi_qr_code'])) {
+            if (in_array($key, ['_token', '_method', 'section', 'upi_qr_code', 'remove_upi_qr_code', 'residence_stamp', 'remove_residence_stamp'])) {
                 continue;
             }
 

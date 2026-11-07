@@ -7,7 +7,7 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <style>
@@ -174,6 +174,47 @@
             border-top: 1px dashed var(--border);
         }
 
+        .receipt-signatory-wrap {
+            position: relative;
+            text-align: center;
+            width: 160px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .receipt-stamp-area {
+            position: relative;
+            width: 100%;
+            height: 65px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        .receipt-stamp-mark {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            pointer-events: none;
+            opacity: 0.90;
+            z-index: 1;
+        }
+
+        .receipt-hand-signature {
+            font-family: 'Caveat', cursive, 'Brush Script MT', sans-serif;
+            font-size: 19px;
+            color: #0f172a;
+            position: relative;
+            z-index: 2;
+            transform: rotate(-3deg);
+            margin-bottom: 2px;
+            font-weight: 700;
+            line-height: 1;
+            white-space: nowrap;
+        }
+
         @media print {
             body {
                 background: #fff !important;
@@ -269,9 +310,18 @@
                 Thank you for your payment.<br>
                 For any clarifications, please contact the warden office.
             </div>
-            <div style="text-align: center; width: 140px;">
-                <div style="height: 35px; border-bottom: 1px solid #64748b; margin-bottom: 4px;"></div>
-                <div style="font-size: 10px; font-weight: 700; text-transform: uppercase;">Authorized Signature</div>
+            <div class="receipt-signatory-wrap">
+                <div class="receipt-stamp-area">
+                    <div class="receipt-stamp-mark">
+                        @include('backend.partials.residence_stamp', ['width' => 95, 'height' => 95, 'rotation' => '-6deg'])
+                    </div>
+                    <div class="receipt-hand-signature">
+                        {{ $settings['residence_name'] ?? 'SRM Residence' }}
+                    </div>
+                </div>
+                <div style="width: 100%; border-bottom: 1.5px solid #475569; margin-bottom: 4px; position: relative; z-index: 2;"></div>
+                <div style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: #0f172a; position: relative; z-index: 2;">Authorized Signature</div>
+                <div style="font-size: 9px; color: #64748b; position: relative; z-index: 2;">{{ $settings['residence_name'] ?? 'SRM Residence' }}</div>
             </div>
         </div>
     </div>

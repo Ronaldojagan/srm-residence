@@ -99,8 +99,9 @@ class BillingController extends Controller
             ->orderByRaw('CAST(room_number AS UNSIGNED) ASC, room_number ASC')
             ->get();
         $rooms = Room::orderByRaw('CAST(room_number AS UNSIGNED) ASC, room_number ASC')->get();
+        $settings = app(\App\Service\SettingsService::class)->settingsIndex();
 
-        return view('backend.billing.index', compact('stats', 'activeTenants', 'rooms', 'currentMonth', 'currentMonthValue'));
+        return view('backend.billing.index', compact('stats', 'activeTenants', 'rooms', 'currentMonth', 'currentMonthValue', 'settings'));
     }
 
     /**
