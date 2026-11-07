@@ -19,6 +19,19 @@ class UserSeeder extends Seeder
     public function run()
     {
         User::updateOrCreate(
+            ['email' => 'admin@srmresidence.in'],
+            [
+                'name' => 'SRM Admin',
+                'type' => UserType::SUPERADMIN,
+                'phone' => '9876543210',
+                'status' => true,
+                'image' => 'avatar.jpg',
+                'password' => Hash::make('password'),
+                'remember_token' => Str::random(10),
+            ]
+        );
+
+        User::updateOrCreate(
             ['email' => 'admin@gmail.com'],
             [
                 'name' => 'Super Admin',
