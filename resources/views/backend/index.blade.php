@@ -205,6 +205,118 @@
                 font-weight: 700;
                 font-size: 0.85rem;
             }
+
+            .res-highlight-card {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+
+            /* Dashboard Mobile Responsiveness Overrides */
+            @media (max-width: 767.98px) {
+                .res-dashboard {
+                    padding-bottom: 1.5rem;
+                }
+                .res-hero-banner {
+                    padding: 1.25rem 1rem !important;
+                    border-radius: 14px !important;
+                    margin-bottom: 1rem !important;
+                }
+                .res-hero-banner h3 {
+                    font-size: 1.25rem !important;
+                }
+                .res-hero-banner .d-flex.gap-2 {
+                    flex-direction: column !important;
+                    width: 100% !important;
+                    gap: 8px !important;
+                }
+                .res-btn-action {
+                    width: 100% !important;
+                    justify-content: center !important;
+                }
+                .res-kpi-card {
+                    padding: 10px 10px !important;
+                    border-radius: 12px !important;
+                }
+                .res-kpi-card .res-icon-box {
+                    width: 36px !important;
+                    height: 36px !important;
+                    font-size: 1rem !important;
+                    margin-bottom: 0.4rem !important;
+                    border-radius: 10px !important;
+                }
+                .res-badge-pill {
+                    font-size: 0.65rem !important;
+                    padding: 2px 6px !important;
+                }
+                .res-kpi-title {
+                    font-size: 0.7rem !important;
+                    letter-spacing: 0.02em !important;
+                    margin-bottom: 0.2rem !important;
+                    white-space: nowrap !important;
+                    overflow: hidden !important;
+                    text-overflow: ellipsis !important;
+                }
+                .res-kpi-value {
+                    font-size: 1.15rem !important;
+                    line-height: 1.2 !important;
+                    margin-bottom: 0.15rem !important;
+                    white-space: nowrap !important;
+                    overflow: hidden !important;
+                    text-overflow: ellipsis !important;
+                }
+                .res-kpi-card small {
+                    font-size: 0.65rem !important;
+                    display: block !important;
+                    white-space: nowrap !important;
+                    overflow: hidden !important;
+                    text-overflow: ellipsis !important;
+                }
+                .res-card {
+                    padding: 1rem !important;
+                    border-radius: 14px !important;
+                    margin-bottom: 1rem !important;
+                }
+                .res-card-title {
+                    font-size: 0.95rem !important;
+                    flex-direction: column !important;
+                    align-items: flex-start !important;
+                    gap: 8px !important;
+                }
+                .res-card-title > * {
+                    width: 100% !important;
+                    display: flex !important;
+                    justify-content: space-between !important;
+                    align-items: center !important;
+                }
+                .res-highlight-card {
+                    flex-direction: column !important;
+                    align-items: stretch !important;
+                    gap: 12px !important;
+                }
+                .res-highlight-card .btn {
+                    width: 100% !important;
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: center !important;
+                }
+                .res-pipeline-stats {
+                    grid-template-columns: 1fr !important;
+                    gap: 8px !important;
+                }
+                .res-pipe-box {
+                    padding: 0.75rem !important;
+                }
+            }
+
+            @media (max-width: 400px) {
+                .res-kpi-card {
+                    padding: 8px 8px !important;
+                }
+                .res-kpi-value {
+                    font-size: 1.05rem !important;
+                }
+            }
         </style>
     @endpush
 
@@ -235,9 +347,9 @@
         </div>
 
         <!-- 6 KPI CARDS (Users, Tenants, Rooms, Monthly Turnover, Expenses, Net Profit) -->
-        <div class="row g-3 mb-4">
+        <div class="row g-2 g-md-3 mb-3 mb-md-4">
             <!-- 1. Users & Staff -->
-            <div class="col-xl-2 col-md-4 col-sm-6">
+            <div class="col-6 col-md-4 col-xl-2">
                 <div class="res-kpi-card">
                     <div class="d-flex justify-content-between align-items-start">
                         <div class="res-icon-box res-icon-users">
@@ -254,7 +366,7 @@
             </div>
 
             <!-- 2. Active Tenants -->
-            <div class="col-xl-2 col-md-4 col-sm-6">
+            <div class="col-6 col-md-4 col-xl-2">
                 <div class="res-kpi-card">
                     <div class="d-flex justify-content-between align-items-start">
                         <div class="res-icon-box res-icon-tenants">
@@ -271,7 +383,7 @@
             </div>
 
             <!-- 3. Rooms & Occupancy -->
-            <div class="col-xl-2 col-md-4 col-sm-6">
+            <div class="col-6 col-md-4 col-xl-2">
                 <div class="res-kpi-card">
                     <div class="d-flex justify-content-between align-items-start">
                         <div class="res-icon-box res-icon-rooms">
@@ -291,7 +403,7 @@
             </div>
 
             <!-- 4. Monthly Turnover -->
-            <div class="col-xl-2 col-md-4 col-sm-6">
+            <div class="col-6 col-md-4 col-xl-2">
                 <div class="res-kpi-card">
                     <div class="d-flex justify-content-between align-items-start">
                         <div class="res-icon-box res-icon-turnover">
@@ -308,7 +420,7 @@
             </div>
 
             <!-- 5. Monthly Expenses -->
-            <div class="col-xl-2 col-md-4 col-sm-6">
+            <div class="col-6 col-md-4 col-xl-2">
                 <div class="res-kpi-card">
                     <div class="d-flex justify-content-between align-items-start">
                         <div class="res-icon-box res-icon-expenses">
@@ -325,7 +437,7 @@
             </div>
 
             <!-- 6. Net Profit -->
-            <div class="col-xl-2 col-md-4 col-sm-6">
+            <div class="col-6 col-md-4 col-xl-2">
                 <div class="res-kpi-card">
                     <div class="d-flex justify-content-between align-items-start">
                         <div class="res-icon-box res-icon-profit">
@@ -343,11 +455,11 @@
         </div>
 
         <!-- HIGHLIGHT BAR: Security Deposits Held & Scheduled Monthly Rent Roll -->
-        <div class="row g-3 mb-4">
+        <div class="row g-2 g-md-3 mb-3 mb-md-4">
             <div class="col-md-6">
-                <div class="res-card p-3 mb-0 border-start border-4 border-info d-flex align-items-center justify-content-between shadow-sm">
+                <div class="res-card res-highlight-card p-3 mb-0 border-start border-4 border-info shadow-sm">
                     <div class="d-flex align-items-center gap-3">
-                        <div class="res-icon-box mb-0" style="background: linear-gradient(135deg, #0ea1b1, #0284c7); box-shadow: 0 6px 14px rgba(14, 161, 177, 0.3); width: 48px; height: 48px;">
+                        <div class="res-icon-box mb-0" style="background: linear-gradient(135deg, #0ea1b1, #0284c7); box-shadow: 0 6px 14px rgba(14, 161, 177, 0.3); width: 48px; height: 48px; min-width: 48px;">
                             <i class="fas fa-hand-holding-dollar"></i>
                         </div>
                         <div>
@@ -369,9 +481,9 @@
             </div>
 
             <div class="col-md-6">
-                <div class="res-card p-3 mb-0 border-start border-4 border-purple d-flex align-items-center justify-content-between shadow-sm" style="border-left-color: #8b5cf6 !important;">
+                <div class="res-card res-highlight-card p-3 mb-0 border-start border-4 border-purple shadow-sm" style="border-left-color: #8b5cf6 !important;">
                     <div class="d-flex align-items-center gap-3">
-                        <div class="res-icon-box mb-0" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed); box-shadow: 0 6px 14px rgba(139, 92, 246, 0.3); width: 48px; height: 48px;">
+                        <div class="res-icon-box mb-0" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed); box-shadow: 0 6px 14px rgba(139, 92, 246, 0.3); width: 48px; height: 48px; min-width: 48px;">
                             <i class="fas fa-shield-alt"></i>
                         </div>
                         <div>

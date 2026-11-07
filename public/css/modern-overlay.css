@@ -1791,6 +1791,64 @@ body[data-leftbar-size="condensed"] .res-nav-badge {
     font-size: 1.4rem !important;
   }
 
+  /* Dashboard Cards Mobile Fixes */
+  .res-kpi-card {
+    padding: 10px 10px !important;
+    border-radius: 12px !important;
+  }
+
+  .res-kpi-card .res-icon-box {
+    width: 36px !important;
+    height: 36px !important;
+    font-size: 1rem !important;
+    margin-bottom: 0.4rem !important;
+    border-radius: 10px !important;
+  }
+
+  .res-kpi-card .res-badge-pill {
+    font-size: 0.65rem !important;
+    padding: 2px 6px !important;
+  }
+
+  .res-kpi-title {
+    font-size: 0.7rem !important;
+    letter-spacing: 0.02em !important;
+    margin-bottom: 0.2rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .res-kpi-value {
+    font-size: 1.15rem !important;
+    line-height: 1.2 !important;
+    margin-bottom: 0.15rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .res-kpi-card small {
+    font-size: 0.65rem !important;
+    display: block !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .res-highlight-card {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+
+  .res-highlight-card .btn {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
   /* Responsive Filter Toolbars */
   .dataTables_filter, .dataTables_length {
     text-align: left !important;
