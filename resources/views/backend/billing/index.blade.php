@@ -793,11 +793,11 @@
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer bg-light">
                     <button type="button" class="btn btn-secondary waves-effect" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary waves-effect waves-light" onclick="window.print()">
-                        <i class="fas fa-print me-1"></i> Print Invoice
-                    </button>
+                    <a href="javascript:void(0)" class="btn button-color text-white waves-effect waves-light" id="btn_open_print_invoice" target="_blank">
+                        <i class="fas fa-print me-1"></i> Print Invoice (A4)
+                    </a>
                 </div>
             </div>
         </div>
@@ -860,11 +860,11 @@
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer bg-light">
                     <button type="button" class="btn btn-secondary waves-effect" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-success waves-effect waves-light" onclick="window.print()">
+                    <a href="javascript:void(0)" class="btn btn-success waves-effect waves-light" id="btn_open_print_receipt" target="_blank">
                         <i class="fas fa-print me-1"></i> Print Receipt
-                    </button>
+                    </a>
                 </div>
             </div>
         </div>
@@ -1707,6 +1707,7 @@
                                     $('#inv_payments_history_section').removeClass('d-none');
                                 }
 
+                                $('#btn_open_print_invoice').attr('href', "{{ url('/admin/billing/bills') }}/" + b.id + "/print");
                                 $('#viewInvoiceModal').modal('show');
                             }
                         }
@@ -1743,6 +1744,7 @@
                                     $('#rcp_tx_row').addClass('d-none');
                                 }
 
+                                $('#btn_open_print_receipt').attr('href', "{{ url('/admin/billing/payments') }}/" + p.id + "/print");
                                 $('#viewReceiptModal').modal('show');
                             }
                         }

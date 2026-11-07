@@ -455,6 +455,7 @@
                                                 <th class="text-end">Paid</th>
                                                 <th class="text-end">Due</th>
                                                 <th class="text-center">Status</th>
+                                                <th class="text-center">Action</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -495,6 +496,11 @@
                                                             <span class="badge bg-secondary-subtle text-secondary px-2 py-1">Unpaid</span>
                                                         @endif
                                                     </td>
+                                                    <td class="text-center">
+                                                        <a href="{{ url('/admin/billing/bills/' . $bill->id . '/print') }}" target="_blank" class="btn btn-sm btn-outline-dark" title="Print Invoice (A4)">
+                                                            <i class="fas fa-print"></i>
+                                                        </a>
+                                                    </td>
                                                 </tr>
                                             @endforeach
                                         </tbody>
@@ -525,6 +531,7 @@
                                                 <th>Method</th>
                                                 <th>Transaction ID</th>
                                                 <th class="text-end">Amount Paid</th>
+                                                <th class="text-center">Action</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -544,6 +551,11 @@
                                                     </td>
                                                     <td class="text-muted small">{{ $pmt->transaction_id ?? '-' }}</td>
                                                     <td class="text-end fw-bold text-success font-14">₹{{ number_format($pmt->amount, 2) }}</td>
+                                                    <td class="text-center">
+                                                        <a href="{{ url('/admin/billing/payments/' . $pmt->id . '/print') }}" target="_blank" class="btn btn-sm btn-outline-dark" title="Print Receipt">
+                                                            <i class="fas fa-print"></i>
+                                                        </a>
+                                                    </td>
                                                 </tr>
                                             @endforeach
                                         </tbody>

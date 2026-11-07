@@ -95,11 +95,13 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'user-access:' . Use
         Route::post('/bills', 'storeBill')->name('bills.store');
         Route::post('/bills/quick-monthly', 'quickGenerateMonthlyRent')->name('bills.quick_monthly');
         Route::get('/bills/{id}', 'getBillDetails')->name('bills.details');
+        Route::get('/bills/{id}/print', 'printInvoice')->name('bills.print');
         Route::get('/tenants/{id}/billing-info', 'getTenantBillingInfo')->name('tenant_info');
         Route::post('/bills/{id}/update', 'updateBill')->name('bills.update');
         Route::delete('/bills/{id}', 'destroyBill')->name('bills.destroy');
         Route::post('/payments', 'storePayment')->name('payments.store');
         Route::get('/payments/{id}', 'getPaymentDetails')->name('payments.details');
+        Route::get('/payments/{id}/print', 'printReceipt')->name('payments.print');
         Route::delete('/payments/{id}', 'destroyPayment')->name('payments.destroy');
     });
 

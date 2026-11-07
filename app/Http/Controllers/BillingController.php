@@ -218,9 +218,12 @@ class BillingController extends Controller
                             </button>';
                 }
 
-                $viewBtn = '<button type="button" class="btn btn-sm btn-outline-primary btn-view-invoice" data-id="' . $row->id . '" title="View & Print Invoice">
-                                <i class="fas fa-print"></i>
+                $viewBtn = '<button type="button" class="btn btn-sm btn-outline-primary btn-view-invoice" data-id="' . $row->id . '" title="View Invoice Preview">
+                                <i class="fas fa-eye"></i>
                             </button>';
+                $printBtn = '<a href="' . url('/admin/billing/bills/' . $row->id . '/print') . '" target="_blank" class="btn btn-sm btn-outline-dark" title="Print Invoice (A4)">
+                                <i class="fas fa-print"></i>
+                            </a>';
                 $editBtn = '<button type="button" class="btn btn-sm btn-outline-secondary btn-edit-bill" data-id="' . $row->id . '" title="Edit Bill">
                                 <i class="fas fa-edit"></i>
                             </button>';
@@ -228,7 +231,7 @@ class BillingController extends Controller
                                 <i class="fas fa-trash-alt"></i>
                             </button>';
 
-                return '<div class="btn-group btn-group-sm" role="group">' . $payBtn . $viewBtn . $editBtn . $delBtn . '</div>';
+                return '<div class="btn-group btn-group-sm" role="group">' . $payBtn . $viewBtn . $printBtn . $editBtn . $delBtn . '</div>';
             })
             ->rawColumns(['bill_number_badge', 'tenant_room', 'bill_type_badge', 'amount_display', 'payment_progress', 'due_date_formatted', 'status_badge', 'action'])
             ->make(true);
@@ -688,6 +691,30 @@ class BillingController extends Controller
                 'amount' => number_format($payment->amount, 2),
             ]
         ]);
+    }
+
+    /**
+     * Dedicated printable invoice view
+     */
+    public function printInvoice($id)
+    {
+        $bill = Bill::with(['tenant.room', 'tenant.rooms', 'room', 'payments.receiver'])->findOrFail($id);
+        $settingsService = app(\App\Service\SettingsService::class);
+        $settings = $settingsService->settingsIndex();
+
+        return view('backend.billing.invoice_print', compact('bill', 'settings'));
+    }
+
+    /**
+     * Dedicated printable payment receipt view
+     */
+    public function printReceipt($id)
+    {
+        $payment = BillPayment::with(['bill.room', 'tenant.room', 'receiver'])->findOrFail($id);
+        $settingsService = app(\App\Service\SettingsService::class);
+        $settings = $settingsService->settingsIndex();
+
+        return view('backend.billing.receipt_print', compact('payment', 'settings'));
     }
 
     /**
