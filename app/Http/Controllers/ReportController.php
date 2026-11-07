@@ -2,853 +2,1245 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\UserType;
+use App\Models\Bill;
+use App\Models\BillPayment;
+use App\Models\Room;
+use App\Models\Tenant;
+use App\Models\Expense;
 use App\Models\User;
-use App\Models\Order;
-use App\Models\Product;
-use App\Models\Shop;
-use App\Models\Address;
-use App\Models\DeliveryPoint;
-use App\Models\OrderItem;
-use App\Models\Payment;
-use App\Models\PayoutShop;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ReportController extends Controller
 {
-    public function index()
+    /**
+     * Display the Reports & Analytics view
+     */
+    public function index(Request $request)
     {
-        return view('backend.report.report');
+        // Automatically mark past due unpaid bills as overdue
+        $this->syncOverdueBills();
+
+        // Natural numeric order for rooms
+        $rooms = Room::orderByRaw('CAST(room_number AS UNSIGNED) ASC, room_number ASC')
+            ->get(['id', 'room_number', 'floor', 'room_type', 'occupancy_status', 'is_self']);
+
+        // Tenants ordered by name
+        $tenants = Tenant::orderBy('name', 'asc')
+            ->get(['id', 'name', 'phone', 'room_number', 'status']);
+
+        // Distinct floors from rooms
+        $floors = Room::select('floor')
+            ->whereNotNull('floor')
+            ->where('floor', '!=', '')
+            ->distinct()
+            ->orderBy('floor')
+            ->pluck('floor');
+
+        // Expense categories
+        $defaultCategories = [
+            'Maintenance & Repairs',
+            'Electricity Bill',
+            'Water & Plumbing',
+            'Painting & Civil',
+            'Housekeeping & Cleaning',
+            'Furniture & Appliance',
+            'WiFi & Internet',
+            'Other',
+        ];
+        $existingCategories = Expense::select('category')->distinct()->pluck('category')->toArray();
+        $expenseCategories = array_values(array_unique(array_filter(array_merge($defaultCategories, $existingCategories))));
+
+        return view('backend.report.report', compact('rooms', 'tenants', 'floors', 'expenseCategories'));
     }
 
+    /**
+     * Mark past due bills as overdue
+     */
+    private function syncOverdueBills(): void
+    {
+        Bill::where('status', 'unpaid')
+            ->whereDate('due_date', '<', Carbon::today())
+            ->update(['status' => 'overdue']);
+    }
+
+    /**
+     * Apply date range filters to Eloquent query
+     */
+    private function applyDateFilter($query, Request $request, string $column = 'created_at')
+    {
+        $range = $request->get('date_range', 'all');
+        $startDate = $request->get('start_date');
+        $endDate = $request->get('end_date');
+
+        if ($range === 'custom') {
+            if ($startDate && $endDate) {
+                $start = Carbon::parse($startDate)->startOfDay();
+                $end = Carbon::parse($endDate)->endOfDay();
+                $query->whereBetween($column, [$start, $end]);
+            } elseif ($startDate) {
+                $query->where($column, '>=', Carbon::parse($startDate)->startOfDay());
+            } elseif ($endDate) {
+                $query->where($column, '<=', Carbon::parse($endDate)->endOfDay());
+            }
+            return;
+        }
+
+        switch ($range) {
+            case 'today':
+                $query->whereDate($column, Carbon::today());
+                break;
+            case 'yesterday':
+                $query->whereDate($column, Carbon::yesterday());
+                break;
+            case 'this_week':
+                $query->whereBetween($column, [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]);
+                break;
+            case 'this_month':
+                $query->whereBetween($column, [Carbon::now()->startOfMonth(), Carbon::now()->endOfMonth()]);
+                break;
+            case 'last_month':
+                $query->whereBetween($column, [Carbon::now()->subMonth()->startOfMonth(), Carbon::now()->subMonth()->endOfMonth()]);
+                break;
+            case 'this_year':
+                $query->whereBetween($column, [Carbon::now()->startOfYear(), Carbon::now()->endOfYear()]);
+                break;
+            case 'all':
+            default:
+                break;
+        }
+    }
+
+    /**
+     * Return live KPI metrics based on active filter criteria
+     */
+    public function reportSummary(Request $request)
+    {
+        $this->syncOverdueBills();
+
+        // 1. Bills & Invoices stats
+        $billsQuery = Bill::query();
+        $this->applyDateFilter($billsQuery, $request, 'bill_date');
+
+        if ($request->filled('room_id') && $request->room_id !== 'all') {
+            $billsQuery->where('room_id', $request->room_id);
+        }
+        if ($request->filled('tenant_id') && $request->tenant_id !== 'all') {
+            $billsQuery->where('tenant_id', $request->tenant_id);
+        }
+        if ($request->filled('floor') && $request->floor !== 'all') {
+            $billsQuery->whereHas('room', fn($q) => $q->where('floor', $request->floor));
+        }
+
+        $totalInvoiced = (float) (clone $billsQuery)->sum('amount');
+        $billsCount = (int) (clone $billsQuery)->count();
+        $outstandingDues = (float) (clone $billsQuery)->whereIn('status', ['unpaid', 'partially_paid', 'overdue'])->sum('due_amount');
+        $pendingBillsCount = (int) (clone $billsQuery)->whereIn('status', ['unpaid', 'partially_paid', 'overdue'])->count();
+        $overdueCount = (int) (clone $billsQuery)->where('status', 'overdue')->count();
+        $overdueAmount = (float) (clone $billsQuery)->where('status', 'overdue')->sum('due_amount');
+
+        // 2. Collections & Payments stats
+        $paymentsQuery = BillPayment::query();
+        $this->applyDateFilter($paymentsQuery, $request, 'payment_date');
+
+        if ($request->filled('room_id') && $request->room_id !== 'all') {
+            $paymentsQuery->whereHas('bill', fn($q) => $q->where('room_id', $request->room_id));
+        }
+        if ($request->filled('tenant_id') && $request->tenant_id !== 'all') {
+            $paymentsQuery->where('tenant_id', $request->tenant_id);
+        }
+        if ($request->filled('floor') && $request->floor !== 'all') {
+            $paymentsQuery->whereHas('bill.room', fn($q) => $q->where('floor', $request->floor));
+        }
+        if ($request->filled('payment_method') && $request->payment_method !== 'all') {
+            $paymentsQuery->where('payment_method', $request->payment_method);
+        }
+
+        $totalCollected = (float) (clone $paymentsQuery)->sum('amount');
+        $paymentsCount = (int) (clone $paymentsQuery)->count();
+
+        // 3. Expenses stats
+        $expensesQuery = Expense::query();
+        $this->applyDateFilter($expensesQuery, $request, 'expense_date');
+
+        if ($request->filled('room_id') && $request->room_id !== 'all') {
+            $expensesQuery->where('room_id', $request->room_id);
+        }
+        if ($request->filled('floor') && $request->floor !== 'all') {
+            $expensesQuery->whereHas('room', fn($q) => $q->where('floor', $request->floor));
+        }
+        if ($request->filled('category') && $request->category !== 'all') {
+            $expensesQuery->where('category', $request->category);
+        }
+        if ($request->filled('payment_method') && $request->payment_method !== 'all') {
+            $expensesQuery->where('payment_method', $request->payment_method);
+        }
+
+        $totalExpenses = (float) (clone $expensesQuery)->sum('amount');
+        $expensesCount = (int) (clone $expensesQuery)->count();
+
+        // 4. Net & Rates
+        $netCashflow = $totalCollected - $totalExpenses;
+        $collectionRate = $totalInvoiced > 0 ? round(($totalCollected / $totalInvoiced) * 100, 1) : 0;
+
+        // 5. Rooms & Occupancy stats
+        $roomsQuery = Room::query();
+        if ($request->filled('floor') && $request->floor !== 'all') {
+            $roomsQuery->where('floor', $request->floor);
+        }
+        $totalRooms = (int) (clone $roomsQuery)->count();
+        $occupiedRooms = (int) (clone $roomsQuery)->where('occupancy_status', 'occupied')->count();
+        $availableRooms = (int) (clone $roomsQuery)->where('occupancy_status', 'available')->where('is_self', 0)->count();
+        $selfRooms = (int) (clone $roomsQuery)->where('is_self', 1)->count();
+        $maintenanceRooms = (int) (clone $roomsQuery)->where('occupancy_status', 'maintenance')->count();
+        $occupancyRate = $totalRooms > 0 ? round(($occupiedRooms / $totalRooms) * 100, 1) : 0;
+
+        // 6. Active Residents
+        $tenantsQuery = Tenant::query();
+        if ($request->filled('room_id') && $request->room_id !== 'all') {
+            $tenantsQuery->where('room_id', $request->room_id);
+        }
+        if ($request->filled('floor') && $request->floor !== 'all') {
+            $tenantsQuery->whereHas('room', fn($q) => $q->where('floor', $request->floor));
+        }
+        $totalTenants = (int) (clone $tenantsQuery)->count();
+        $activeTenants = (int) (clone $tenantsQuery)->where('status', 1)->count();
+
+        return response()->json([
+            'success' => true,
+            'cards' => [
+                'total_invoiced' => $totalInvoiced,
+                'total_invoiced_formatted' => '₹' . number_format($totalInvoiced, 2),
+                'bills_count' => $billsCount,
+                'total_collected' => $totalCollected,
+                'total_collected_formatted' => '₹' . number_format($totalCollected, 2),
+                'payments_count' => $paymentsCount,
+                'outstanding_dues' => $outstandingDues,
+                'outstanding_dues_formatted' => '₹' . number_format($outstandingDues, 2),
+                'pending_bills_count' => $pendingBillsCount,
+                'overdue_count' => $overdueCount,
+                'overdue_amount' => $overdueAmount,
+                'overdue_amount_formatted' => '₹' . number_format($overdueAmount, 2),
+                'total_expenses' => $totalExpenses,
+                'total_expenses_formatted' => '₹' . number_format($totalExpenses, 2),
+                'expenses_count' => $expensesCount,
+                'net_cashflow' => $netCashflow,
+                'net_cashflow_formatted' => ($netCashflow >= 0 ? '₹' : '-₹') . number_format(abs($netCashflow), 2),
+                'collection_rate' => $collectionRate . '%',
+                'total_rooms' => $totalRooms,
+                'occupied_rooms' => $occupiedRooms,
+                'available_rooms' => $availableRooms,
+                'self_rooms' => $selfRooms,
+                'maintenance_rooms' => $maintenanceRooms,
+                'occupancy_rate' => $occupancyRate . '%',
+                'total_tenants' => $totalTenants,
+                'active_tenants' => $activeTenants,
+            ]
+        ]);
+    }
+
+    /**
+     * Backward-compatible alias for getReportData
+     */
     public function getReportData(Request $request)
     {
-        $type = $request->type;
-        $startDate = $request->start_date ? Carbon::parse($request->start_date)->startOfDay() : null;
-        $endDate = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : null;
-
-        switch ($type) {
-            case 'user':
-                return $this->getUserReportData($startDate, $endDate);
-            case 'order':
-                return $this->getOrderReportData($startDate, $endDate);
-            case 'product':
-                return $this->getProductReportData($startDate, $endDate);
-            case 'shop':
-                return $this->getShopReportData($startDate, $endDate);
-            default:
-                return response()->json(['error' => 'Invalid report type'], 400);
-        }
+        return $this->reportSummary($request);
     }
 
-    private function getUserReportData($startDate, $endDate)
+    /**
+     * Return visual charts data for reports dashboard
+     */
+    public function reportCharts(Request $request)
     {
-        $query = User::where('type', UserType::USER);
+        // 1. Monthly Trends (Last 6 Months)
+        $months = [];
+        $invoicedData = [];
+        $collectedData = [];
+        $expensesData = [];
 
-        if ($startDate && $endDate) {
-            $query->whereBetween('created_at', [$startDate, $endDate]);
+        for ($i = 5; $i >= 0; $i--) {
+            $monthDate = Carbon::now()->subMonths($i);
+            $monthLabel = $monthDate->format('M Y');
+            $monthName = $monthDate->format('F Y');
+            $year = $monthDate->year;
+            $monthNum = $monthDate->month;
+
+            $months[] = $monthLabel;
+
+            $inv = (float) Bill::where('billing_month', $monthName)
+                ->orWhere(function ($q) use ($year, $monthNum) {
+                    $q->whereYear('bill_date', $year)->whereMonth('bill_date', $monthNum);
+                })->sum('amount');
+
+            $col = (float) BillPayment::whereYear('payment_date', $year)
+                ->whereMonth('payment_date', $monthNum)
+                ->sum('amount');
+
+            $exp = (float) Expense::whereYear('expense_date', $year)
+                ->whereMonth('expense_date', $monthNum)
+                ->sum('amount');
+
+            $invoicedData[] = round($inv, 2);
+            $collectedData[] = round($col, 2);
+            $expensesData[] = round($exp, 2);
         }
 
-        $totalUsers = $query->count();
-        $activeUsers = $query->clone()->where('status', 1)->count();
-        $inactiveUsers = $totalUsers - $activeUsers;
-
-        // Order statistics for users
-        $orderQuery = Order::with('user');
-        if ($startDate && $endDate) {
-            $orderQuery->whereBetween('created_at', [$startDate, $endDate]);
-        }
-
-        $totalOrders = $orderQuery->count();
-        $totalRevenue = $orderQuery->sum('total_amount');
-        $avgOrderValue = $totalOrders > 0 ? $totalRevenue / $totalOrders : 0;
-
-        // Address statistics
-        $addressQuery = Address::query();
-        if ($startDate && $endDate) {
-            $addressQuery->whereBetween('created_at', [$startDate, $endDate]);
-        }
-        $totalAddresses = $addressQuery->count();
-
-        // Order status distribution
-        $orderStatuses = Order::selectRaw('status, count(*) as count')
-            ->when($startDate && $endDate, function ($q) use ($startDate, $endDate) {
-                $q->whereBetween('created_at', [$startDate, $endDate]);
-            })
+        // 2. Bill Status Breakdown
+        $statusCounts = Bill::select('status', DB::raw('count(*) as count'), DB::raw('sum(amount) as total'))
             ->groupBy('status')
-            ->pluck('count', 'status');
+            ->pluck('count', 'status')
+            ->toArray();
 
-        // Monthly order chart data
-        $monthlyOrders = Order::selectRaw('DATE_FORMAT(created_at, "%Y-%m") as month, count(*) as count')
-            ->when($startDate && $endDate, function ($q) use ($startDate, $endDate) {
-                $q->whereBetween('created_at', [$startDate, $endDate]);
-            })
-            ->groupBy('month')
-            ->orderBy('month')
-            ->get();
-
-        return response()->json([
-            'cards' => [
-                [
-                    'title' => 'Total Users',
-                    'value' => $totalUsers,
-                    'icon' => 'users',
-                    'image' => url('img/report-card1.png'),
-                ],
-                [
-                    'title' => 'Active Users',
-                    'value' => $activeUsers,
-                    'icon' => 'user-check',
-                    'image' => url('img/report-card2.png'),
-                ],
-                [
-                    'title' => 'Inactive Users',
-                    'value' => $inactiveUsers,
-                    'icon' => 'user-x',
-                    'image' => url('img/report-card3.png'),
-                ],
-                [
-                    'title' => 'Total Orders',
-                    'value' => $totalOrders,
-                    'icon' => 'shopping-cart',
-                    'image' => url('img/report-card4.png'),
-                ],
-                [
-                    'title' => 'Total Revenue',
-                    'value' => number_format($totalRevenue, 2),
-                    'icon' => 'dollar-sign',
-                    'image' => url('img/report-card4.png'),
-                ],
-                [
-                    'title' => 'Avg Order Value',
-                    'value' => number_format($avgOrderValue, 2),
-                    'icon' => 'credit-card',
-                    'image' => url('img/report-card3.png'),
-                ],
-                [
-                    'title' => 'Saved Addresses',
-                    'value' => $totalAddresses,
-                    'icon' => 'map-pin',
-                    'image' => url('img/report-card2.png'),
-                ]
-            ],
-            'charts' => [
-                'order_status' => [
-                    'labels' => $orderStatuses->keys()->map(function ($status) {
-                        return ucfirst(str_replace('_', ' ', $status));
-                    })->toArray(),
-                    'data' => $orderStatuses->values()->toArray(),
-                    'colors' => $orderStatuses->keys()->map(function ($status) {
-                        return $this->getStatusColor($status);
-                    })->toArray()
-                ],
-                'monthly_orders' => [
-                    'labels' => $monthlyOrders->pluck('month')->toArray(),
-                    'data' => $monthlyOrders->pluck('count')->toArray(),
-                    'colors' => ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b']
-                ]
-            ]
-        ]);
-    }
-
-    private function getOrderReportData($startDate, $endDate)
-    {
-        $query = Order::query();
-
-        if ($startDate && $endDate) {
-            $query->whereBetween('created_at', [$startDate, $endDate]);
-        }
-
-        $totalOrders = $query->count();
-        $totalRevenue = $query->sum('total_amount');
-        $avgOrderValue = $totalOrders > 0 ? $totalRevenue / $totalOrders : 0;
-
-        // Payment statistics
-        $paymentQuery = Payment::query();
-        if ($startDate && $endDate) {
-            $paymentQuery->whereBetween('created_at', [$startDate, $endDate]);
-        }
-        $totalPayments = $paymentQuery->count();
-        $totalPaymentAmount = $paymentQuery->sum('amount');
-
-        // Order status distribution
-        $orderStatuses = Order::selectRaw('status, count(*) as count')
-            ->when($startDate && $endDate, function ($q) use ($startDate, $endDate) {
-                $q->whereBetween('created_at', [$startDate, $endDate]);
-            })
-            ->groupBy('status')
-            ->pluck('count', 'status');
-
-        // Payment method distribution
-        $paymentMethods = Payment::selectRaw('payment_method, count(*) as count')
-            ->when($startDate && $endDate, function ($q) use ($startDate, $endDate) {
-                $q->whereBetween('created_at', [$startDate, $endDate]);
-            })
-            ->groupBy('payment_method')
-            ->pluck('count', 'payment_method');
-
-        return response()->json([
-            'cards' => [
-                [
-                    'title' => 'Total Orders',
-                    'value' => $totalOrders,
-                    'icon' => 'shopping-cart',
-                    'image' => url('img/report-card1.png'),
-                ],
-                [
-                    'title' => 'Total Revenue',
-                    'value' => number_format($totalRevenue, 2),
-                    'icon' => 'dollar-sign',
-                    'image' => url('img/report-card2.png'),
-                ],
-                [
-                    'title' => 'Avg Order Value',
-                    'value' => number_format($avgOrderValue, 2),
-                    'icon' => 'credit-card',
-                    'image' => url('img/report-card3.png'),
-                ],
-                [
-                    'title' => 'Total Payments',
-                    'value' => $totalPayments,
-                    'icon' => 'credit-card',
-                    'image' => url('img/report-card4.png'),
-                ],
-                [
-                    'title' => 'Payment Amount',
-                    'value' => number_format($totalPaymentAmount, 2),
-                    'icon' => 'dollar-sign',
-                    'image' => url('img/report-card4.png'),
-                ]
-            ],
-            'charts' => [
-                'order_status' => [
-                    'labels' => $orderStatuses->keys()->map(function ($status) {
-                        return ucfirst(str_replace('_', ' ', $status));
-                    })->toArray(),
-                    'data' => $orderStatuses->values()->toArray(),
-                    'colors' => $orderStatuses->keys()->map(function ($status) {
-                        return $this->getStatusColor($status);
-                    })->toArray()
-                ],
-                'payment_methods' => [
-                    'labels' => $paymentMethods->keys()->toArray(),
-                    'data' => $paymentMethods->values()->toArray(),
-                    'colors' => ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e']
-                ]
-            ]
-        ]);
-    }
-
-    private function getProductReportData($startDate, $endDate)
-    {
-        $query = Product::query();
-
-        if ($startDate && $endDate) {
-            $query->whereBetween('created_at', [$startDate, $endDate]);
-        }
-
-        $totalProducts = $query->count();
-        $activeProducts = $query->clone()->where('status', 1)->count();
-        $inactiveProducts = $totalProducts - $activeProducts;
-        $outOfStock = $query->clone()->where('product_stock', '<=', 0)->count();
-
-        // Top selling products
-        $topProducts = Product::withCount(['orderItems as total_sold' => function ($q) use ($startDate, $endDate) {
-            if ($startDate && $endDate) {
-                $q->whereHas('order', function ($q2) use ($startDate, $endDate) {
-                    $q2->whereBetween('created_at', [$startDate, $endDate]);
-                });
-            }
-        }])
-            ->orderByDesc('total_sold')
-            ->limit(5)
-            ->get();
-
-        // Stock history
-       $stockHistory = Product::selectRaw('
-            SUM(CASE WHEN product_stock = 0 THEN 1 ELSE 0 END) as out_of_stock,
-            SUM(CASE WHEN product_stock > 0 AND product_stock <= max_product_stock_alert THEN 1 ELSE 0 END) as low_stock,
-            SUM(CASE WHEN product_stock > max_product_stock_alert THEN 1 ELSE 0 END) as in_stock
-        ')
-        ->when($startDate && $endDate, function ($q) use ($startDate, $endDate) {
-            $q->whereBetween('created_at', [$startDate, $endDate]);
-        })
-        ->first();
-
-        return response()->json([
-            'cards' => [
-                [
-                    'title' => 'Total Products',
-                    'value' => $totalProducts,
-                    'icon' => 'box',
-                    'image' => url('img/report-card1.png'),
-                ],
-                [
-                    'title' => 'Active Products',
-                    'value' => $activeProducts,
-                    'icon' => 'check-circle',
-                    'image' => url('img/report-card2.png'),
-                ],
-                [
-                    'title' => 'Inactive Products',
-                    'value' => $inactiveProducts,
-                    'icon' => 'x-circle',
-                    'image' => url('img/report-card3.png'),
-                ],
-                [
-                    'title' => 'Out of Stock',
-                    'value' => $outOfStock,
-                    'icon' => 'alert-triangle',
-                    'image' => url('img/report-card4.png'),
-                ],
-                [
-                    'title' => 'Low Stock',
-                    'value' => $stockHistory->low_stock,
-                    'icon' => 'battery',
-                    'image' => url('img/report-card4.png'),
-                ],
-                [
-                    'title' => 'In Stock',
-                    'value' => $stockHistory->in_stock,
-                    'icon' => 'battery-charging',
-                    'image' => url('img/report-card3.png'),
-                ]
-            ],
-            'charts' => [
-                'top_products' => [
-                    'labels' => $topProducts->pluck('name')->toArray(),
-                    'data' => $topProducts->pluck('total_sold')->toArray(),
-                    'colors' => ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b']
-                ],
-                'stock_status' => [
-                    'labels' => ['Out of Stock', 'Low Stock', 'In Stock'],
-                    'data' => [
-                        $stockHistory->out_of_stock,
-                        $stockHistory->low_stock,
-                        $stockHistory->in_stock
-                    ],
-                    'colors' => ['#e74a3b', '#f6c23e', '#1cc88a']
-                ]
-            ]
-        ]);
-    }
-
-   private function getShopReportData($startDate, $endDate)
-{
-    // Shop statistics
-    $shopQuery = Shop::query();
-
-    if ($startDate && $endDate) {
-        $shopQuery->whereBetween('created_at', [$startDate, $endDate]);
-    }
-
-    $totalShops = $shopQuery->count();
-    $activeShops = $shopQuery->clone()->where('status', 1)->count();
-    $inactiveShops = $totalShops - $activeShops;
-
-    // Shop order statistics based on OrderItem
-    $orderItemQuery = OrderItem::query()->with(['order', 'shop']);
-
-    if ($startDate && $endDate) {
-        $orderItemQuery->whereHas('order', function ($q) use ($startDate, $endDate) {
-            $q->whereBetween('created_at', [$startDate, $endDate]);
-        });
-    }
-
-    // Calculate shop-specific metrics from OrderItem
-    $totalShopOrderItems = $orderItemQuery->count();
-    $totalShopSales = $orderItemQuery->sum('total_amount');
-
-    // Calculate commissions based on shop's commission percentage
-    $shopSalesData = $orderItemQuery->get()
-        ->groupBy('shop_id')
-        ->map(function ($items, $shopId) {
-            $shop = Shop::find($shopId);
-            $totalSales = $items->sum('total_amount');
-            $commissionRate = $shop ? $shop->commission_percentage : 0;
-            $commission = ($totalSales * $commissionRate) / 100;
-
-            return [
-                'shop_id' => $shopId,
-                'total_sales' => $totalSales,
-                'commission_rate' => $commissionRate,
-                'commission_amount' => $commission,
-                'shop_earnings' => $totalSales - $commission
-            ];
-        });
-
-    $totalCommission = $shopSalesData->sum('commission_amount');
-    $totalShopEarnings = $shopSalesData->sum('shop_earnings');
-
-    // Get total platform orders
-    $orderQuery = Order::query();
-    if ($startDate && $endDate) {
-        $orderQuery->whereBetween('created_at', [$startDate, $endDate]);
-    }
-
-    $totalPlatformOrders = $orderQuery->count();
-    $totalPlatformRevenue = $orderQuery->sum('total_amount');
-
-    // Top performing shops with detailed calculations
-    $topShops = Shop::withCount(['orderItems as total_orders' => function ($q) use ($startDate, $endDate) {
-        if ($startDate && $endDate) {
-            $q->whereHas('order', function ($query) use ($startDate, $endDate) {
-                $query->whereBetween('created_at', [$startDate, $endDate]);
-            });
-        }
-    }])
-    ->withSum(['orderItems as total_sales' => function ($q) use ($startDate, $endDate) {
-        if ($startDate && $endDate) {
-            $q->whereHas('order', function ($query) use ($startDate, $endDate) {
-                $query->whereBetween('created_at', [$startDate, $endDate]);
-            });
-        }
-    }], 'total_amount')
-    ->with(['orderItems' => function ($q) use ($startDate, $endDate) {
-        if ($startDate && $endDate) {
-            $q->whereHas('order', function ($query) use ($startDate, $endDate) {
-                $query->whereBetween('created_at', [$startDate, $endDate]);
-            });
-        }
-    }])
-    ->orderByDesc('total_sales')
-    ->limit(5)
-    ->get()
-    ->map(function ($shop) {
-        $totalSales = $shop->total_sales ?? 0;
-        $commissionRate = $shop->commission_percentage;
-        $commission = ($totalSales * $commissionRate) / 100;
-
-        return [
-            'id' => $shop->id,
-            'name' => $shop->name,
-            'total_orders' => $shop->total_orders ?? 0,
-            'total_sales' => $totalSales,
-            'commission_rate' => $commissionRate,
-            'commission_amount' => $commission,
-            'shop_earnings' => $totalSales - $commission,
-            'status' => $shop->status,
-            'image_url' => $shop->image_url
-        ];
-    });
-
-    return response()->json([
-        'cards' => [
-            [
-                'title' => 'Total Shops',
-                'value' => $totalShops,
-                'icon' => 'store',
-                'image' => url('img/report-card1.png'),
-            ],
-            [
-                'title' => 'Active Shops',
-                'value' => $activeShops,
-                'icon' => 'check-circle',
-                'image' => url('img/report-card2.png'),
-            ],
-            [
-                'title' => 'Inactive Shops',
-                'value' => $inactiveShops,
-                'icon' => 'x-circle',
-                'image' => url('img/report-card3.png'),
-            ],
-            [
-                'title' => 'Shop Order Items',
-                'value' => $totalShopOrderItems,
-                'icon' => 'shopping-cart',
-                'image' => url('img/report-card4.png'),
-            ],
-            [
-                'title' => 'Total Shop Sales',
-                'value' => number_format($totalShopSales, 2),
-                'icon' => 'dollar-sign',
-                'image' => url('img/report-card4.png'),
-            ],
-            [
-                'title' => 'Total Commission',
-                'value' => number_format($totalCommission, 2),
-                'icon' => 'percent',
-                'image' => url('img/report-card3.png'),
-            ],
-            [
-                'title' => 'Total Shop Earnings',
-                'value' => number_format($totalShopEarnings, 2),
-                'icon' => 'credit-card',
-                'image' => url('img/report-card2.png'),
-            ],
-            [
-                'title' => 'Total Platform Orders',
-                'value' => $totalPlatformOrders,
-                'icon' => 'package',
-                'image' => url('img/report-card1.png'),
-            ],
-            [
-                'title' => 'Total Platform Revenue',
-                'value' => number_format($totalPlatformRevenue, 2),
-                'icon' => 'trending-up',
-                'image' => url('img/report-card1.png'),
-            ]
-        ],
-        'charts' => [
-            'top_shops' => [
-                'labels' => $topShops->pluck('name')->toArray(),
-                'data' => $topShops->pluck('total_sales')->toArray(),
-                'colors' => ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b']
-            ]
-        ],
-        'top_shops_details' => $topShops
-    ]);
-}
-
-    private function getStatusColor($status)
-    {
-        $colors = [
-            'pending' => '#f6c23e',
-            'inprogress' => '#36b9cc',
-            'completed' => '#1cc88a',
-            'cancelled' => '#e74a3b'
+        $statusData = [
+            'paid' => $statusCounts['paid'] ?? 0,
+            'partially_paid' => $statusCounts['partially_paid'] ?? 0,
+            'unpaid' => $statusCounts['unpaid'] ?? 0,
+            'overdue' => $statusCounts['overdue'] ?? 0,
         ];
 
-        return $colors[strtolower($status)] ?? '#858796';
+        // 3. Expense Categories Breakdown
+        $expensesByCategory = Expense::select('category', DB::raw('sum(amount) as total'))
+            ->groupBy('category')
+            ->orderByDesc('total')
+            ->limit(6)
+            ->get();
+
+        $categoryLabels = [];
+        $categoryValues = [];
+        foreach ($expensesByCategory as $item) {
+            $categoryLabels[] = $item->category;
+            $categoryValues[] = round((float) $item->total, 2);
+        }
+
+        return response()->json([
+            'months' => $months,
+            'invoiced' => $invoicedData,
+            'collected' => $collectedData,
+            'expenses' => $expensesData,
+            'status' => $statusData,
+            'expense_categories' => [
+                'labels' => $categoryLabels,
+                'values' => $categoryValues,
+            ]
+        ]);
     }
 
+    /**
+     * Dynamic DataTables records provider for the active report module
+     */
     public function getReportTableData(Request $request)
     {
-        $type = $request->type;
-        $startDate = $request->start_date ? Carbon::parse($request->start_date)->startOfDay() : null;
-        $endDate = $request->end_date ? Carbon::parse($request->end_date)->endOfDay() : null;
-        $filters = $request->filters ?? [];
-        $filterLogic = $request->filter_logic ?? 'and';
+        $this->syncOverdueBills();
+        $type = $request->get('report_type', 'bills');
 
         switch ($type) {
-            case 'user':
-                return $this->getUserTableData($startDate, $endDate, $filters, $filterLogic);
-            case 'order':
-                return $this->getOrderTableData($startDate, $endDate, $filters, $filterLogic);
-            case 'deliverymans':
-                return $this->getDeliveryMenTableData($startDate, $endDate, $filters, $filterLogic);
-            case 'deliverypoints':
-                return $this->getDeliveryPointsTableData($startDate, $endDate, $filters, $filterLogic);
-            case 'product':
-                return $this->getProductTableData($startDate, $endDate, $filters, $filterLogic);
-            case 'shop':
-                return $this->getShopTableData($startDate, $endDate, $filters, $filterLogic);
-            case 'shoppayout':
-                return $this->getShopPayoutTableData($startDate, $endDate, $filters, $filterLogic);
+            case 'payments':
+                return $this->getPaymentsDataTable($request);
+            case 'rooms':
+                return $this->getRoomsDataTable($request);
+            case 'tenants':
+                return $this->getTenantsDataTable($request);
+            case 'expenses':
+                return $this->getExpensesDataTable($request);
+            case 'eb':
+                return $this->getEbDataTable($request);
+            case 'bills':
             default:
-                return response()->json(['error' => 'Invalid report type'], 400);
+                return $this->getBillsDataTable($request);
         }
     }
 
-    private function getUserTableData($startDate, $endDate, $filters, $filterLogic)
+    /**
+     * DataTable for Bills & Invoices
+     */
+    private function getBillsDataTable(Request $request)
     {
-        $query = User::where('type', UserType::USER)
-            ->select([
-                'id',
-                'name',
-                'email',
-                'phone',
-                'status',
-                'created_at'
-            ]);
+        $query = Bill::with(['tenant', 'room', 'creator'])->latest('bill_date')->latest('id');
 
-        if ($startDate && $endDate) {
-            $query->whereBetween('created_at', [$startDate, $endDate]);
+        $this->applyDateFilter($query, $request, 'bill_date');
+
+        if ($request->filled('room_id') && $request->room_id !== 'all') {
+            $query->where('room_id', $request->room_id);
         }
-
-        if ($filters) {
-            $filters = is_string($filters) ? json_decode($filters, true) : $filters;
-            $logic = $filterLogic;
-
-            $query->where(function ($q) use ($filters, $logic) {
-                foreach ($filters as $filter) {
-                    FilterController::applyOrderFilter($q, $filter, $logic);
-                }
-            });
+        if ($request->filled('tenant_id') && $request->tenant_id !== 'all') {
+            $query->where('tenant_id', $request->tenant_id);
+        }
+        if ($request->filled('floor') && $request->floor !== 'all') {
+            $query->whereHas('room', fn($q) => $q->where('floor', $request->floor));
+        }
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('status', $request->status);
         }
 
         return DataTables::of($query)
-            ->addColumn('created_at', function ($user) {
-                return $user->created_at->format('d-m-Y h:i A');
+            ->addIndexColumn()
+            ->addColumn('bill_number_badge', function ($row) {
+                return '<div class="d-flex align-items-center">
+                    <span class="badge bg-light text-dark border px-2 py-1 fw-bold font-12">
+                        <i class="fas fa-file-invoice text-primary me-1"></i> ' . e($row->bill_number) . '
+                    </span>
+                </div>';
             })
-            ->addColumn('status', function ($user) {
-                return $user->status ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-danger">Inactive</span>';
+            ->addColumn('billing_month_display', function ($row) {
+                $date = $row->bill_date ? $row->bill_date->format('d M Y') : '-';
+                return '<div>
+                    <span class="fw-bold text-dark d-block">' . e($row->billing_month) . '</span>
+                    <small class="text-muted"><i class="far fa-calendar-alt me-1 font-10"></i>' . $date . '</small>
+                </div>';
             })
-            ->rawColumns(['status'])
+            ->addColumn('room_badge', function ($row) {
+                if ($row->room) {
+                    return '<span class="badge bg-primary text-white fw-bold px-2 py-1">
+                                <i class="fas fa-door-closed me-1"></i> Room ' . e($row->room->room_number) . '
+                            </span>
+                            <div class="small text-muted mt-1">' . e($row->room->floor) . '</div>';
+                }
+                return '<span class="badge bg-secondary text-white px-2 py-1">Room ' . e($row->tenant->room_number ?? 'N/A') . '</span>';
+            })
+            ->addColumn('tenant_info', function ($row) {
+                if ($row->tenant) {
+                    $phone = $row->tenant->phone ? '<small class="text-muted d-block"><i class="fas fa-phone-alt me-1 font-10"></i>' . e($row->tenant->phone) . '</small>' : '';
+                    return '<div>
+                        <a href="' . url('/admin/tenants/' . $row->tenant->id . '/view') . '" class="fw-bold text-dark text-decoration-none hover-primary">' . e($row->tenant->name) . '</a>
+                        ' . $phone . '
+                    </div>';
+                }
+                return '<span class="text-muted">Former Resident</span>';
+            })
+            ->addColumn('bill_type_display', function ($row) {
+                return '<span class="badge bg-light text-secondary border px-2 py-1 fw-semibold font-11">
+                    ' . e($row->bill_type) . '
+                </span>';
+            })
+            ->addColumn('amount_formatted', function ($row) {
+                return '<span class="fw-bold text-dark font-13">₹' . number_format($row->amount, 2) . '</span>';
+            })
+            ->addColumn('paid_formatted', function ($row) {
+                return '<span class="fw-bold text-success font-13">₹' . number_format($row->paid_amount, 2) . '</span>';
+            })
+            ->addColumn('due_formatted', function ($row) {
+                $color = $row->due_amount > 0 ? 'text-danger' : 'text-muted';
+                return '<span class="fw-bold ' . $color . ' font-13">₹' . number_format($row->due_amount, 2) . '</span>';
+            })
+            ->addColumn('due_date_formatted', function ($row) {
+                if (!$row->due_date) return '-';
+                $due = Carbon::parse($row->due_date);
+                $isPast = $due->isPast() && $row->due_amount > 0;
+                $text = $due->format('d M, Y');
+                if ($isPast) {
+                    $days = abs(Carbon::today()->diffInDays($due, false));
+                    return '<span class="text-danger fw-bold">' . $text . '</span><br><small class="badge bg-danger-subtle text-danger font-10">Overdue ' . $days . 'd</small>';
+                }
+                return '<span class="text-muted">' . $text . '</span>';
+            })
+            ->addColumn('status_badge', function ($row) {
+                switch ($row->status) {
+                    case 'paid':
+                        return '<span class="badge bg-success text-white px-2 py-1"><i class="fas fa-check-circle me-1"></i> Paid</span>';
+                    case 'partially_paid':
+                        return '<span class="badge bg-info text-white px-2 py-1"><i class="fas fa-adjust me-1"></i> Partial</span>';
+                    case 'overdue':
+                        return '<span class="badge bg-danger text-white px-2 py-1"><i class="fas fa-exclamation-triangle me-1"></i> Overdue</span>';
+                    default:
+                        return '<span class="badge bg-warning text-dark px-2 py-1"><i class="fas fa-clock me-1"></i> Unpaid</span>';
+                }
+            })
+            ->addColumn('action', function ($row) {
+                $btns = '<div class="btn-group btn-group-sm" role="group">';
+                $btns .= '<a href="' . url('/admin/billing') . '" class="btn btn-outline-primary" title="Go to Billing / Print Invoice"><i class="fas fa-external-link-alt"></i></a>';
+                $btns .= '</div>';
+                return $btns;
+            })
+            ->rawColumns(['bill_number_badge', 'billing_month_display', 'room_badge', 'tenant_info', 'bill_type_display', 'amount_formatted', 'paid_formatted', 'due_formatted', 'due_date_formatted', 'status_badge', 'action'])
             ->make(true);
     }
 
-    private function getDeliveryMenTableData($startDate, $endDate, $filters, $filterLogic)
+    /**
+     * DataTable for Payments & Receipts
+     */
+    private function getPaymentsDataTable(Request $request)
     {
-        $query = User::with('deliveryPoint')
-            ->where('type', UserType::DELIVERY)
-            ->select([
-                'id',
-                'name',
-                'email',
-                'phone',
-                'status',
-                'created_at',
-                'delivery_point_id'
-            ]);
+        $query = BillPayment::with(['bill.room', 'tenant', 'receiver'])->latest('payment_date')->latest('id');
 
-        if ($startDate && $endDate) {
-            $query->whereBetween('created_at', [$startDate, $endDate]);
+        $this->applyDateFilter($query, $request, 'payment_date');
+
+        if ($request->filled('room_id') && $request->room_id !== 'all') {
+            $query->whereHas('bill', fn($q) => $q->where('room_id', $request->room_id));
         }
-
-        if ($filters) {
-            $filters = is_string($filters) ? json_decode($filters, true) : $filters;
-            $logic = $filterLogic;
-
-            $query->where(function ($q) use ($filters, $logic) {
-                foreach ($filters as $filter) {
-                    FilterController::applyOrderFilter($q, $filter, $logic);
-                }
-            });
+        if ($request->filled('tenant_id') && $request->tenant_id !== 'all') {
+            $query->where('tenant_id', $request->tenant_id);
+        }
+        if ($request->filled('floor') && $request->floor !== 'all') {
+            $query->whereHas('bill.room', fn($q) => $q->where('floor', $request->floor));
+        }
+        if ($request->filled('payment_method') && $request->payment_method !== 'all') {
+            $query->where('payment_method', $request->payment_method);
         }
 
         return DataTables::of($query)
-            ->addColumn('created_at', function ($deliveryMan) {
-                return $deliveryMan->created_at->format('d-m-Y h:i A');
+            ->addIndexColumn()
+            ->addColumn('payment_number_badge', function ($row) {
+                return '<span class="badge bg-success-subtle text-success border border-success px-2 py-1 fw-bold font-12">
+                    <i class="fas fa-receipt me-1"></i> ' . e($row->payment_number) . '
+                </span>';
             })
-            ->addColumn('status', function ($deliveryMan) {
-                return $deliveryMan->status ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-danger">Inactive</span>';
+            ->addColumn('bill_number_display', function ($row) {
+                if ($row->bill) {
+                    return '<span class="fw-semibold text-dark"><i class="fas fa-file-invoice text-muted me-1 font-11"></i>' . e($row->bill->bill_number) . '</span><br><small class="text-muted">' . e($row->bill->billing_month) . '</small>';
+                }
+                return '<span class="text-muted">-</span>';
             })
-            ->addColumn('delivery_location', function ($deliveryMan) {
-                $point = $deliveryMan->deliveryPoint;
-
-                return $point
-                    ? $point->location . ' - ' . $point->sub_location
-                    : '-';
+            ->addColumn('payment_date_formatted', function ($row) {
+                return $row->payment_date ? $row->payment_date->format('d M Y') : '-';
             })
-            ->rawColumns(['status'])
+            ->addColumn('tenant_info', function ($row) {
+                if ($row->tenant) {
+                    $phone = $row->tenant->phone ? '<small class="text-muted d-block"><i class="fas fa-phone-alt me-1 font-10"></i>' . e($row->tenant->phone) . '</small>' : '';
+                    return '<div>
+                        <a href="' . url('/admin/tenants/' . $row->tenant->id . '/view') . '" class="fw-bold text-dark text-decoration-none hover-primary">' . e($row->tenant->name) . '</a>
+                        ' . $phone . '
+                    </div>';
+                }
+                return '<span class="text-muted">Resident</span>';
+            })
+            ->addColumn('room_badge', function ($row) {
+                $room = $row->bill->room ?? ($row->tenant->room ?? null);
+                if ($room) {
+                    return '<span class="badge bg-primary text-white fw-bold px-2 py-1">
+                                <i class="fas fa-door-closed me-1"></i> Room ' . e($room->room_number) . '
+                            </span>
+                            <div class="small text-muted mt-1">' . e($room->floor) . '</div>';
+                }
+                return '<span class="text-muted">-</span>';
+            })
+            ->addColumn('payment_method_badge', function ($row) {
+                $icon = match ($row->payment_method) {
+                    'Cash' => 'fas fa-money-bill-wave text-success',
+                    'UPI' => 'fas fa-mobile-alt text-primary',
+                    'Bank Transfer' => 'fas fa-university text-info',
+                    'Cheque' => 'fas fa-money-check text-warning',
+                    'Card' => 'fas fa-credit-card text-purple',
+                    default => 'fas fa-wallet text-secondary'
+                };
+                return '<span class="badge bg-light text-dark border px-2 py-1 fw-semibold font-11">
+                    <i class="' . $icon . ' me-1 font-11"></i> ' . e($row->payment_method) . '
+                </span>';
+            })
+            ->addColumn('transaction_id_display', function ($row) {
+                return '<span class="text-muted font-11">' . e($row->transaction_id ?: 'N/A') . '</span>';
+            })
+            ->addColumn('amount_formatted', function ($row) {
+                return '<span class="fw-bold text-success fs-6">₹' . number_format($row->amount, 2) . '</span>';
+            })
+            ->addColumn('received_by_name', function ($row) {
+                return '<span class="text-muted font-11">' . e($row->receiver->name ?? 'Admin') . '</span>';
+            })
+            ->rawColumns(['payment_number_badge', 'bill_number_display', 'tenant_info', 'room_badge', 'payment_method_badge', 'transaction_id_display', 'amount_formatted', 'received_by_name'])
             ->make(true);
     }
 
-    private function getDeliveryPointsTableData($startDate, $endDate, $filters, $filterLogic)
+    /**
+     * DataTable for Rooms & Occupancy
+     */
+    private function getRoomsDataTable(Request $request)
     {
-        $query = DeliveryPoint::where('status', true)
-            ->select([
-                'id',
-                'location',
-                'sub_location',
-                'status',
-            ]);
+        $query = Room::with(['currentTenant']);
 
-        if ($startDate && $endDate) {
-            $query->whereBetween('created_at', [$startDate, $endDate]);
+        if ($request->filled('floor') && $request->floor !== 'all') {
+            $query->where('floor', $request->floor);
+        }
+        if ($request->filled('status') && $request->status !== 'all') {
+            if ($request->status === 'self') {
+                $query->where('is_self', 1);
+            } else {
+                $query->where('occupancy_status', $request->status)->where('is_self', 0);
+            }
+        }
+        if ($request->filled('room_id') && $request->room_id !== 'all') {
+            $query->where('id', $request->room_id);
         }
 
-        if ($filters) {
-            $filters = is_string($filters) ? json_decode($filters, true) : $filters;
-            $logic = $filterLogic;
+        // Natural numeric ordering
+        $query->orderByRaw('CAST(room_number AS UNSIGNED) ASC, room_number ASC');
 
-            $query->where(function ($q) use ($filters, $logic) {
-                foreach ($filters as $filter) {
-                    FilterController::applyOrderFilter($q, $filter, $logic);
+        return DataTables::of($query)
+            ->addIndexColumn()
+            ->addColumn('room_badge', function ($row) {
+                return '<span class="badge bg-primary text-white fw-bold px-2 py-1 fs-6">
+                    <i class="fas fa-door-closed me-1"></i> Room ' . e($row->room_number) . '
+                </span>';
+            })
+            ->addColumn('floor_display', function ($row) {
+                return '<span class="fw-semibold text-dark">' . e($row->floor) . '</span>';
+            })
+            ->addColumn('room_type_display', function ($row) {
+                return '<span class="badge bg-light text-secondary border px-2 py-1">' . e($row->room_type) . '</span>';
+            })
+            ->addColumn('capacity_display', function ($row) {
+                return $row->capacity . ' Persons';
+            })
+            ->addColumn('monthly_rent_formatted', function ($row) {
+                return '<span class="fw-bold text-dark">₹' . number_format($row->monthly_rent, 2) . '</span>';
+            })
+            ->addColumn('eb_rate_formatted', function ($row) {
+                return '₹' . number_format($row->eb_unit_rate, 2) . ' / unit';
+            })
+            ->addColumn('maintenance_formatted', function ($row) {
+                return '₹' . number_format($row->maintenance_charges, 2);
+            })
+            ->addColumn('other_formatted', function ($row) {
+                return '₹' . number_format($row->other_charges, 2);
+            })
+            ->addColumn('total_monthly_formatted', function ($row) {
+                return '<span class="fw-bold text-primary fs-6">₹' . number_format($row->total_monthly, 2) . '</span>';
+            })
+            ->addColumn('deposit_formatted', function ($row) {
+                return '₹' . number_format($row->security_deposit, 2);
+            })
+            ->addColumn('status_badge', function ($row) {
+                if ($row->is_self) {
+                    return '<span class="badge bg-secondary text-white px-2 py-1"><i class="fas fa-user-shield me-1"></i> Self-Occupied</span>';
                 }
-            });
+                switch ($row->occupancy_status) {
+                    case 'occupied':
+                        return '<span class="badge bg-success text-white px-2 py-1"><i class="fas fa-user-check me-1"></i> Occupied</span>';
+                    case 'available':
+                        return '<span class="badge bg-info text-white px-2 py-1"><i class="fas fa-check-circle me-1"></i> Available</span>';
+                    case 'maintenance':
+                        return '<span class="badge bg-warning text-dark px-2 py-1"><i class="fas fa-tools me-1"></i> Maintenance</span>';
+                    default:
+                        return '<span class="badge bg-light text-dark border px-2 py-1">' . e(ucfirst($row->occupancy_status)) . '</span>';
+                }
+            })
+            ->addColumn('current_tenant_display', function ($row) {
+                if ($row->is_self) {
+                    return '<span class="badge bg-light text-muted border font-11">Owner / Management</span>';
+                }
+                if ($row->currentTenant) {
+                    return '<div>
+                        <a href="' . url('/admin/tenants/' . $row->currentTenant->id . '/view') . '" class="fw-bold text-dark text-decoration-none hover-primary">' . e($row->currentTenant->name) . '</a>
+                        <small class="text-muted d-block"><i class="fas fa-phone-alt font-10 me-1"></i>' . e($row->currentTenant->phone ?? '-') . '</small>
+                    </div>';
+                }
+                return '<span class="text-muted">Vacant</span>';
+            })
+            ->rawColumns(['room_badge', 'floor_display', 'room_type_display', 'monthly_rent_formatted', 'total_monthly_formatted', 'status_badge', 'current_tenant_display'])
+            ->make(true);
+    }
+
+    /**
+     * DataTable for Tenants & Leases
+     */
+    private function getTenantsDataTable(Request $request)
+    {
+        $query = Tenant::with(['room', 'bills', 'payments']);
+
+        if ($request->filled('room_id') && $request->room_id !== 'all') {
+            $query->where('room_id', $request->room_id);
+        }
+        if ($request->filled('floor') && $request->floor !== 'all') {
+            $query->whereHas('room', fn($q) => $q->where('floor', $request->floor));
+        }
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('status', $request->status === 'active' ? 1 : 0);
+        }
+
+        $query->orderByRaw('CAST(room_number AS UNSIGNED) ASC, room_number ASC');
+
+        return DataTables::of($query)
+            ->addIndexColumn()
+            ->addColumn('resident_info', function ($row) {
+                return '<div>
+                    <a href="' . url('/admin/tenants/' . $row->id . '/view') . '" class="fw-bold text-dark text-decoration-none hover-primary fs-6">' . e($row->name) . '</a>
+                    <div class="small text-muted mt-1"><i class="fas fa-phone-alt font-10 me-1"></i>' . e($row->phone ?? 'No Phone') . '</div>
+                </div>';
+            })
+            ->addColumn('room_badge', function ($row) {
+                $roomNo = $row->room_number ?? ($row->room ? $row->room->room_number : '-');
+                $floor = $row->room ? $row->room->floor : '';
+                return '<span class="badge bg-primary text-white fw-bold px-2 py-1">
+                            <i class="fas fa-door-closed me-1"></i> Room ' . e($roomNo) . '
+                        </span>
+                        <div class="small text-muted mt-1">' . e($floor) . '</div>';
+            })
+            ->addColumn('commence_date_formatted', function ($row) {
+                return $row->commence_date ? $row->commence_date->format('d M Y') : '-';
+            })
+            ->addColumn('monthly_rent_formatted', function ($row) {
+                return '<span class="fw-bold text-dark">₹' . number_format($row->monthly_rent, 2) . '</span>';
+            })
+            ->addColumn('deposit_formatted', function ($row) {
+                return '₹' . number_format($row->security_deposit, 2);
+            })
+            ->addColumn('total_invoiced_formatted', function ($row) {
+                $inv = (float) $row->bills->sum('amount');
+                return '<span class="fw-bold text-dark">₹' . number_format($inv, 2) . '</span>';
+            })
+            ->addColumn('total_paid_formatted', function ($row) {
+                $paid = (float) $row->bills->sum('paid_amount');
+                return '<span class="fw-bold text-success">₹' . number_format($paid, 2) . '</span>';
+            })
+            ->addColumn('outstanding_due_formatted', function ($row) {
+                $due = (float) $row->bills->sum('due_amount');
+                $color = $due > 0 ? 'text-danger' : 'text-muted';
+                return '<span class="fw-bold ' . $color . '">₹' . number_format($due, 2) . '</span>';
+            })
+            ->addColumn('status_badge', function ($row) {
+                if ($row->status) {
+                    return '<span class="badge bg-success text-white px-2 py-1"><i class="fas fa-user-check me-1"></i> Active</span>';
+                }
+                return '<span class="badge bg-secondary text-white px-2 py-1"><i class="fas fa-user-times me-1"></i> Inactive</span>';
+            })
+            ->addColumn('action', function ($row) {
+                return '<a href="' . url('/admin/tenants/' . $row->id . '/view') . '" class="btn btn-sm btn-outline-info" title="View Resident Details">
+                    <i class="fas fa-eye"></i> View
+                </a>';
+            })
+            ->rawColumns(['resident_info', 'room_badge', 'monthly_rent_formatted', 'total_invoiced_formatted', 'total_paid_formatted', 'outstanding_due_formatted', 'status_badge', 'action'])
+            ->make(true);
+    }
+
+    /**
+     * DataTable for Expenses
+     */
+    private function getExpensesDataTable(Request $request)
+    {
+        $query = Expense::with(['room', 'creator'])->latest('expense_date')->latest('id');
+
+        $this->applyDateFilter($query, $request, 'expense_date');
+
+        if ($request->filled('room_id') && $request->room_id !== 'all') {
+            $query->where('room_id', $request->room_id);
+        }
+        if ($request->filled('floor') && $request->floor !== 'all') {
+            $query->whereHas('room', fn($q) => $q->where('floor', $request->floor));
+        }
+        if ($request->filled('category') && $request->category !== 'all') {
+            $query->where('category', $request->category);
+        }
+        if ($request->filled('payment_method') && $request->payment_method !== 'all') {
+            $query->where('payment_method', $request->payment_method);
+        }
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('expense_type', $request->status);
         }
 
         return DataTables::of($query)
-            ->addColumn('created_at', function ($deliveryMan) {
-                return $deliveryMan->created_at->format('d-m-Y h:i A');
+            ->addIndexColumn()
+            ->addColumn('expense_date_formatted', function ($row) {
+                return $row->expense_date ? $row->expense_date->format('d M Y') : '-';
             })
-            ->addColumn('status', function ($deliveryMan) {
-                return $deliveryMan->status ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-danger">Inactive</span>';
+            ->addColumn('type_badge', function ($row) {
+                if ($row->expense_type === 'room') {
+                    return '<span class="badge bg-primary-subtle text-primary border border-primary px-2 py-1">Room</span>';
+                }
+                return '<span class="badge bg-secondary-subtle text-secondary border border-secondary px-2 py-1">General / Personal</span>';
             })
-            ->rawColumns(['status'])
+            ->addColumn('room_badge', function ($row) {
+                if ($row->room) {
+                    return '<span class="badge bg-primary text-white fw-bold px-2 py-1">
+                                <i class="fas fa-door-closed me-1"></i> Room ' . e($row->room->room_number) . '
+                            </span>
+                            <div class="small text-muted mt-1">' . e($row->room->floor) . '</div>';
+                }
+                return '<span class="badge bg-light text-muted border px-2 py-1">Common Residence</span>';
+            })
+            ->addColumn('category_badge', function ($row) {
+                return '<span class="badge bg-info-subtle text-info border border-info px-2 py-1 fw-semibold font-11">' . e($row->category) . '</span>';
+            })
+            ->addColumn('title_desc', function ($row) {
+                $notes = $row->notes ? '<small class="text-muted d-block text-wrap" style="max-width:260px;">' . e($row->notes) . '</small>' : '';
+                return '<div>
+                    <span class="fw-bold text-dark d-block">' . e($row->title) . '</span>
+                    ' . $notes . '
+                </div>';
+            })
+            ->addColumn('amount_formatted', function ($row) {
+                return '<span class="fw-bold text-danger fs-6">₹' . number_format($row->amount, 2) . '</span>';
+            })
+            ->addColumn('payment_method_display', function ($row) {
+                return '<span class="badge bg-light text-dark border px-2 py-1 font-11">' . e($row->payment_method) . '</span>';
+            })
+            ->addColumn('paid_to_display', function ($row) {
+                return '<span class="fw-semibold text-secondary font-12">' . e($row->paid_to ?? '-') . '</span>';
+            })
+            ->addColumn('recorded_by_name', function ($row) {
+                return '<span class="text-muted font-11">' . e($row->creator->name ?? 'Admin') . '</span>';
+            })
+            ->rawColumns(['type_badge', 'room_badge', 'category_badge', 'title_desc', 'amount_formatted', 'payment_method_display', 'paid_to_display', 'recorded_by_name'])
             ->make(true);
     }
 
-    private function getOrderTableData($startDate, $endDate, $filters, $filterLogic)
+    /**
+     * DataTable for Electricity (EB) Readings
+     */
+    private function getEbDataTable(Request $request)
     {
-        $query = Order::with(['user'])
-            ->select([
-                'id',
-                'order_no as order_id',
-                'user_id',
-                'total_amount',
-                'status as order_status',
-                'created_at'
-            ]);
+        $query = Bill::with(['tenant', 'room'])
+            ->where(function ($q) {
+                $q->whereNotNull('eb_current_reading')
+                    ->orWhere('eb_consumed_units', '>', 0)
+                    ->orWhere('eb_amount', '>', 0)
+                    ->orWhere('bill_type', 'like', '%Electricity%');
+            })
+            ->latest('bill_date')->latest('id');
 
-        if ($startDate && $endDate) {
-            $query->whereBetween('created_at', [$startDate, $endDate]);
+        $this->applyDateFilter($query, $request, 'bill_date');
+
+        if ($request->filled('room_id') && $request->room_id !== 'all') {
+            $query->where('room_id', $request->room_id);
         }
-        if ($filters) {
-            $filters = is_string($filters) ? json_decode($filters, true) : $filters;
-            $logic = $filterLogic;
-
-            $query->where(function ($q) use ($filters, $logic) {
-                foreach ($filters as $filter) {
-                    FilterController::applyOrderFilter($q, $filter, $logic);
-                }
-            });
+        if ($request->filled('tenant_id') && $request->tenant_id !== 'all') {
+            $query->where('tenant_id', $request->tenant_id);
+        }
+        if ($request->filled('floor') && $request->floor !== 'all') {
+            $query->whereHas('room', fn($q) => $q->where('floor', $request->floor));
         }
 
         return DataTables::of($query)
-            ->addColumn('created_at', function ($order) {
-                return $order->created_at->format('d-m-Y h:i A');
+            ->addIndexColumn()
+            ->addColumn('billing_month_display', function ($row) {
+                $date = $row->bill_date ? $row->bill_date->format('d M Y') : '-';
+                return '<div>
+                    <span class="fw-bold text-dark d-block">' . e($row->billing_month) . '</span>
+                    <small class="text-muted"><i class="far fa-calendar-alt me-1 font-10"></i>' . $date . '</small>
+                </div>';
             })
-            ->addColumn('customer', function ($order) {
-                return $order->user->name ?? 'N/A';
-            })
-            ->rawColumns(['order_status'])
-            ->make(true);
-    }
-
-
-    private function getProductTableData($startDate, $endDate, $filters, $filterLogic)
-    {
-        $query = Product::with(['category'])
-            ->select([
-                'id',
-                'name as product_name',
-                'category_id',
-                'amount as price',
-                'product_stock',
-                'status',
-                'created_at'
-            ]);
-
-        if ($startDate && $endDate) {
-            $query->whereBetween('created_at', [$startDate, $endDate]);
-        }
-
-        if ($filters) {
-            $filters = is_string($filters) ? json_decode($filters, true) : $filters;
-            $logic = $filterLogic;
-
-            $query->where(function ($q) use ($filters, $logic) {
-                foreach ($filters as $filter) {
-                    FilterController::applyOrderFilter($q, $filter, $logic);
+            ->addColumn('room_badge', function ($row) {
+                if ($row->room) {
+                    return '<span class="badge bg-primary text-white fw-bold px-2 py-1">
+                                <i class="fas fa-door-closed me-1"></i> Room ' . e($row->room->room_number) . '
+                            </span>
+                            <div class="small text-muted mt-1">' . e($row->room->floor) . '</div>';
                 }
-            });
-        }
-
-        return DataTables::of($query)
-            ->addColumn('created_at', function ($product) {
-                return $product->created_at->format('d-m-Y h:i A');
+                return '<span class="badge bg-secondary text-white px-2 py-1">Room ' . e($row->tenant->room_number ?? 'N/A') . '</span>';
             })
-            ->addColumn('category', function ($product) {
-                return $product->category->name ?? 'N/A';
+            ->addColumn('tenant_name_display', function ($row) {
+                if ($row->tenant) {
+                    return '<a href="' . url('/admin/tenants/' . $row->tenant->id . '/view') . '" class="fw-bold text-dark text-decoration-none hover-primary">' . e($row->tenant->name) . '</a>';
+                }
+                return '<span class="text-muted">Former Resident</span>';
             })
-            ->addColumn('status', function ($product) {
-                return $product->status ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-danger">Inactive</span>';
+            ->addColumn('previous_reading_display', function ($row) {
+                return number_format((float) $row->eb_previous_reading, 2);
             })
-            ->rawColumns(['status'])
+            ->addColumn('current_reading_display', function ($row) {
+                return $row->eb_current_reading !== null ? number_format((float) $row->eb_current_reading, 2) : '-';
+            })
+            ->addColumn('consumed_units_display', function ($row) {
+                return '<span class="fw-bold text-primary fs-6">' . number_format((float) $row->eb_consumed_units, 2) . ' kWh</span>';
+            })
+            ->addColumn('unit_rate_display', function ($row) {
+                return '₹' . number_format((float) $row->eb_unit_rate, 2);
+            })
+            ->addColumn('eb_amount_formatted', function ($row) {
+                return '<span class="fw-bold text-dark fs-6">₹' . number_format((float) $row->eb_amount, 2) . '</span>';
+            })
+            ->addColumn('bill_status_badge', function ($row) {
+                switch ($row->status) {
+                    case 'paid':
+                        return '<span class="badge bg-success text-white px-2 py-1"><i class="fas fa-check-circle me-1"></i> Paid</span>';
+                    case 'partially_paid':
+                        return '<span class="badge bg-info text-white px-2 py-1"><i class="fas fa-adjust me-1"></i> Partial</span>';
+                    case 'overdue':
+                        return '<span class="badge bg-danger text-white px-2 py-1"><i class="fas fa-exclamation-triangle me-1"></i> Overdue</span>';
+                    default:
+                        return '<span class="badge bg-warning text-dark px-2 py-1"><i class="fas fa-clock me-1"></i> Unpaid</span>';
+                }
+            })
+            ->rawColumns(['billing_month_display', 'room_badge', 'tenant_name_display', 'consumed_units_display', 'eb_amount_formatted', 'bill_status_badge'])
             ->make(true);
     }
 
-    private function getShopTableData($startDate, $endDate, $filters, $filterLogic)
+    /**
+     * CSV Streaming Export with Full Records & Active Filters
+     */
+    public function exportReport(Request $request): StreamedResponse
     {
-        $query = Shop::select([
-            'id',
-            'name as shop_name',
-            'owner_name as owner',
-            'address as location',
-            'status',
-            'created_at'
+        $this->syncOverdueBills();
+        $type = $request->get('report_type', 'bills');
+        $fileName = 'srm_residence_' . $type . '_report_' . date('Ymd_His') . '.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
+        ];
+
+        $callback = function () use ($type, $request) {
+            $handle = fopen('php://output', 'w');
+            // Write UTF-8 BOM so Excel opens Indian Rupees and characters accurately
+            fputs($handle, "\xEF\xBB\xBF");
+
+            switch ($type) {
+                case 'payments':
+                    $this->exportPaymentsCsv($handle, $request);
+                    break;
+                case 'rooms':
+                    $this->exportRoomsCsv($handle, $request);
+                    break;
+                case 'tenants':
+                    $this->exportTenantsCsv($handle, $request);
+                    break;
+                case 'expenses':
+                    $this->exportExpensesCsv($handle, $request);
+                    break;
+                case 'eb':
+                    $this->exportEbCsv($handle, $request);
+                    break;
+                case 'bills':
+                default:
+                    $this->exportBillsCsv($handle, $request);
+                    break;
+            }
+
+            fclose($handle);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    private function exportBillsCsv($handle, Request $request)
+    {
+        fputcsv($handle, [
+            'Bill Number',
+            'Billing Month',
+            'Bill Date',
+            'Due Date',
+            'Room Number',
+            'Floor',
+            'Resident Name',
+            'Resident Phone',
+            'Bill Type',
+            'Total Amount (INR)',
+            'Paid Amount (INR)',
+            'Due Amount (INR)',
+            'Status',
+            'EB Units',
+            'EB Amount (INR)',
+            'Generated By',
         ]);
 
-        if ($startDate && $endDate) {
-            $query->whereBetween('created_at', [$startDate, $endDate]);
+        $query = Bill::with(['tenant', 'room', 'creator'])->latest('bill_date')->latest('id');
+        $this->applyDateFilter($query, $request, 'bill_date');
+
+        if ($request->filled('room_id') && $request->room_id !== 'all') {
+            $query->where('room_id', $request->room_id);
+        }
+        if ($request->filled('tenant_id') && $request->tenant_id !== 'all') {
+            $query->where('tenant_id', $request->tenant_id);
+        }
+        if ($request->filled('floor') && $request->floor !== 'all') {
+            $query->whereHas('room', fn($q) => $q->where('floor', $request->floor));
+        }
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('status', $request->status);
         }
 
-        if ($filters) {
-            $filters = is_string($filters) ? json_decode($filters, true) : $filters;
-            $logic = $filterLogic;
-
-            $query->where(function ($q) use ($filters, $logic) {
-                foreach ($filters as $filter) {
-                    FilterController::applyOrderFilter($q, $filter, $logic);
-                }
-            });
-        }
-
-        return DataTables::of($query)
-            ->addColumn('created_at', function ($shop) {
-                return $shop->created_at->format('d-m-Y h:i A');
-            })
-            ->addColumn('status', function ($shop) {
-                return $shop->status ? '<span class="badge bg-success">Active</span>' : '<span class="badge bg-danger">Inactive</span>';
-            })
-            ->rawColumns(['status'])
-            ->make(true);
+        $query->chunk(100, function ($bills) use ($handle) {
+            foreach ($bills as $bill) {
+                fputcsv($handle, [
+                    $bill->bill_number,
+                    $bill->billing_month,
+                    $bill->bill_date ? $bill->bill_date->format('Y-m-d') : '',
+                    $bill->due_date ? $bill->due_date->format('Y-m-d') : '',
+                    $bill->room ? $bill->room->room_number : ($bill->tenant->room_number ?? 'N/A'),
+                    $bill->room ? $bill->room->floor : '',
+                    $bill->tenant ? $bill->tenant->name : 'Former Resident',
+                    $bill->tenant ? $bill->tenant->phone : '',
+                    $bill->bill_type,
+                    number_format($bill->amount, 2, '.', ''),
+                    number_format($bill->paid_amount, 2, '.', ''),
+                    number_format($bill->due_amount, 2, '.', ''),
+                    ucfirst(str_replace('_', ' ', $bill->status)),
+                    $bill->eb_consumed_units,
+                    number_format($bill->eb_amount, 2, '.', ''),
+                    $bill->creator ? $bill->creator->name : 'System',
+                ]);
+            }
+        });
     }
 
-    private function getShopPayoutTableData($startDate, $endDate, $filters, $filterLogic)
+    private function exportPaymentsCsv($handle, Request $request)
     {
-        $query = PayoutShop::with(['shop', 'payout'])
-            ->select([
-                'shop_id',
-                DB::raw('DATE(created_at) as payout_date'),
-                DB::raw('COUNT(*) as total_payouts'),
-                DB::raw('SUM(amount) as total_amount'),
-                DB::raw('SUM(commission) as commission_amount'),
-                DB::raw('SUM(payable_amount) as payable_amount'),
-                DB::raw('ROUND(AVG((commission/NULLIF(amount,0))*100), 2) as commission_rate'),
-                DB::raw('GROUP_CONCAT(DISTINCT status) as payout_status'),
-                DB::raw('MAX(id) as latest_id')
-            ])
-            ->groupBy('shop_id', DB::raw('DATE(created_at)'));
+        fputcsv($handle, [
+            'Receipt Number',
+            'Invoice Number',
+            'Payment Date',
+            'Resident Name',
+            'Resident Phone',
+            'Room Number',
+            'Floor',
+            'Payment Method',
+            'Transaction ID',
+            'Amount Paid (INR)',
+            'Received By',
+            'Notes',
+        ]);
 
-        if ($startDate && $endDate) {
-            $query->whereBetween('created_at', [$startDate, $endDate]);
+        $query = BillPayment::with(['bill.room', 'tenant', 'receiver'])->latest('payment_date')->latest('id');
+        $this->applyDateFilter($query, $request, 'payment_date');
+
+        if ($request->filled('room_id') && $request->room_id !== 'all') {
+            $query->whereHas('bill', fn($q) => $q->where('room_id', $request->room_id));
+        }
+        if ($request->filled('tenant_id') && $request->tenant_id !== 'all') {
+            $query->where('tenant_id', $request->tenant_id);
+        }
+        if ($request->filled('floor') && $request->floor !== 'all') {
+            $query->whereHas('bill.room', fn($q) => $q->where('floor', $request->floor));
+        }
+        if ($request->filled('payment_method') && $request->payment_method !== 'all') {
+            $query->where('payment_method', $request->payment_method);
         }
 
-        if ($filters) {
-            $filters = is_string($filters) ? json_decode($filters, true) : $filters;
-            $logic = $filterLogic;
-            $query->where(function ($q) use ($filters, $logic) {
-                foreach ($filters as $filter) {
-                    FilterController::applyFilter($q, $filter, $logic);
-                }
-            });
-        }
-
-        return DataTables::of($query)
-            ->addColumn('shop_name', function ($row) {
-                $shop = Shop::find($row->shop_id);
-                return $shop->name ?? 'N/A';
-            })
-            ->addColumn('owner_name', function ($row) {
-                $shop = Shop::find($row->shop_id);
-                return $shop->owner_name ?? 'N/A';
-            })
-            ->editColumn('total_amount', function ($row) {
-                return number_format($row->total_amount, 2);
-            })
-            ->editColumn('commission_amount', function ($row) {
-                return number_format($row->commission_amount, 2);
-            })
-            ->editColumn('payable_amount', function ($row) {
-                return number_format($row->payable_amount, 2);
-            })
-            ->editColumn('commission_rate', function ($row) {
-                return number_format($row->commission_rate ?? 0, 2);
-            })
-            ->editColumn('payout_date', function ($row) {
-                return Carbon::parse($row->payout_date)->format('d-m-Y');
-            })
-            ->editColumn('payout_status', function ($row) {
-                $statuses = explode(',', $row->payout_status);
-                if (in_array('paid', $statuses)) {
-                    return 'paid';
-                } elseif (in_array('processing', $statuses)) {
-                    return 'processing';
-                } elseif (in_array('failed', $statuses)) {
-                    return 'failed';
-                } else {
-                    return 'generated';
-                }
-            })
-            ->rawColumns(['actions'])
-            ->make(true);
+        $query->chunk(100, function ($payments) use ($handle) {
+            foreach ($payments as $p) {
+                $room = $p->bill->room ?? ($p->tenant->room ?? null);
+                fputcsv($handle, [
+                    $p->payment_number,
+                    $p->bill ? $p->bill->bill_number : '',
+                    $p->payment_date ? $p->payment_date->format('Y-m-d') : '',
+                    $p->tenant ? $p->tenant->name : 'Resident',
+                    $p->tenant ? $p->tenant->phone : '',
+                    $room ? $room->room_number : '',
+                    $room ? $room->floor : '',
+                    $p->payment_method,
+                    $p->transaction_id ?: '',
+                    number_format($p->amount, 2, '.', ''),
+                    $p->receiver ? $p->receiver->name : 'Admin',
+                    $p->notes ?: '',
+                ]);
+            }
+        });
     }
 
+    private function exportRoomsCsv($handle, Request $request)
+    {
+        fputcsv($handle, [
+            'Room Number',
+            'Floor',
+            'Room Type',
+            'Capacity',
+            'Monthly Rent (INR)',
+            'EB Rate (INR/unit)',
+            'Maintenance Charges (INR)',
+            'Other Charges (INR)',
+            'Total Monthly Due (INR)',
+            'Security Deposit (INR)',
+            'Occupancy Status',
+            'Self Occupied',
+            'Current Resident',
+            'Resident Phone',
+        ]);
+
+        $query = Room::with(['currentTenant']);
+        if ($request->filled('floor') && $request->floor !== 'all') {
+            $query->where('floor', $request->floor);
+        }
+        if ($request->filled('status') && $request->status !== 'all') {
+            if ($request->status === 'self') {
+                $query->where('is_self', 1);
+            } else {
+                $query->where('occupancy_status', $request->status)->where('is_self', 0);
+            }
+        }
+        if ($request->filled('room_id') && $request->room_id !== 'all') {
+            $query->where('id', $request->room_id);
+        }
+        $query->orderByRaw('CAST(room_number AS UNSIGNED) ASC, room_number ASC');
+
+        $query->chunk(100, function ($rooms) use ($handle) {
+            foreach ($rooms as $r) {
+                fputcsv($handle, [
+                    $r->room_number,
+                    $r->floor,
+                    $r->room_type,
+                    $r->capacity,
+                    number_format($r->monthly_rent, 2, '.', ''),
+                    number_format($r->eb_unit_rate, 2, '.', ''),
+                    number_format($r->maintenance_charges, 2, '.', ''),
+                    number_format($r->other_charges, 2, '.', ''),
+                    number_format($r->total_monthly, 2, '.', ''),
+                    number_format($r->security_deposit, 2, '.', ''),
+                    $r->is_self ? 'Self' : ucfirst($r->occupancy_status),
+                    $r->is_self ? 'Yes' : 'No',
+                    $r->currentTenant ? $r->currentTenant->name : 'None',
+                    $r->currentTenant ? $r->currentTenant->phone : '',
+                ]);
+            }
+        });
+    }
+
+    private function exportTenantsCsv($handle, Request $request)
+    {
+        fputcsv($handle, [
+            'Resident Name',
+            'Phone',
+            'Email',
+            'Room Number',
+            'Floor',
+            'Move-in Date',
+            'Monthly Rent (INR)',
+            'Security Deposit (INR)',
+            'Initial EB Reading',
+            'Total Invoiced (INR)',
+            'Total Paid (INR)',
+            'Current Dues (INR)',
+            'Status',
+        ]);
+
+        $query = Tenant::with(['room', 'bills']);
+        if ($request->filled('room_id') && $request->room_id !== 'all') {
+            $query->where('room_id', $request->room_id);
+        }
+        if ($request->filled('floor') && $request->floor !== 'all') {
+            $query->whereHas('room', fn($q) => $q->where('floor', $request->floor));
+        }
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('status', $request->status === 'active' ? 1 : 0);
+        }
+        $query->orderByRaw('CAST(room_number AS UNSIGNED) ASC, room_number ASC');
+
+        $query->chunk(100, function ($tenants) use ($handle) {
+            foreach ($tenants as $t) {
+                $roomNo = $t->room_number ?? ($t->room ? $t->room->room_number : '');
+                $floor = $t->room ? $t->room->floor : '';
+                $inv = (float) $t->bills->sum('amount');
+                $paid = (float) $t->bills->sum('paid_amount');
+                $due = (float) $t->bills->sum('due_amount');
+
+                fputcsv($handle, [
+                    $t->name,
+                    $t->phone ?: '',
+                    $t->email ?: '',
+                    $roomNo,
+                    $floor,
+                    $t->commence_date ? $t->commence_date->format('Y-m-d') : '',
+                    number_format($t->monthly_rent, 2, '.', ''),
+                    number_format($t->security_deposit, 2, '.', ''),
+                    $t->eb_start_reading,
+                    number_format($inv, 2, '.', ''),
+                    number_format($paid, 2, '.', ''),
+                    number_format($due, 2, '.', ''),
+                    $t->status ? 'Active' : 'Inactive',
+                ]);
+            }
+        });
+    }
+
+    private function exportExpensesCsv($handle, Request $request)
+    {
+        fputcsv($handle, [
+            'Expense Date',
+            'Expense Type',
+            'Room Number',
+            'Floor',
+            'Category',
+            'Title / Item',
+            'Amount (INR)',
+            'Payment Method',
+            'Paid To',
+            'Recorded By',
+            'Notes',
+        ]);
+
+        $query = Expense::with(['room', 'creator'])->latest('expense_date')->latest('id');
+        $this->applyDateFilter($query, $request, 'expense_date');
+
+        if ($request->filled('room_id') && $request->room_id !== 'all') {
+            $query->where('room_id', $request->room_id);
+        }
+        if ($request->filled('floor') && $request->floor !== 'all') {
+            $query->whereHas('room', fn($q) => $q->where('floor', $request->floor));
+        }
+        if ($request->filled('category') && $request->category !== 'all') {
+            $query->where('category', $request->category);
+        }
+        if ($request->filled('payment_method') && $request->payment_method !== 'all') {
+            $query->where('payment_method', $request->payment_method);
+        }
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('expense_type', $request->status);
+        }
+
+        $query->chunk(100, function ($expenses) use ($handle) {
+            foreach ($expenses as $e) {
+                fputcsv($handle, [
+                    $e->expense_date ? $e->expense_date->format('Y-m-d') : '',
+                    $e->expense_type === 'room' ? 'Room' : 'General',
+                    $e->room ? $e->room->room_number : 'Common',
+                    $e->room ? $e->room->floor : '',
+                    $e->category,
+                    $e->title,
+                    number_format($e->amount, 2, '.', ''),
+                    $e->payment_method,
+                    $e->paid_to ?: '',
+                    $e->creator ? $e->creator->name : 'Admin',
+                    $e->notes ?: '',
+                ]);
+            }
+        });
+    }
+
+    private function exportEbCsv($handle, Request $request)
+    {
+        fputcsv($handle, [
+            'Billing Month',
+            'Bill Date',
+            'Room Number',
+            'Floor',
+            'Resident Name',
+            'Previous Reading',
+            'Current Reading',
+            'Consumed Units (kWh)',
+            'EB Rate (INR/unit)',
+            'EB Total Amount (INR)',
+            'Bill Status',
+        ]);
+
+        $query = Bill::with(['tenant', 'room'])
+            ->where(function ($q) {
+                $q->whereNotNull('eb_current_reading')
+                    ->orWhere('eb_consumed_units', '>', 0)
+                    ->orWhere('eb_amount', '>', 0)
+                    ->orWhere('bill_type', 'like', '%Electricity%');
+            })
+            ->latest('bill_date')->latest('id');
+
+        $this->applyDateFilter($query, $request, 'bill_date');
+
+        if ($request->filled('room_id') && $request->room_id !== 'all') {
+            $query->where('room_id', $request->room_id);
+        }
+        if ($request->filled('tenant_id') && $request->tenant_id !== 'all') {
+            $query->where('tenant_id', $request->tenant_id);
+        }
+        if ($request->filled('floor') && $request->floor !== 'all') {
+            $query->whereHas('room', fn($q) => $q->where('floor', $request->floor));
+        }
+
+        $query->chunk(100, function ($bills) use ($handle) {
+            foreach ($bills as $b) {
+                fputcsv($handle, [
+                    $b->billing_month,
+                    $b->bill_date ? $b->bill_date->format('Y-m-d') : '',
+                    $b->room ? $b->room->room_number : ($b->tenant->room_number ?? 'N/A'),
+                    $b->room ? $b->room->floor : '',
+                    $b->tenant ? $b->tenant->name : 'Former Resident',
+                    $b->eb_previous_reading,
+                    $b->eb_current_reading,
+                    $b->eb_consumed_units,
+                    $b->eb_unit_rate,
+                    number_format($b->eb_amount, 2, '.', ''),
+                    ucfirst(str_replace('_', ' ', $b->status)),
+                ]);
+            }
+        });
+    }
 }

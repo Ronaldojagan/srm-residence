@@ -2,2214 +2,1078 @@
 
 @section('content')
     @push('head_content')
-        <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
-        <link rel="stylesheet" href="{{ asset('assets/libs/chartist/chartist.min.css') }}">
         <link href="{{ asset('assets/libs/sweetalert2/sweetalert2.min.css') }}" rel="stylesheet" type="text/css" />
         <link href="https://cdn.datatables.net/1.11.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-        <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
         <style>
-            .report-card {
-                border-radius: 10px;
-                /* box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); */
-                transition: transform 0.3s ease;
-            }
-
-            .report-card:hover {
-                transform: translateY(-5px);
-            }
-
-            .report-card i {
-                font-size: 24px;
-                margin-bottom: 15px;
-            }
-
-            .chart-container {
-                height: 300px;
+            .res-report-card {
+                border-radius: 14px;
+                border: 1px solid #e2e8f0;
+                background: #ffffff;
+                padding: 1.25rem 1.5rem;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+                transition: transform 0.2s ease, box-shadow 0.2s ease;
                 position: relative;
+                overflow: hidden;
             }
-
-            .report-tabs .nav-link {
-                font-weight: 600;
-                color: #6c757d;
+            .res-report-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
             }
-
-            .report-tabs .nav-link.active {
-                color: #0ea1b1;
-                background-color: rgba(14, 161, 177, 0.1);
-            }
-
-            .filter-popup {
-                position: absolute;
-                width: 800px;
-                background: white;
-                border: 1px solid #ddd;
-                border-radius: 5px;
-                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-                display: none;
-                z-index: 1050;
-            }
-
-            .filter-popup-content {
-                padding: 0;
-            }
-
-            .filter-popup-header,
-            .filter-popup-footer {
-                padding: 10px 15px;
-                background: #f8f9fa;
-            }
-
-            .filter-popup-body {
-                padding: 15px;
-                max-height: 500px;
-                overflow-y: auto;
-            }
-
-            .filter-rule {
-                margin-bottom: 10px;
-                padding: 10px;
-                background: #f8f9fa;
-                border-radius: 4px;
-                border: 1px solid #dee2e6;
-            }
-
-            .rule-connector {
-                font-weight: bold;
-                color: #666;
-            }
-
-            .filter-logic-toggle .btn {
-                font-size: 0.8rem;
-                padding: 0.25rem 0.5rem;
-            }
-
-            .no-data-chart {
+            .res-report-card .card-icon {
+                width: 48px;
+                height: 48px;
+                border-radius: 12px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                height: 100%;
-                color: #6c757d;
-                font-weight: bold;
+                font-size: 22px;
             }
-
-            .card-header-actions {
-                display: flex;
-                align-items: center;
+            .filter-card {
+                background: #ffffff;
+                border-radius: 14px;
+                border: 1px solid #e2e8f0;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+                padding: 1.5rem;
+                margin-bottom: 1.5rem;
             }
-
-            .export-btn-group {
-                margin-left: auto;
+            .filter-label {
+                font-size: 0.8rem;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                color: #64748b;
+                margin-bottom: 0.35rem;
             }
-
-            .select2-container--default .select2-selection--multiple {
-                border: 1px solid #ced4da;
-                min-height: 38px;
+            .report-nav-pills .nav-link {
+                font-weight: 600;
+                color: #475569;
+                border-radius: 10px;
+                padding: 0.65rem 1.25rem;
+                margin-right: 0.5rem;
+                background: #f1f5f9;
+                border: 1px solid transparent;
+                transition: all 0.2s ease;
+            }
+            .report-nav-pills .nav-link:hover {
+                background: #e2e8f0;
+                color: #0f172a;
+            }
+            .report-nav-pills .nav-link.active {
+                background: #0ea1b1;
+                color: #ffffff;
+                box-shadow: 0 4px 10px rgba(14, 161, 177, 0.25);
+            }
+            .data-table-card {
+                background: #ffffff;
+                border-radius: 14px;
+                border: 1px solid #e2e8f0;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+                padding: 1.5rem;
+            }
+            .table-responsive {
+                border-radius: 10px;
+            }
+            .chart-box {
+                background: #ffffff;
+                border-radius: 14px;
+                border: 1px solid #e2e8f0;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+                padding: 1.25rem;
+                margin-bottom: 1.5rem;
+            }
+            @media print {
+                .navbar, .left-side-menu, .filter-card, .report-nav-pills, .btn, .dataTables_filter, .dataTables_length, .dataTables_paginate, .dataTables_info, .card-header-actions, .no-print {
+                    display: none !important;
+                }
+                .content-page, .content, .container-fluid {
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    width: 100% !important;
+                }
+                .data-table-card, .res-report-card {
+                    box-shadow: none !important;
+                    border: 1px solid #ddd !important;
+                }
+                .tab-pane {
+                    display: block !important;
+                    opacity: 1 !important;
+                }
             }
         </style>
     @endpush
 
-    <div class="row justify-content-between mb-4">
-        <div class="col-md-6">
-            <h4 class="page-title-main">Reports Dashboard</h4>
+    <!-- Page Header -->
+    <div class="row align-items-center mb-4">
+        <div class="col-md-7">
+            <h4 class="page-title-main mb-1">
+                <i class="fas fa-chart-line text-primary me-2"></i>Reports & Financial Ledger
+            </h4>
+            <p class="text-muted mb-0 font-13">
+                Comprehensive multi-criteria reporting, audit records, and analytics for SRM Residence.
+            </p>
         </div>
-        <div class="col-md-6 mt-3 text-end">
-            <div class="input-group" id="reportrange" style="cursor: pointer; max-width: 300px; margin-left: auto;">
-                <span class="input-group-text"><i class="fa fa-calendar"></i></span>
-                <input type="text" class="form-control text-center" id="date-range" readonly>
-                <input type="hidden" id="start-date">
-                <input type="hidden" id="end-date">
+        <div class="col-md-5 text-md-end mt-3 mt-md-0 no-print">
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-primary" id="btnExportCsv" title="Export current filtered records to CSV">
+                    <i class="fas fa-file-excel me-1"></i> Export CSV
+                </button>
+                <button type="button" class="btn btn-outline-secondary" onclick="window.print()" title="Print Summary Report">
+                    <i class="fas fa-print me-1"></i> Print
+                </button>
+                <button type="button" class="btn btn-outline-info" id="btnToggleCharts" title="Toggle Visual Charts">
+                    <i class="fas fa-chart-pie me-1"></i> <span id="toggleChartsText">Show Charts</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Live KPI Metric Cards -->
+    <div class="row g-3 mb-4">
+        <!-- Invoiced -->
+        <div class="col-xl-2 col-md-4 col-sm-6">
+            <div class="res-report-card">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted font-12 fw-semibold text-uppercase">Total Invoiced</span>
+                    <div class="card-icon bg-primary-subtle text-primary">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                    </div>
+                </div>
+                <h4 class="fw-bold text-dark mb-1" id="kpiTotalInvoiced">₹0</h4>
+                <small class="text-muted font-11" id="kpiBillsCount">0 Invoices</small>
+            </div>
+        </div>
+
+        <!-- Collected -->
+        <div class="col-xl-2 col-md-4 col-sm-6">
+            <div class="res-report-card">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted font-12 fw-semibold text-uppercase">Total Collected</span>
+                    <div class="card-icon bg-success-subtle text-success">
+                        <i class="fas fa-check-double"></i>
+                    </div>
+                </div>
+                <h4 class="fw-bold text-success mb-1" id="kpiTotalCollected">₹0</h4>
+                <small class="text-muted font-11">Rate: <span id="kpiCollectionRate" class="fw-bold text-success">0%</span></small>
+            </div>
+        </div>
+
+        <!-- Outstanding Dues -->
+        <div class="col-xl-2 col-md-4 col-sm-6">
+            <div class="res-report-card">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted font-12 fw-semibold text-uppercase">Pending Dues</span>
+                    <div class="card-icon bg-warning-subtle text-warning">
+                        <i class="fas fa-hourglass-half"></i>
+                    </div>
+                </div>
+                <h4 class="fw-bold text-warning mb-1" id="kpiOutstandingDues">₹0</h4>
+                <small class="text-muted font-11" id="kpiPendingBillsCount">0 Pending</small>
+            </div>
+        </div>
+
+        <!-- Overdue -->
+        <div class="col-xl-2 col-md-4 col-sm-6">
+            <div class="res-report-card">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted font-12 fw-semibold text-uppercase">Overdue Dues</span>
+                    <div class="card-icon bg-danger-subtle text-danger">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </div>
+                </div>
+                <h4 class="fw-bold text-danger mb-1" id="kpiOverdueAmount">₹0</h4>
+                <small class="text-danger font-11 fw-semibold" id="kpiOverdueCount">0 Overdue Bills</small>
+            </div>
+        </div>
+
+        <!-- Expenses -->
+        <div class="col-xl-2 col-md-4 col-sm-6">
+            <div class="res-report-card">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted font-12 fw-semibold text-uppercase">Total Expenses</span>
+                    <div class="card-icon bg-purple-subtle text-purple" style="background-color: #f3e8ff; color: #9333ea;">
+                        <i class="fas fa-receipt"></i>
+                    </div>
+                </div>
+                <h4 class="fw-bold text-purple mb-1" style="color: #9333ea;" id="kpiTotalExpenses">₹0</h4>
+                <small class="text-muted font-11" id="kpiExpensesCount">0 Records</small>
+            </div>
+        </div>
+
+        <!-- Net Cashflow & Occupancy -->
+        <div class="col-xl-2 col-md-4 col-sm-6">
+            <div class="res-report-card">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted font-12 fw-semibold text-uppercase">Net Balance</span>
+                    <div class="card-icon bg-info-subtle text-info">
+                        <i class="fas fa-balance-scale"></i>
+                    </div>
+                </div>
+                <h4 class="fw-bold mb-1" id="kpiNetCashflow">₹0</h4>
+                <small class="text-muted font-11">Occupancy: <span id="kpiOccupancyRate" class="fw-bold text-dark">0%</span></small>
             </div>
         </div>
     </div>
 
-    <div class="row mb-4">
-        <div class="col-12">
-            <ul class="nav nav-tabs report-tabs" id="reportTabs" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="order-tab" data-bs-toggle="tab" data-bs-target="#order-tab-pane"
-                        type="button" role="tab" data-type="order">
-                        <i class="fas fa-shopping-cart me-1"></i> Orders
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="user-tab" data-bs-toggle="tab" data-bs-target="#user-tab-pane"
-                        type="button" role="tab" data-type="user">
-                        <i class="fas fa-users me-1"></i> Users
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="deliverymans-tab" data-bs-toggle="tab"
-                        data-bs-target="#deliverymans-tab-pane" type="button" role="tab" data-type="deliverymans">
-                        <i class="fas fa-users me-1"></i> Delivery Mans
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="shop-tab" data-bs-toggle="tab" data-bs-target="#shop-tab-pane"
-                        type="button" role="tab" data-type="shop">
-                        <i class="fas fa-store me-1"></i> Delivery Points
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="payments-tab" data-bs-toggle="tab" data-bs-target="#payments-tab-pane"
-                        type="button" role="tab" data-type="payments">
-                        <i class="fas fa-box-open me-1"></i> Payments
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="shop-tab" data-bs-toggle="tab" data-bs-target="#shop-tab-pane"
-                        type="button" role="tab" data-type="shop">
-                        <i class="fas fa-store me-1"></i> Missing Bottles
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="product-tab" data-bs-toggle="tab" data-bs-target="#product-tab-pane"
-                        type="button" role="tab" data-type="product">
-                        <i class="fas fa-box-open me-1"></i> Packages
-                    </button>
-                </li>
-            </ul>
+    <!-- Visual Charts Container (Initially Hidden, Toggleable) -->
+    <div id="chartsContainer" class="row mb-4 no-print" style="display: none;">
+        <div class="col-lg-8">
+            <div class="chart-box">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h5 class="fw-bold text-dark mb-0"><i class="fas fa-chart-bar text-primary me-2"></i>Monthly Financial Trends (Last 6 Months)</h5>
+                    <span class="badge bg-light text-secondary border">Invoiced vs Collected vs Expenses</span>
+                </div>
+                <div style="height: 280px; position: relative;">
+                    <canvas id="monthlyTrendChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="chart-box">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h5 class="fw-bold text-dark mb-0"><i class="fas fa-pie-chart text-info me-2"></i>Bill Status Split</h5>
+                    <span class="badge bg-light text-secondary border">Distribution</span>
+                </div>
+                <div style="height: 280px; position: relative;">
+                    <canvas id="billStatusChart"></canvas>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="tab-content" id="reportTabsContent">
-
-        {{-- Users tab --}}
-        <div class="tab-pane fade show active" id="user-tab-pane" role="tabpanel" aria-labelledby="user-tab">
-            <div class="row mb-4" id="user-cards">
-                <!-- Cards will be loaded here -->
-            </div>
-
-            <div class="row">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-header bg-white py-2 d-flex align-items-center">
-                            <h5>Users Data</h5>
-                            <div class="export-btn-group ms-auto">
-                                <button class="btn btn-theme-second-success export-table" data-table-id="user-table">
-                                    <i class="fas fa-download"></i> Export
-                                </button>
-                                <button class="btn btn-theme-success filter-btn ms-2" data-table-id="user-table">
-                                    <i class="fas fa-filter"></i> Filters
-                                    <span class="badge bg-danger filter-badge" style="display: none;">0</span>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive table-border">
-                                <table class="table table-striped data-table user-table">
-                                    <thead class="theme-menu-color">
-                                        <tr>
-                                            <th>Date</th>
-                                            <th>Name</th>
-                                            <th>Email</th>
-                                            <th>Phone</th>
-                                            <th>Status</th>
-                                        </tr>
-                                    </thead>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <!-- Comprehensive Filter Suite -->
+    <div class="filter-card no-print">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <h5 class="fw-bold text-dark mb-0">
+                <i class="fas fa-sliders-h text-primary me-2"></i>Filter Records
+            </h5>
+            <span class="badge bg-light text-muted border px-2 py-1 font-11">Filters apply immediately across tables & KPI cards</span>
         </div>
 
-        {{-- Order tab --}}
-        <div class="tab-pane fade" id="order-tab-pane" role="tabpanel" aria-labelledby="order-tab">
-            <div class="row mb-4" id="order-cards">
-                <!-- Cards will be loaded here -->
+        <form id="reportFilterForm" class="row g-2 align-items-end">
+            <!-- Date Range Preset -->
+            <div class="col-lg-2 col-md-3 col-sm-6">
+                <label class="filter-label"><i class="far fa-calendar-alt me-1"></i>Date Range</label>
+                <select id="filterDateRange" class="form-select form-select-sm">
+                    <option value="all" selected>All Time</option>
+                    <option value="today">Today</option>
+                    <option value="yesterday">Yesterday</option>
+                    <option value="this_week">This Week</option>
+                    <option value="this_month">This Month</option>
+                    <option value="last_month">Last Month</option>
+                    <option value="this_year">This Financial Year</option>
+                    <option value="custom">Custom Date Range</option>
+                </select>
             </div>
 
-            {{-- <div class="row">
-                <div class="col-lg-6 mb-4">
-                    <div class="card h-100">
-                        <div class="card-header bg-white py-2 d-flex align-items-center">
-                            <h5>Order Status Distribution</h5>
-                            <div class="export-btn-group ms-auto">
-                                <button class="btn btn-theme-second-success export-chart"
-                                    data-chart-id="orderStatusChart">
-                                    <i class="fas fa-download"></i> Export
-                                </button>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="chart-container">
-                                <canvas id="orderStatusChart"></canvas>
-                                <div class="no-data-chart" style="display: none;">No data available for this chart</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-lg-6 mb-4">
-                    <div class="card h-100">
-                        <div class="card-header bg-white py-2 d-flex align-items-center">
-                            <h5>Payment Methods</h5>
-                            <div class="export-btn-group ms-auto">
-                                <button class="btn btn-theme-second-success export-chart"
-                                    data-chart-id="paymentMethodChart">
-                                    <i class="fas fa-download"></i> Export
-                                </button>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="chart-container">
-                                <canvas id="paymentMethodChart"></canvas>
-                                <div class="no-data-chart" style="display: none;">No data available for this chart</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div> --}}
-
-            <div class="row">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-header bg-white py-2 d-flex align-items-center">
-                            <h5>Orders Data</h5>
-                            <div class="export-btn-group ms-auto">
-                                <button class="btn btn-theme-second-success export-table" data-table-id="order-table">
-                                    <i class="fas fa-download"></i> Export
-                                </button>
-                                <button class="btn btn-theme-success filter-btn ms-2" data-table-id="order-table">
-                                    <i class="fas fa-filter"></i> Filters
-                                    <span class="badge bg-danger filter-badge" style="display: none;">0</span>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive table-border">
-                                <table class="table table-striped data-table order-table">
-                                    <thead class="theme-menu-color">
-                                        <tr>
-                                            <th>Date</th>
-                                            <th>Order ID</th>
-                                            <th>Customer</th>
-                                            <th>Total Amount</th>
-                                            <th>Status</th>
-                                        </tr>
-                                    </thead>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- Delivery men tab --}}
-        <div class="tab-pane fade show active" id="deliverymans-tab-pane" role="tabpanel"
-            aria-labelledby="deliverymans-tab">
-            <div class="row mb-4" id="deliverymans-cards">
-                <!-- Cards will be loaded here -->
+            <!-- Custom Start Date -->
+            <div class="col-lg-2 col-md-3 col-sm-6 custom-date-col" style="display: none;">
+                <label class="filter-label">Start Date</label>
+                <input type="text" id="filterStartDate" class="form-control form-select-sm flatpickr-input" placeholder="YYYY-MM-DD">
             </div>
 
-            <div class="row">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-header bg-white py-2 d-flex align-items-center">
-                            <h5>Delivery Mans</h5>
-                            <div class="export-btn-group ms-auto">
-                                <button class="btn btn-theme-second-success export-table"
-                                    data-table-id="deliverymans-table">
-                                    <i class="fas fa-download"></i> Export
-                                </button>
-                                <button class="btn btn-theme-success filter-btn ms-2" data-table-id="deliverymans-table">
-                                    <i class="fas fa-filter"></i> Filters
-                                    <span class="badge bg-danger filter-badge" style="display: none;">0</span>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive table-border">
-                                <table class="table table-striped data-table deliverymans-table">
-                                    <thead class="theme-menu-color">
-                                        <tr>
-                                            <th>Joined Date</th>
-                                            <th>Name</th>
-                                            <th>Email</th>
-                                            <th>Phone</th>
-                                            <th>Delivery Point</th>
-                                            <th>Status</th>
-                                        </tr>
-                                    </thead>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- Delivery Points tab --}}
-        <div class="tab-pane fade show active" id="deliverypoints-tab-pane" role="tabpanel"
-            aria-labelledby="deliverypoints-tab">
-            <div class="row mb-4" id="deliverypoints-cards">
-                <!-- Cards will be loaded here -->
+            <!-- Custom End Date -->
+            <div class="col-lg-2 col-md-3 col-sm-6 custom-date-col" style="display: none;">
+                <label class="filter-label">End Date</label>
+                <input type="text" id="filterEndDate" class="form-control form-select-sm flatpickr-input" placeholder="YYYY-MM-DD">
             </div>
 
-            <div class="row">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-header bg-white py-2 d-flex align-items-center">
-                            <h5>Delivery Mans</h5>
-                            <div class="export-btn-group ms-auto">
-                                <button class="btn btn-theme-second-success export-table"
-                                    data-table-id="deliverypoints-table">
-                                    <i class="fas fa-download"></i> Export
-                                </button>
-                                <button class="btn btn-theme-success filter-btn ms-2"
-                                    data-table-id="deliverypoints-table">
-                                    <i class="fas fa-filter"></i> Filters
-                                    <span class="badge bg-danger filter-badge" style="display: none;">0</span>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive table-border">
-                                <table class="table table-striped data-table deliverypoints-table">
-                                    <thead class="theme-menu-color">
-                                        <tr>
-                                            <th>Joined Date</th>
-                                            <th>Name</th>
-                                            <th>Email</th>
-                                            <th>Phone</th>
-                                            <th>Delivery Point</th>
-                                            <th>Status</th>
-                                        </tr>
-                                    </thead>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="tab-pane fade" id="payments-tab-pane" role="tabpanel" aria-labelledby="payments-tab">
-            <div class="row mb-4" id="payments-cards">
-                <!-- Cards will be loaded here -->
+            <!-- Room Selector (Numerically Sorted) -->
+            <div class="col-lg-2 col-md-3 col-sm-6">
+                <label class="filter-label"><i class="fas fa-door-closed me-1"></i>Room</label>
+                <select id="filterRoom" class="form-select form-select-sm">
+                    <option value="all" selected>All Rooms</option>
+                    @foreach ($rooms as $room)
+                        <option value="{{ $room->id }}">
+                            Room {{ $room->room_number }} ({{ $room->floor }}){{ $room->is_self ? ' - Self' : '' }}
+                        </option>
+                    @endforeach
+                </select>
             </div>
 
-            <div class="row">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-header bg-white py-2 d-flex align-items-center">
-                            <h5>Payments Data</h5>
-                            <div class="export-btn-group ms-auto">
-                                <button class="btn btn-theme-second-success export-table" data-table-id="payments-table">
-                                    <i class="fas fa-download"></i> Export
-                                </button>
-                                <button class="btn btn-theme-success filter-btn ms-2" data-table-id="payments-table">
-                                    <i class="fas fa-filter"></i> Filters
-                                    <span class="badge bg-danger filter-badge" style="display: none;">0</span>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive table-border">
-                                <table class="table table-striped data-table payments-table">
-                                    <thead class="theme-menu-color">
-                                        <tr>
-                                            <th>Date</th>
-                                            <th>Order ID</th>
-                                            <th>User</th>
-                                            <th>Trans ID</th>
-                                            <th>Method</th>
-                                            <th>Amount</th>
-                                            <th>Status</th>
-                                        </tr>
-                                    </thead>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="tab-pane fade" id="product-tab-pane" role="tabpanel" aria-labelledby="product-tab">
-            <div class="row mb-4" id="product-cards">
-                <!-- Cards will be loaded here -->
+            <!-- Tenant / Resident Selector -->
+            <div class="col-lg-2 col-md-3 col-sm-6">
+                <label class="filter-label"><i class="fas fa-user me-1"></i>Resident</label>
+                <select id="filterTenant" class="form-select form-select-sm">
+                    <option value="all" selected>All Residents</option>
+                    @foreach ($tenants as $tenant)
+                        <option value="{{ $tenant->id }}">
+                            {{ $tenant->name }} (Room {{ $tenant->room_number ?? 'N/A' }})
+                        </option>
+                    @endforeach
+                </select>
             </div>
 
-            <div class="row">
-                <div class="col-lg-6 mb-4">
-                    <div class="card h-100">
-                        <div class="card-header bg-white py-2 d-flex align-items-center">
-                            <h5>Top Selling Products</h5>
-                            <div class="export-btn-group ms-auto">
-                                <button class="btn btn-theme-second-success export-chart"
-                                    data-chart-id="topProductsChart">
-                                    <i class="fas fa-download"></i> Export
-                                </button>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="chart-container">
-                                <canvas id="topProductsChart"></canvas>
-                                <div class="no-data-chart" style="display: none;">No data available for this chart</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-lg-6 mb-4">
-                    <div class="card h-100">
-                        <div class="card-header bg-white py-2 d-flex align-items-center">
-                            <h5>Stock Status</h5>
-                            <div class="export-btn-group ms-auto">
-                                <button class="btn btn-theme-second-success export-chart"
-                                    data-chart-id="stockStatusChart">
-                                    <i class="fas fa-download"></i> Export
-                                </button>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="chart-container">
-                                <canvas id="stockStatusChart"></canvas>
-                                <div class="no-data-chart" style="display: none;">No data available for this chart</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <!-- Floor Selector -->
+            <div class="col-lg-2 col-md-3 col-sm-6">
+                <label class="filter-label"><i class="fas fa-layer-group me-1"></i>Floor</label>
+                <select id="filterFloor" class="form-select form-select-sm">
+                    <option value="all" selected>All Floors</option>
+                    @foreach ($floors as $fl)
+                        <option value="{{ $fl }}">{{ $fl }}</option>
+                    @endforeach
+                </select>
             </div>
 
-            <div class="row">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-header bg-white py-2 d-flex align-items-center">
-                            <h5>Products Data</h5>
-                            <div class="export-btn-group ms-auto">
-                                <button class="btn btn-theme-second-success export-table" data-table-id="product-table">
-                                    <i class="fas fa-download"></i> Export
-                                </button>
-                                <button class="btn btn-theme-success filter-btn ms-2" data-table-id="product-table">
-                                    <i class="fas fa-filter"></i> Filters
-                                    <span class="badge bg-danger filter-badge" style="display: none;">0</span>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive table-border">
-                                <table class="table table-striped data-table product-table">
-                                    <thead class="theme-menu-color">
-                                        <tr>
-                                            <th>Date</th>
-                                            <th>Product Name</th>
-                                            <th>Category</th>
-                                            <th>Price</th>
-                                            <th>Stock</th>
-                                            <th>Status</th>
-                                        </tr>
-                                    </thead>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="tab-pane fade" id="shop-tab-pane" role="tabpanel" aria-labelledby="shop-tab">
-            <div class="row mb-4" id="shop-cards">
-                <!-- Cards will be loaded here -->
+            <!-- Adaptive Status Selector -->
+            <div class="col-lg-2 col-md-3 col-sm-6">
+                <label class="filter-label" id="statusLabel"><i class="fas fa-tag me-1"></i>Status</label>
+                <select id="filterStatus" class="form-select form-select-sm">
+                    <option value="all" selected>All Statuses</option>
+                    <!-- Options populated adaptively by active tab JS -->
+                </select>
             </div>
 
-            <div class="row">
-                <div class="col-lg-12 mb-4">
-                    <div class="card h-100">
-                        <div class="card-header bg-white py-2 d-flex align-items-center">
-                            <h5>Top Performing Shops</h5>
-                            <div class="export-btn-group ms-auto">
-                                <button class="btn btn-theme-second-success export-chart" data-chart-id="topShopsChart">
-                                    <i class="fas fa-download"></i> Export
-                                </button>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="chart-container">
-                                <canvas id="topShopsChart"></canvas>
-                                <div class="no-data-chart" style="display: none;">No data available for this chart</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <!-- Payment Method Filter (for Payments & Expenses) -->
+            <div class="col-lg-2 col-md-3 col-sm-6" id="paymentMethodCol">
+                <label class="filter-label"><i class="fas fa-credit-card me-1"></i>Payment Mode</label>
+                <select id="filterPaymentMethod" class="form-select form-select-sm">
+                    <option value="all" selected>All Methods</option>
+                    <option value="Cash">Cash</option>
+                    <option value="UPI">UPI / GPay / PhonePe</option>
+                    <option value="Bank Transfer">Bank Transfer (NEFT/IMPS)</option>
+                    <option value="Cheque">Cheque</option>
+                    <option value="Card">Card</option>
+                </select>
             </div>
 
-            <div class="row">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-header bg-white py-2 d-flex align-items-center">
-                            <h5>Shops Data</h5>
-                            <div class="export-btn-group ms-auto">
-                                <button class="btn btn-theme-second-success export-table" data-table-id="shop-table">
-                                    <i class="fas fa-download"></i> Export
-                                </button>
-                                <button class="btn btn-theme-success filter-btn ms-2" data-table-id="shop-table">
-                                    <i class="fas fa-filter"></i> Filters
-                                    <span class="badge bg-danger filter-badge" style="display: none;">0</span>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive table-border">
-                                <table class="table table-striped data-table shop-table">
-                                    <thead class="theme-menu-color">
-                                        <tr>
-                                            <th>Date</th>
-                                            <th>Shop Name</th>
-                                            <th>Owner</th>
-                                            <th>Location</th>
-                                            <th>Status</th>
-                                        </tr>
-                                    </thead>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <!-- Expense Category Filter (for Expenses) -->
+            <div class="col-lg-2 col-md-3 col-sm-6" id="expenseCategoryCol" style="display: none;">
+                <label class="filter-label"><i class="fas fa-folder-open me-1"></i>Expense Category</label>
+                <select id="filterExpenseCategory" class="form-select form-select-sm">
+                    <option value="all" selected>All Categories</option>
+                    @foreach ($expenseCategories as $cat)
+                        <option value="{{ $cat }}">{{ $cat }}</option>
+                    @endforeach
+                </select>
             </div>
 
-            <div class="row">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-header bg-white py-2 d-flex align-items-center">
-                            <h5>Shop Payout Data</h5>
-                            <div class="export-btn-group ms-auto">
-                                <button class="btn btn-theme-second-success export-table"
-                                    data-table-id="shoppayout-table">
-                                    <i class="fas fa-download"></i> Export
-                                </button>
-                                <button class="btn btn-theme-success filter-btn ms-2" data-table-id="shoppayout-table">
-                                    <i class="fas fa-filter"></i> Filters
-                                    <span class="badge bg-danger filter-badge" style="display: none;">0</span>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive table-border">
-                                <table class="table table-striped data-table shoppayout-table">
-                                    <thead class="theme-menu-color">
-                                        <tr>
-                                            <th>Date</th>
-                                            <th>Shop Name</th>
-                                            <th>Owner</th>
-                                            <th>Total Payouts</th>
-                                            <th>Total Amount</th>
-                                            <th>Commission Rate</th>
-                                            <th>Commission Amount</th>
-                                            <th>Payable Amount</th>
-                                            <th>Status</th>
-                                        </tr>
-                                    </thead>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <!-- Filter Action Buttons -->
+            <div class="col-lg-4 col-md-6 col-sm-12 text-end ms-auto mt-2">
+                <button type="button" id="btnApplyFilters" class="btn btn-sm btn-primary px-3">
+                    <i class="fas fa-filter me-1"></i> Apply Filters
+                </button>
+                <button type="button" id="btnResetFilters" class="btn btn-sm btn-outline-secondary px-3 ms-1">
+                    <i class="fas fa-undo me-1"></i> Reset All
+                </button>
             </div>
-        </div>
-
+        </form>
     </div>
 
-    @push('footer_content')
-        <script src="https://code.jquery.com/jquery-3.6.1.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.0/jquery.validate.js"></script>
-        <script src="https://cdn.datatables.net/1.11.4/js/jquery.dataTables.min.js"></script>
-        <script src="https://cdn.datatables.net/1.11.4/js/dataTables.bootstrap5.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/gh/linways/table-to-excel@v1.0.4/dist/tableToExcel.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <!-- Module Navigation Pills -->
+    <ul class="nav nav-pills report-nav-pills mb-3 no-print" id="reportTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="tab-bills" data-bs-toggle="pill" data-bs-target="#pane-bills" type="button" role="tab" data-type="bills">
+                <i class="fas fa-file-invoice me-1"></i> Invoices & Bills
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-payments" data-bs-toggle="pill" data-bs-target="#pane-payments" type="button" role="tab" data-type="payments">
+                <i class="fas fa-receipt me-1"></i> Collections & Receipts
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-rooms" data-bs-toggle="pill" data-bs-target="#pane-rooms" type="button" role="tab" data-type="rooms">
+                <i class="fas fa-door-open me-1"></i> Room Occupancy
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-tenants" data-bs-toggle="pill" data-bs-target="#pane-tenants" type="button" role="tab" data-type="tenants">
+                <i class="fas fa-users me-1"></i> Residents & Leases
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-expenses" data-bs-toggle="pill" data-bs-target="#pane-expenses" type="button" role="tab" data-type="expenses">
+                <i class="fas fa-money-bill-wave me-1"></i> Expenses Ledger
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-eb" data-bs-toggle="pill" data-bs-target="#pane-eb" type="button" role="tab" data-type="eb">
+                <i class="fas fa-bolt me-1"></i> Electricity (EB)
+            </button>
+        </li>
+    </ul>
 
-        <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        <script src="{{ asset('assets/libs/sweetalert2/sweetalert2.min.js') }}"></script>
-        <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
-        <script>
-            $(document).ready(function() {
-                // Initialize date range picker
-                const start = moment().subtract(29, 'days');
-                const end = moment();
-
-                $('#reportrange').daterangepicker({
-                    startDate: start,
-                    endDate: end,
-                    ranges: {
-                        'Today': [moment(), moment()],
-                        'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
-                        'Last 7 Days': [moment().subtract(6, 'days'), moment()],
-                        'Last 30 Days': [moment().subtract(29, 'days'), moment()],
-                        'This Month': [moment().startOf('month'), moment().endOf('month')],
-                        'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1,
-                            'month').endOf('month')]
-                    }
-                }, function(start, end) {
-                    $('#date-range').val(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
-                    $('#start-date').val(start.format('YYYY-MM-DD'));
-                    $('#end-date').val(end.format('YYYY-MM-DD'));
-
-                    // Reload report data when date changes
-                    loadReportData($('#reportTabs .nav-link.active').data('type'));
-                    reloadDataTables();
-                });
-
-                // Set initial date range display
-                $('#date-range').val(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
-                $('#start-date').val(start.format('YYYY-MM-DD'));
-                $('#end-date').val(end.format('YYYY-MM-DD'));
-
-                const filterPopups = {
-                    user: {},
-                    order: {},
-                    product: {},
-                    shop: {},
-                    shoppayout: {} // Changed from shoppayout (consistent with type)
-                };
-
-                // Load initial data for the active tab
-                loadReportData('user');
-                initializeDataTables();
-
-                // Handle tab changes
-                $('#reportTabs .nav-link').on('click', function() {
-                    const reportType = $(this).data('type');
-                    loadReportData(reportType);
-                });
-
-                // Function to load report data
-                function loadReportData(type) {
-                    const startDate = $('#start-date').val();
-                    const endDate = $('#end-date').val();
-
-                    $.ajax({
-                        url: "{{ url('admin/reports/data') }}",
-                        type: 'GET',
-                        data: {
-                            type: type,
-                            start_date: startDate,
-                            end_date: endDate
-                        },
-                        success: function(response) {
-                            renderReportCards(type, response.cards);
-                            renderCharts(type, response.charts);
-                        },
-                        error: function(xhr) {
-                            Swal.fire('Error', 'Failed to load report data', 'error');
-                        }
-                    });
-                }
-
-                // Function to render report cards
-                function renderReportCards(type, cards) {
-                    const $container = $(`#${type}-cards`);
-                    $container.empty();
-
-                    cards.forEach(card => {
-                        const cardStyle = `style="background-image: url('${card.image}');"`;
-
-                        $container.append(`
-        <div class="col-xl-3 col-lg-3 col-md-6 col-sm-6 col-12 mb-4 custom-report-card" ${cardStyle}>
-            <div class="card shadow h-100 py-2 report-card text-white bg-none">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2 text-center">
-                            <div class="text-xs font-weight-bold text-uppercase mb-1">
-                                ${card.title}
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-white">
-                                ${card.value}
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-${card.icon} fa-2x"></i>
-                        </div>
-                    </div>
+    <!-- Tab Content Panes with DataTables -->
+    <div class="data-table-card">
+        <div class="tab-content" id="reportTabContent">
+            
+            <!-- 1. BILLS & INVOICES TAB -->
+            <div class="tab-pane fade show active" id="pane-bills" role="tabpanel">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h5 class="fw-bold text-dark mb-0">
+                        <i class="fas fa-file-invoice text-primary me-2"></i>Bills & Invoices Records
+                    </h5>
+                    <span class="badge bg-light text-muted border font-12" id="billsRecordCountBadge">Live Records</span>
+                </div>
+                <div class="table-responsive">
+                    <table id="billsTable" class="table table-hover table-bordered align-middle w-100">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Invoice #</th>
+                                <th>Billing Month</th>
+                                <th>Room</th>
+                                <th>Resident</th>
+                                <th>Bill Type</th>
+                                <th>Total (₹)</th>
+                                <th>Paid (₹)</th>
+                                <th>Due (₹)</th>
+                                <th>Due Date</th>
+                                <th>Status</th>
+                                <th class="no-print">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
                 </div>
             </div>
+
+            <!-- 2. COLLECTIONS & PAYMENTS TAB -->
+            <div class="tab-pane fade" id="pane-payments" role="tabpanel">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h5 class="fw-bold text-dark mb-0">
+                        <i class="fas fa-receipt text-success me-2"></i>Collections & Payment Receipts
+                    </h5>
+                    <span class="badge bg-light text-muted border font-12">Live Records</span>
+                </div>
+                <div class="table-responsive">
+                    <table id="paymentsTable" class="table table-hover table-bordered align-middle w-100">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Receipt #</th>
+                                <th>Invoice Ref</th>
+                                <th>Payment Date</th>
+                                <th>Resident</th>
+                                <th>Room</th>
+                                <th>Mode</th>
+                                <th>Txn / Ref ID</th>
+                                <th>Amount Paid</th>
+                                <th>Received By</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 3. ROOM INVENTORY & OCCUPANCY TAB -->
+            <div class="tab-pane fade" id="pane-rooms" role="tabpanel">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h5 class="fw-bold text-dark mb-0">
+                        <i class="fas fa-door-open text-info me-2"></i>Rooms & Occupancy Register
+                    </h5>
+                    <span class="badge bg-light text-muted border font-12">All Units</span>
+                </div>
+                <div class="table-responsive">
+                    <table id="roomsTable" class="table table-hover table-bordered align-middle w-100">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Room #</th>
+                                <th>Floor</th>
+                                <th>Type</th>
+                                <th>Capacity</th>
+                                <th>Monthly Rent</th>
+                                <th>EB Rate</th>
+                                <th>Maintenance</th>
+                                <th>Other</th>
+                                <th>Total Monthly</th>
+                                <th>Deposit</th>
+                                <th>Status</th>
+                                <th>Current Resident</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 4. TENANTS & RESIDENTS TAB -->
+            <div class="tab-pane fade" id="pane-tenants" role="tabpanel">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h5 class="fw-bold text-dark mb-0">
+                        <i class="fas fa-users text-primary me-2"></i>Residents Directory & Ledger
+                    </h5>
+                    <span class="badge bg-light text-muted border font-12">Resident Accounts</span>
+                </div>
+                <div class="table-responsive">
+                    <table id="tenantsTable" class="table table-hover table-bordered align-middle w-100">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Resident Details</th>
+                                <th>Room</th>
+                                <th>Move-in Date</th>
+                                <th>Monthly Rent</th>
+                                <th>Security Deposit</th>
+                                <th>Total Invoiced</th>
+                                <th>Total Paid</th>
+                                <th>Current Due</th>
+                                <th>Status</th>
+                                <th class="no-print">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 5. EXPENSES TAB -->
+            <div class="tab-pane fade" id="pane-expenses" role="tabpanel">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h5 class="fw-bold text-dark mb-0">
+                        <i class="fas fa-money-bill-wave text-danger me-2"></i>Expenditures & Maintenance Register
+                    </h5>
+                    <span class="badge bg-light text-muted border font-12">Expense Records</span>
+                </div>
+                <div class="table-responsive">
+                    <table id="expensesTable" class="table table-hover table-bordered align-middle w-100">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Expense Date</th>
+                                <th>Type</th>
+                                <th>Room / Area</th>
+                                <th>Category</th>
+                                <th>Item / Description</th>
+                                <th>Amount</th>
+                                <th>Method</th>
+                                <th>Paid To</th>
+                                <th>Recorded By</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 6. ELECTRICITY (EB) TAB -->
+            <div class="tab-pane fade" id="pane-eb" role="tabpanel">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h5 class="fw-bold text-dark mb-0">
+                        <i class="fas fa-bolt text-warning me-2"></i>Electricity (EB) Meter & Units Ledger
+                    </h5>
+                    <span class="badge bg-light text-muted border font-12">EB Meter Readings</span>
+                </div>
+                <div class="table-responsive">
+                    <table id="ebTable" class="table table-hover table-bordered align-middle w-100">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Billing Month</th>
+                                <th>Room</th>
+                                <th>Resident</th>
+                                <th>Prev Reading</th>
+                                <th>Curr Reading</th>
+                                <th>Consumed Units</th>
+                                <th>Rate (₹/unit)</th>
+                                <th>EB Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
         </div>
-    `);
-                    });
-                }
-                // Function to render charts
-                function renderCharts(type, charts) {
-                    // Destroy existing charts if they exist
-                    if (window.charts) {
-                        Object.values(window.charts).forEach(chart => {
-                            if (chart) chart.destroy();
-                        });
-                    }
-
-                    window.charts = {};
-
-                    // Render each chart based on type
-                    if (type === 'user') {
-                        renderChartWithNoDataCheck('userOrderStatusChart', charts.order_status, {
-                            type: 'doughnut',
-                            options: {
-                                maintainAspectRatio: false,
-                                plugins: {
-                                    legend: {
-                                        position: 'right',
-                                    }
-                                },
-                                cutout: '70%',
-                            }
-                        });
-
-                        renderChartWithNoDataCheck('userMonthlyOrdersChart', charts.monthly_orders, {
-                            type: 'bar',
-                            options: {
-                                maintainAspectRatio: false,
-                                scales: {
-                                    y: {
-                                        beginAtZero: true
-                                    }
-                                },
-                                plugins: {
-                                    legend: {
-                                        display: false
-                                    }
-                                }
-                            }
-                        });
-                    } else if (type === 'order') {
-                        renderChartWithNoDataCheck('orderStatusChart', charts.order_status, {
-                            type: 'pie',
-                            options: {
-                                maintainAspectRatio: false,
-                                plugins: {
-                                    legend: {
-                                        position: 'right',
-                                    }
-                                },
-                            }
-                        });
-
-                        renderChartWithNoDataCheck('paymentMethodChart', charts.payment_methods, {
-                            type: 'polarArea',
-                            options: {
-                                maintainAspectRatio: false,
-                                plugins: {
-                                    legend: {
-                                        position: 'right',
-                                    }
-                                },
-                            }
-                        });
-                    } else if (type === 'product') {
-                        renderChartWithNoDataCheck('topProductsChart', charts.top_products, {
-                            type: 'bar',
-                            options: {
-                                indexAxis: 'y',
-                                maintainAspectRatio: false,
-                                scales: {
-                                    x: {
-                                        beginAtZero: true
-                                    }
-                                },
-                                plugins: {
-                                    legend: {
-                                        display: false
-                                    }
-                                }
-                            }
-                        });
-
-                        renderChartWithNoDataCheck('stockStatusChart', charts.stock_status, {
-                            type: 'doughnut',
-                            options: {
-                                maintainAspectRatio: false,
-                                plugins: {
-                                    legend: {
-                                        position: 'right',
-                                    }
-                                },
-                                cutout: '70%',
-                            }
-                        });
-                    } else if (type === 'shop') {
-                        renderChartWithNoDataCheck('topShopsChart', charts.top_shops, {
-                            type: 'bar',
-                            options: {
-                                indexAxis: 'y',
-                                maintainAspectRatio: false,
-                                scales: {
-                                    x: {
-                                        beginAtZero: true,
-                                        ticks: {
-                                            callback: function(value) {
-                                                return '₹' + value;
-                                            }
-                                        }
-                                    }
-                                },
-                                plugins: {
-                                    legend: {
-                                        display: false
-                                    },
-                                    tooltip: {
-                                        callbacks: {
-                                            label: function(context) {
-                                                return '₹' + context.raw.toLocaleString();
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        });
-                    }
-                }
-
-                // Helper function to render chart with no data check
-                function renderChartWithNoDataCheck(chartId, chartData, chartConfig) {
-                    const $chartContainer = $(`#${chartId}`).parent();
-                    const $noDataMessage = $chartContainer.find('.no-data-chart');
-
-                    if (!chartData || chartData.data.length === 0 || chartData.data.every(val => val === 0)) {
-                        $chartContainer.find('canvas').hide();
-                        $noDataMessage.show();
-                        return;
-                    }
-
-                    $noDataMessage.hide();
-                    $chartContainer.find('canvas').show();
-
-                    window.charts[chartId] = new Chart(
-                        document.getElementById(chartId), {
-                            type: chartConfig.type,
-                            data: {
-                                labels: chartData.labels,
-                                datasets: [{
-                                    data: chartData.data,
-                                    backgroundColor: chartData.colors,
-                                    hoverBorderColor: "rgba(234, 236, 244, 1)",
-                                }],
-                            },
-                            options: chartConfig.options
-                        }
-                    );
-                }
-
-                // Initialize DataTables
-                function initializeDataTables() {
-                    const startDate = $('#start-date').val();
-                    const endDate = $('#end-date').val();
-
-                    // User Table
-                    $('.user-table').DataTable({
-                        processing: true,
-                        serverSide: true,
-                        ajax: {
-                            url: "{{ url('admin/reports/table') }}",
-                            data: function(d) {
-                                d.type = 'user';
-                                d.start_date = $('#start-date').val();
-                                d.end_date = $('#end-date').val();
-
-                                // Ensure filters are included
-                                if (filterPopups.user.activeFilterRules) {
-                                    d.filters = filterPopups.user.activeFilterRules;
-                                    d.filter_logic = filterPopups.user.filterLogic;
-                                }
-
-                            }
-                        },
-                        columns: [{
-                                data: 'created_at',
-                                name: 'created_at'
-                            },
-                            {
-                                data: 'name',
-                                name: 'name'
-                            },
-                            {
-                                data: 'email',
-                                name: 'email'
-                            },
-                            {
-                                data: 'phone',
-                                name: 'phone'
-                            },
-                            {
-                                data: 'status',
-                                name: 'status',
-                                orderable: false,
-                                render: function(data, type, row) {
-                                    return data ? '<span class="badge bg-success">Active</span>' :
-                                        '<span class="badge bg-danger">Inactive</span>';
-                                }
-                            }
-                        ]
-                    });
-
-                    // Order Table
-                    $('.order-table').DataTable({
-                        processing: true,
-                        serverSide: true,
-                        ajax: {
-                            url: "{{ url('admin/reports/table') }}",
-                            data: function(d) {
-                                d.type = 'order';
-                                d.start_date = $('#start-date').val();
-                                d.end_date = $('#end-date').val();
-
-                                // Ensure filters are included
-                                if (filterPopups.order.activeFilterRules) {
-                                    d.filters = filterPopups.order.activeFilterRules;
-                                    d.filter_logic = filterPopups.order.filterLogic;
-                                }
-
-                            }
-                        },
-                        columns: [{
-                                data: 'created_at',
-                                name: 'created_at'
-                            },
-                            {
-                                data: 'order_id',
-                                name: 'order_id',
-                                render: function(data) {
-                                    return '#' + data;
-                                }
-                            },
-                            {
-                                data: 'customer',
-                                name: 'customer',
-                                orderable: false
-                            },
-                            {
-                                data: 'total_amount',
-                                name: 'total_amount',
-                                render: function(data) {
-                                    return '₹' + parseFloat(data).toFixed(2);
-                                }
-                            },
-                            {
-                                data: 'order_status',
-                                name: 'status',
-                                orderable: false,
-                                render: function(data) {
-                                    const status = data.replace('_', ' ');
-                                    const color = getStatusColor(data);
-                                    return '<span class="badge" style="background-color: ' + color +
-                                        '">' + status.charAt(0).toUpperCase() + status.slice(1) +
-                                        '</span>';
-                                }
-                            }
-                        ]
-                    });
-
-                    // DeliveryMen Table
-                    $('.deliverymans-table').DataTable({
-                        processing: true,
-                        serverSide: true,
-                        ajax: {
-                            url: "{{ url('admin/reports/table') }}",
-                            data: function(d) {
-                                d.type = 'deliverymans';
-                                d.start_date = $('#start-date').val();
-                                d.end_date = $('#end-date').val();
-
-                                // Ensure filters are included
-                                if (filterPopups.deliverymans.activeFilterRules) {
-                                    d.filters = filterPopups.user.activeFilterRules;
-                                    d.filter_logic = filterPopups.user.filterLogic;
-                                }
-
-                            }
-                        },
-                        columns: [{
-                                data: 'created_at',
-                                name: 'created_at'
-                            },
-                            {
-                                data: 'name',
-                                name: 'name'
-                            },
-                            {
-                                data: 'email',
-                                name: 'email'
-                            },
-                            {
-                                data: 'phone',
-                                name: 'phone'
-                            },
-                            {
-                                data: 'delivery_location',
-                                name: 'delivery_location',
-                                orderable: false,
-                                searchable: false
-                            },
-                            {
-                                data: 'status',
-                                name: 'status',
-                                orderable: false,
-                                render: function(data, type, row) {
-                                    return data ? '<span class="badge bg-success">Active</span>' :
-                                        '<span class="badge bg-danger">Inactive</span>';
-                                }
-                            }
-                        ]
-                    });
-
-                    // DeliveryMen Table
-                    $('.deliverypoints-table').DataTable({
-                        processing: true,
-                        serverSide: true,
-                        ajax: {
-                            url: "{{ url('admin/reports/table') }}",
-                            data: function(d) {
-                                d.type = 'deliverypoints';
-                                d.start_date = $('#start-date').val();
-                                d.end_date = $('#end-date').val();
-
-                                // Ensure filters are included
-                                if (filterPopups.deliverypoints.activeFilterRules) {
-                                    d.filters = filterPopups.user.activeFilterRules;
-                                    d.filter_logic = filterPopups.user.filterLogic;
-                                }
-
-                            }
-                        },
-                        columns: [{
-                                data: 'created_at',
-                                name: 'created_at'
-                            },
-                            {
-                                data: 'location',
-                                name: 'location'
-                            },
-                            {
-                                data: 'sub_location',
-                                name: 'sub_location'
-                            },
-                            {
-                                data: 'status',
-                                name: 'status',
-                                orderable: false,
-                                render: function(data, type, row) {
-                                    return data ? '<span class="badge bg-success">Active</span>' :
-                                        '<span class="badge bg-danger">Inactive</span>';
-                                }
-                            }
-                        ]
-                    });
-
-                    // Payments Table
-                    $('.payments-table').DataTable({
-                        processing: true,
-                        serverSide: true,
-                        ajax: {
-                            url: "{{ url('admin/reports/table') }}",
-                            data: function(d) {
-                                d.type = 'payments';
-                                d.start_date = $('#start-date').val();
-                                d.end_date = $('#end-date').val();
-
-                                // Ensure filters are included
-                                if (filterPopups.payments.activeFilterRules) {
-                                    d.filters = filterPopups.payments.activeFilterRules;
-                                    d.filter_logic = filterPopups.payments.filterLogic;
-                                }
-
-                            }
-                        },
-                        columns: [{
-                                data: 'created_at',
-                                name: 'created_at'
-                            },
-                            {
-                                data: 'product_name',
-                                name: 'name'
-                            },
-                            {
-                                data: 'category',
-                                name: 'category',
-                                orderable: false
-                            },
-                            {
-                                data: 'price',
-                                name: 'price',
-                                render: function(data) {
-                                    return '₹' + parseFloat(data).toFixed(2);
-                                }
-                            },
-                            {
-                                data: 'product_stock',
-                                name: 'product_stock'
-                            },
-                            {
-                                data: 'status',
-                                name: 'status',
-                                orderable: false,
-                                render: function(data) {
-                                    return data ? '<span class="badge bg-success">Active</span>' :
-                                        '<span class="badge bg-danger">Inactive</span>';
-                                }
-                            }
-                        ]
-                    });
-
-
-                    // Product Table
-                    $('.product-table').DataTable({
-                        processing: true,
-                        serverSide: true,
-                        ajax: {
-                            url: "{{ url('admin/reports/table') }}",
-                            data: function(d) {
-                                d.type = 'product';
-                                d.start_date = $('#start-date').val();
-                                d.end_date = $('#end-date').val();
-
-                                // Ensure filters are included
-                                if (filterPopups.product.activeFilterRules) {
-                                    d.filters = filterPopups.product.activeFilterRules;
-                                    d.filter_logic = filterPopups.product.filterLogic;
-                                }
-
-                            }
-                        },
-                        columns: [{
-                                data: 'created_at',
-                                name: 'created_at'
-                            },
-                            {
-                                data: 'product_name',
-                                name: 'name'
-                            },
-                            {
-                                data: 'category',
-                                name: 'category',
-                                orderable: false
-                            },
-                            {
-                                data: 'price',
-                                name: 'price',
-                                render: function(data) {
-                                    return '₹' + parseFloat(data).toFixed(2);
-                                }
-                            },
-                            {
-                                data: 'product_stock',
-                                name: 'product_stock'
-                            },
-                            {
-                                data: 'status',
-                                name: 'status',
-                                orderable: false,
-                                render: function(data) {
-                                    return data ? '<span class="badge bg-success">Active</span>' :
-                                        '<span class="badge bg-danger">Inactive</span>';
-                                }
-                            }
-                        ]
-                    });
-
-                    // Shop Table
-                    $('.shop-table').DataTable({
-                        processing: true,
-                        serverSide: true,
-                        ajax: {
-                            url: "{{ url('admin/reports/table') }}",
-                            data: function(d) {
-                                d.type = 'shop';
-                                d.start_date = $('#start-date').val();
-                                d.end_date = $('#end-date').val();
-
-                                // Ensure filters are included
-                                if (filterPopups.shop.activeFilterRules) {
-                                    d.filters = filterPopups.shop.activeFilterRules;
-                                    d.filter_logic = filterPopups.shop.filterLogic;
-                                }
-
-                            }
-                        },
-                        columns: [{
-                                data: 'created_at',
-                                name: 'created_at'
-                            },
-                            {
-                                data: 'shop_name',
-                                name: 'name'
-                            },
-                            {
-                                data: 'owner',
-                                name: 'owner',
-                                orderable: false
-                            },
-                            {
-                                data: 'location',
-                                name: 'address'
-                            },
-                            {
-                                data: 'status',
-                                name: 'status',
-                                orderable: false,
-                                render: function(data) {
-                                    return data ? '<span class="badge bg-success">Active</span>' :
-                                        '<span class="badge bg-danger">Inactive</span>';
-                                }
-                            }
-                        ]
-                    });
-
-                    $('.shoppayout-table').DataTable({
-                        processing: true,
-                        serverSide: true,
-                        ajax: {
-                            url: "{{ url('admin/reports/table') }}",
-                            data: function(d) {
-                                d.type = 'shoppayout'; // Changed from 'shoppayout' to match backend
-                                d.start_date = $('#start-date').val();
-                                d.end_date = $('#end-date').val();
-
-                                // Ensure filters are included - FIXED
-                                if (filterPopups.shoppayout && filterPopups.shoppayout.activeFilterRules) {
-                                    d.filters = filterPopups.shoppayout.activeFilterRules;
-                                    d.filter_logic = filterPopups.shoppayout.filterLogic;
-                                }
-                            }
-                        },
-                        columns: [{
-                                data: 'payout_date',
-                                name: 'payout_date'
-                            },
-                            {
-                                data: 'shop_name',
-                                name: 'shop_name',
-                                orderable: false
-                            },
-                            {
-                                data: 'owner_name',
-                                name: 'owner_name',
-                                orderable: false
-                            },
-                            {
-                                data: 'total_payouts',
-                                name: 'total_payouts',
-                                render: function(data) {
-                                    return '<span class="badge bg-primary">' + data + '</span>';
-                                }
-                            },
-                            {
-                                data: 'total_amount',
-                                name: 'total_amount',
-                                render: function(data) {
-                                    return '₹' + parseFloat(data).toFixed(2);
-                                }
-                            },
-                            {
-                                data: 'commission_rate',
-                                name: 'commission_rate',
-                                render: function(data) {
-                                    return data + '%';
-                                }
-                            },
-                            {
-                                data: 'commission_amount',
-                                name: 'commission_amount',
-                                render: function(data) {
-                                    return '₹' + parseFloat(data).toFixed(2);
-                                }
-                            },
-                            {
-                                data: 'payable_amount',
-                                name: 'payable_amount',
-                                render: function(data) {
-                                    return '<span class="fw-bold text-success">₹' + parseFloat(data)
-                                        .toFixed(2) + '</span>';
-                                }
-                            },
-                            {
-                                data: 'payout_status',
-                                name: 'payout_status',
-                                orderable: false,
-                                render: function(data) {
-                                    const statusColors = {
-                                        'generated': '#ffc107',
-                                        'processing': '#17a2b8',
-                                        'paid': '#28a745',
-                                        'failed': '#dc3545'
-                                    };
-                                    const color = statusColors[data] || '#6c757d';
-                                    return '<span class="badge" style="background-color: ' + color +
-                                        '">' +
-                                        data.charAt(0).toUpperCase() + data.slice(1) + '</span>';
-                                }
-                            }
-                        ],
-                        order: [
-                            [0, 'desc']
-                        ]
-                    });
-
-                    // Initialize filter buttons for each table
-                    $('.filter-btn').each(function() {
-                        const tableId = $(this).data('table-id');
-                        initFilterPopup(tableId.replace('-table', ''), $(`.${tableId}`).DataTable());
-                    });
-                }
-
-                // Reload DataTables when date range changes
-                function reloadDataTables() {
-                    const startDate = $('#start-date').val();
-                    const endDate = $('#end-date').val();
-
-                    $('.order-table').DataTable().ajax.reload();
-                    $('.user-table').DataTable().ajax.reload();
-                    $('.product-table').DataTable().ajax.reload();
-                    $('.shop-table').DataTable().ajax.reload();
-                    $('.shoppayout-table').DataTable().ajax.reload();
-                }
-
-                // Initialize filter popup for a table
-                function initFilterPopup(type, tableApi) {
-                    const popupId = `${type}-filter-popup`;
-                    const $filterBtn = $(`.filter-btn[data-table-id="${type}-table"]`);
-
-                    // Remove existing popup if any
-                    $(`#${popupId}`).remove();
-
-                    const popupHTML = `
-                        <div id="${popupId}" class="filter-popup">
-                            <div class="filter-popup-content">
-                                <div class="filter-popup-header" style="border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
-                                    <h5 style="margin: 0; font-size: 1.1rem;">Advanced Filters</h5>
-                                    <button type="button" class="close btn-close btn-close-white"></button>
-                                </div>
-                                <div class="filter-popup-body p-3">
-                                    <div class="mb-3">
-                                        <div class="input-group">
-                                            <select class="form-control form-control-sm saved-filters-dropdown">
-                                                <option value="">Load Saved Filter...</option>
-                                            </select>
-                                            <button class="btn btn-sm btn-outline-secondary edit-saved-filter-btn" type="button" title="Edit Filter">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-danger delete-saved-filter-btn" type="button" title="Delete Filter">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div class="filter-rules-container">
-                                        <!-- Rules will be added here -->
-                                    </div>
-                                    <div class="d-flex justify-content-between mt-3">
-                                        <button type="button" class="btn btn-theme-second-success add-rule-btn">
-                                            <i class="fas fa-plus"></i> Add Filter Rule
-                                        </button>
-                                        <div class="filter-logic-toggle btn-group btn-group-sm">
-                                            <button type="button" class="btn btn-theme-success active" data-logic="and">AND (All conditions must be met)</button>
-                                            <button type="button" class="btn btn-outline-primary" data-logic="or">OR (Any condition can be met)</button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="filter-popup-footer p-3" style="border-top: 1px solid #eee; display: flex; justify-content: space-between;">
-                                    <div>
-                                        <button type="button" class="btn btn-sm btn-outline-danger clear-filters-btn">
-                                            <i class="fas fa-trash"></i> Clear All
-                                        </button>
-                                    </div>
-                                    <div>
-                                        <button type="button" class="btn btn-theme-second-success me-2 save-filter-btn">
-                                            <i class="fas fa-save"></i> Save Filter
-                                        </button>
-                                        <button type="button" class="btn add-btn text-white apply-filter-btn">
-                                            <i class="fas fa-check"></i> Apply Filters
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>`;
-
-                    $('body').append(popupHTML);
-
-                    const $popup = $(`#${popupId}`);
-
-                    // Store filter state
-                    filterPopups[type] = {
-                        activeFilterRules: [],
-                        filterLogic: 'and',
-                        $popup: $popup,
-                        currentEditingFilterId: null
-                    };
-
-                    // Position and show/hide popup
-                    function positionPopup() {
-                        const offset = $filterBtn.offset();
-                        const popupWidth = 800;
-                        const windowWidth = $(window).width();
-
-                        let leftPos = offset.left;
-
-                        if (leftPos + popupWidth > windowWidth) {
-                            leftPos = windowWidth - popupWidth - 20;
-                        }
-
-                        $popup.css({
-                            'top': offset.top + $filterBtn.outerHeight() + 5 + 'px',
-                            'left': leftPos + 'px'
-                        });
-                    }
-
-                    $filterBtn.on('click', function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-
-                        $('.filter-popup').not($popup).hide();
-
-                        positionPopup();
-                        $popup.toggle();
-
-                        filterPopups[type].currentEditingFilterId = null;
-                        $popup.find('.save-filter-btn').html('<i class="fas fa-save"></i> Save Filter');
-
-                        if ($popup.find('.filter-rule').length === 0) {
-                            addFilterRule(type, tableApi);
-                        }
-
-                        loadSavedFilters(type);
-                    });
-
-                    $popup.find('.close').on('click', function() {
-                        $popup.hide();
-                        filterPopups[type].currentEditingFilterId = null;
-                    });
-
-                    $popup.find('.add-rule-btn').on('click', function() {
-                        addFilterRule(type, tableApi);
-                    });
-
-                    $popup.find('.filter-logic-toggle button').on('click', function() {
-                        $(this).addClass('active').siblings().removeClass('active');
-                        filterPopups[type].filterLogic = $(this).data('logic');
-                        updateRuleConnectors(type);
-                    });
-
-                    $popup.find('.clear-filters-btn').on('click', function() {
-                        $popup.find('.filter-rules-container').empty();
-                        filterPopups[type].activeFilterRules = [];
-                        filterPopups[type].filterLogic = 'and';
-                        tableApi.ajax.reload();
-                        updateFilterBadge(type);
-                        $popup.hide();
-                        filterPopups[type].currentEditingFilterId = null;
-                    });
-
-                    $popup.find('.apply-filter-btn').on('click', function() {
-                        const rules = collectFilterRules(type);
-
-                        const logic = $popup.find('.filter-logic-toggle .active').data('logic') || 'and';
-
-                        if (rules.length === 0) {
-                            Swal.fire('Warning', 'Please add at least one filter rule', 'warning');
-                            return;
-                        }
-
-                        filterPopups[type].activeFilterRules = rules;
-                        filterPopups[type].filterLogic = logic;
-
-                        tableApi.ajax.reload();
-                        updateFilterBadge(type);
-                        $popup.hide();
-                    });
-
-                    $popup.find('.save-filter-btn').on('click', function() {
-                        const rules = collectFilterRules(type);
-                        const logic = $popup.find('.filter-logic-toggle .active').data('logic') || 'and';
-                        const filterId = filterPopups[type].currentEditingFilterId;
-                        const isEditing = !!filterId;
-
-                        Swal.fire({
-                            title: isEditing ? 'Update Filter' : 'Save Filter',
-                            input: 'text',
-                            inputLabel: 'Filter Name',
-                            inputValue: isEditing ? $popup.find(
-                                '.saved-filters-dropdown option:selected').text() : '',
-                            showCancelButton: true,
-                            confirmButtonText: isEditing ? 'Update' : 'Save',
-                            preConfirm: (name) => {
-                                if (!name) {
-                                    Swal.showValidationMessage('Filter name is required');
-                                }
-                                return name;
-                            }
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                const url = isEditing ? `/admin/filters/${filterId}` : '/admin/filters';
-                                const method = isEditing ? 'PUT' : 'POST';
-
-                                $.ajax({
-                                    url: url,
-                                    type: method,
-                                    data: {
-                                        name: result.value,
-                                        page: 'reports',
-                                        table_type: type,
-                                        logic: logic,
-                                        rules: rules,
-                                        _token: $('meta[name="csrf-token"]').attr('content')
-                                    },
-                                    success: function() {
-                                        Swal.fire(
-                                            isEditing ? 'Updated!' : 'Saved!',
-                                            `Your filter has been ${isEditing ? 'updated' : 'saved'}.`,
-                                            'success'
-                                        );
-                                        loadSavedFilters(type);
-                                        filterPopups[type].currentEditingFilterId = null;
-                                        $popup.find('.save-filter-btn').html(
-                                            '<i class="fas fa-save"></i> Save Filter');
-                                    },
-                                    error: function(xhr) {
-                                        Swal.fire('Error', xhr.responseJSON?.message ||
-                                            'Failed to save filter', 'error');
-                                    }
-                                });
-                            }
-                        });
-                    });
-
-                    $popup.find('.edit-saved-filter-btn').on('click', function() {
-                        const filterId = $popup.find('.saved-filters-dropdown').val();
-                        if (filterId) {
-                            filterPopups[type].currentEditingFilterId = filterId;
-                            $popup.find('.save-filter-btn').html('<i class="fas fa-save"></i> Update Filter');
-
-                            $.get(`/admin/filters/${filterId}`, function(filter) {
-                                $popup.find('.filter-rules-container').empty();
-
-                                $popup.find(
-                                    `.filter-logic-toggle button[data-logic="${filter.filters.logic}"]`
-                                ).click();
-
-                                filter.filters.rules.forEach(rule => {
-                                    addFilterRule(type, tableApi);
-                                    const $lastRule = $popup.find('.filter-rule').last();
-
-                                    $lastRule.find('.rule-column').val(rule.column).change();
-
-                                    setTimeout(() => {
-                                        $lastRule.find('.rule-operator').val(rule
-                                            .operator);
-
-                                        if (rule.operator === 'between') {
-                                            $lastRule.find('.rule-value-start').val(rule
-                                                .value.start);
-                                            $lastRule.find('.rule-value-end').val(rule
-                                                .value.end);
-                                        } else if (Array.isArray(rule.value)) {
-                                            $lastRule.find('.rule-value').val(rule
-                                                .value).trigger('change');
-                                        } else {
-                                            $lastRule.find('.rule-value').val(rule
-                                                .value);
-                                        }
-                                    }, 100);
-                                });
-                            });
-                        } else {
-                            Swal.fire('Error', 'No filter selected', 'error');
-                        }
-                    });
-
-                    $popup.find('.saved-filters-dropdown').on('change', function() {
-                        const filterId = $(this).val();
-                        if (filterId) {
-                            $.get(`/admin/filters/${filterId}`, function(filter) {
-                                $popup.find('.filter-rules-container').empty();
-
-                                $popup.find(
-                                    `.filter-logic-toggle button[data-logic="${filter.filters.logic}"]`
-                                ).click();
-                                filterPopups[type].filterLogic = filter.filters.logic;
-
-                                filter.filters.rules.forEach(rule => {
-                                    addFilterRule(type, tableApi);
-                                    const $lastRule = $popup.find('.filter-rule').last();
-
-                                    $lastRule.find('.rule-column').val(rule.column).change();
-
-                                    setTimeout(() => {
-                                        $lastRule.find('.rule-operator').val(rule
-                                            .operator);
-
-                                        if (rule.operator === 'between') {
-                                            $lastRule.find('.rule-value-start').val(rule
-                                                .value.start);
-                                            $lastRule.find('.rule-value-end').val(rule
-                                                .value.end);
-                                        } else if (Array.isArray(rule.value)) {
-                                            $lastRule.find('.rule-value').val(rule
-                                                .value).trigger('change');
-                                        } else {
-                                            $lastRule.find('.rule-value').val(rule
-                                                .value);
-                                        }
-                                    }, 100);
-                                });
-
-                                filterPopups[type].currentEditingFilterId = filterId;
-                                $popup.find('.save-filter-btn').html(
-                                    '<i class="fas fa-save"></i> Update Filter');
-
-                                filterPopups[type].activeFilterRules = filter.filters.rules;
-                                tableApi.ajax.reload();
-                                updateFilterBadge(type);
-                            }).fail(function(xhr) {
-                                Swal.fire('Error', 'Failed to load filter', 'error');
-                            });
-                        }
-                    });
-
-                    $popup.find('.delete-saved-filter-btn').on('click', function() {
-                        const filterId = $popup.find('.saved-filters-dropdown').val();
-                        if (filterId) {
-                            Swal.fire({
-                                title: 'Delete Filter?',
-                                text: "You won't be able to revert this!",
-                                icon: 'warning',
-                                showCancelButton: true,
-                                confirmButtonColor: '#d33',
-                                confirmButtonText: 'Delete'
-                            }).then((result) => {
-                                if (result.isConfirmed) {
-                                    $.ajax({
-                                        url: `/admin/filters/${filterId}`,
-                                        type: 'DELETE',
-                                        data: {
-                                            _token: '{{ csrf_token() }}'
-                                        },
-                                        success: function() {
-                                            Swal.fire('Deleted!',
-                                                'Your filter has been deleted.',
-                                                'success');
-                                            loadSavedFilters(type);
-                                            filterPopups[type].currentEditingFilterId =
-                                                null;
-                                        },
-                                        error: function(xhr) {
-                                            Swal.fire('Error', xhr.responseJSON?.message ||
-                                                'Failed to delete filter', 'error');
-                                        }
-                                    });
-                                }
-                            });
-                        } else {
-                            Swal.fire('Error', 'No filter selected', 'error');
-                        }
-                    });
-
-                    function loadSavedFilters(type) {
-                        $.get('/admin/filters', {
-                            page: 'reports',
-                            table_type: type
-                        }, function(filters) {
-                            const $dropdown = $popup.find('.saved-filters-dropdown');
-                            $dropdown.empty();
-                            $dropdown.append('<option value="">Load Saved Filter...</option>');
-
-                            filters.forEach(filter => {
-                                $dropdown.append(
-                                    `<option value="${filter.id}">${filter.name}</option>`);
-                            });
-                        }).fail(function(xhr) {});
-                    }
-
-                    function collectFilterRules(type) {
-                        const rules = [];
-                        const $popup = filterPopups[type].$popup;
-
-                        $popup.find('.filter-rule').each(function() {
-                            const $rule = $(this);
-                            const column = $rule.find('.rule-column').val();
-                            const operator = $rule.find('.rule-operator').val();
-
-                            if (!column || !operator) {
-                                return;
-                            }
-
-                            let value;
-                            if (operator === 'between') {
-                                const startVal = $rule.find('.rule-value-start').val();
-                                const endVal = $rule.find('.rule-value-end').val();
-                                if (!startVal || !endVal) {
-                                    return;
-                                }
-                                value = {
-                                    start: startVal,
-                                    end: endVal
-                                };
-                            } else if ($rule.find('.rule-value').is('select[multiple]')) {
-                                value = $rule.find('.rule-value').val() || [];
-                                if (value.length === 0) {
-                                    return;
-                                }
-                            } else {
-                                value = $rule.find('.rule-value').val();
-                                if (!value && value !== 0 && operator !== 'is_empty' && operator !==
-                                    'is_not_empty') {
-                                    return;
-                                }
-                            }
-
-                            rules.push({
-                                column: column,
-                                operator: operator,
-                                value: value
-                            });
-                        });
-
-                        return rules;
-                    }
-                }
-
-                function addFilterRule(type, tableApi) {
-                    const $popup = filterPopups[type].$popup;
-                    const columns = tableApi.columns().header().toArray();
-
-                    const columnOptions = columns.map(function(col, index) {
-                        const colData = tableApi.column(index).dataSrc();
-                        const colTitle = $(col).text().trim();
-                        if (colData && colData !== 'action' && colData !== 'kyc_details' && colData !==
-                            'bank_details') {
-                            return `<option value="${colData}">${colTitle}</option>`;
-                        }
-                        return '';
-                    }).filter(option => option !== '').join('');
-
-                    const ruleCount = $popup.find('.filter-rule').length;
-                    const showConnector = ruleCount > 0;
-
-                    const ruleHTML = `
-                        <div class="filter-rule mb-2 p-2" style="border: 1px solid #eee; border-radius: 4px; background: #f9f9f9;">
-                            <div class="row align-items-center">
-                                ${showConnector ? `<div class="col-auto">
-                                                                            <span class="rule-connector" style="font-weight: bold; color: #666;">${filterPopups[type].filterLogic}</span>
-                                                                        </div>` : ''}
-                                <div class="col">
-                                    <select class="form-control form-control-sm rule-column">
-                                        <option value="">Select Column</option>
-                                        ${columnOptions}
-                                    </select>
-                                </div>
-                                <div class="col">
-                                    <select class="form-control form-control-sm rule-operator">
-                                        <option value="">Select Operator</option>
-                                    </select>
-                                </div>
-                                <div class="col rule-value-container">
-                                    <input type="text" class="form-control form-control-sm rule-value" placeholder="Value">
-                                </div>
-                                <div class="col-auto">
-                                    <button type="button" class="btn btn-sm btn-outline-danger remove-rule-btn">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>`;
-
-                    $popup.find('.filter-rules-container').append(ruleHTML);
-
-                    const $newRule = $popup.find('.filter-rule').last();
-                    const $columnSelect = $newRule.find('.rule-column');
-
-                    $columnSelect.on('change', function() {
-                        updateOperatorOptions(type, $(this), tableApi);
-                    });
-
-                    $newRule.find('.remove-rule-btn').on('click', function() {
-                        $(this).closest('.filter-rule').remove();
-                        updateRuleConnectors(type);
-
-                        // Add a new rule if none exist
-                        if ($popup.find('.filter-rule').length === 0) {
-                            addFilterRule(type, tableApi);
-                        }
-                    });
-                }
-
-                function updateOperatorOptions(type, $columnSelect, tableApi) {
-                    const columnName = $columnSelect.val();
-                    const $rule = $columnSelect.closest('.filter-rule');
-                    const $operatorSelect = $rule.find('.rule-operator');
-                    const $valueContainer = $rule.find('.rule-value-container');
-
-                    $operatorSelect.empty().append('<option value="">Select Operator</option>');
-                    $valueContainer.empty();
-
-                    if (!columnName) {
-                        return;
-                    }
-
-                    const baseOperators = [{
-                            value: 'equals',
-                            text: 'equals'
-                        },
-                        {
-                            value: 'not_equals',
-                            text: 'not equals'
-                        }
-                    ];
-
-                    if (columnName === 'status') {
-                        baseOperators.forEach(op => $operatorSelect.append(
-                            `<option value="${op.value}">${op.text}</option>`));
-
-                        const $select = $(`
-                            <select class="form-control form-control-sm rule-value">
-                                <option value="">Select Status</option>
-                                <option value="1">Active</option>
-                                <option value="0">Inactive</option>
-                            </select>
-                        `);
-                        $valueContainer.append($select);
-                    } else if (columnName === 'payment_status') {
-                        baseOperators.forEach(op => $operatorSelect.append(
-                            `<option value="${op.value}">${op.text}</option>`));
-
-                        const $select = $(`
-                            <select class="form-control form-control-sm rule-value">
-                                <option value="">Select Status</option>
-                                <option value="Razorpay">Razorpay</option>
-                                <option value="COD">Cash on delivery</option>
-                            </select>
-                        `);
-                        $valueContainer.append($select);
-                    } else if (columnName === 'payout_status') {
-                        baseOperators.forEach(op => $operatorSelect.append(
-                            `<option value="${op.value}">${op.text}</option>`));
-
-                        const $select = $(`
-                            <select class="form-control form-control-sm rule-value">
-                                <option value="">Select Status</option>
-                                <option value="Generated">Generated</option>
-                                <option value="Paid">Paid</option>
-                                <option value="Failed">Failed</option>
-                            </select>
-                        `);
-                        $valueContainer.append($select);
-                    } else if (columnName === 'suspension') {
-                        baseOperators.forEach(op => $operatorSelect.append(
-                            `<option value="${op.value}">${op.text}</option>`));
-
-                        const $select = $(`
-                            <select class="form-control form-control-sm rule-value">
-                                <option value="">Select Status</option>
-                                <option value="1">Active</option>
-                                <option value="0">Suspended</option>
-                            </select>
-                        `);
-                        $valueContainer.append($select);
-                    } else if (columnName === 'order_status') {
-                        baseOperators.forEach(op => $operatorSelect.append(
-                            `<option value="${op.value}">${op.text}</option>`));
-
-                        const $select = $(`
-                            <select class="form-control form-control-sm rule-value">
-                                <option value="">Select Status</option>
-                                <option value="Pending">Pending</option>
-                                <option value="Inprogress">Inprogress</option>
-                                <option value="Completed">Completed</option>
-                                <option value="Cancelled">Cancelled</option>
-                            </select>
-                        `);
-                        $valueContainer.append($select);
-
-                    } else if (columnName === 'date' || columnName === 'created_at') {
-                        const dateOperators = [
-                            ...baseOperators,
-                            {
-                                value: 'greater_than',
-                                text: 'after'
-                            },
-                            {
-                                value: 'less_than',
-                                text: 'before'
-                            },
-                            {
-                                value: 'between',
-                                text: 'between'
-                            }
-                        ];
-
-                        dateOperators.forEach(op => $operatorSelect.append(
-                            `<option value="${op.value}">${op.text}</option>`
-                        ));
-
-                        const $valueInput = $(
-                            '<input type="text" class="form-control form-control-sm rule-value datepicker" placeholder="Select date">'
-                        );
-                        $valueContainer.append($valueInput);
-
-                        flatpickr($valueInput[0], {
-                            enableTime: true,
-                            dateFormat: "Y-m-d H:i:S",
-                            time_24hr: true
-                        });
-
-                        $operatorSelect.on('change', function() {
-                            if ($(this).val() === 'between') {
-                                $valueContainer.empty().append(`
-                                    <div class="row g-2">
-                                        <div class="col">
-                                            <input type="text" class="form-control form-control-sm rule-value-start datepicker" placeholder="Start date">
-                                        </div>
-                                        <div class="col-auto d-flex align-items-center">
-                                            <span>and</span>
-                                        </div>
-                                        <div class="col">
-                                            <input type="text" class="form-control form-control-sm rule-value-end datepicker" placeholder="End date">
-                                        </div>
-                                    </div>
-                                `);
-
-                                flatpickr('.rule-value-start, .rule-value-end', {
-                                    enableTime: true,
-                                    dateFormat: "Y-m-d H:i:S",
-                                    time_24hr: true
-                                });
-                            }
-                        });
-                    } else if (columnName === 'total_amount' || columnName === 'price' || columnName ===
-                        'product_stock') {
-                        const numericOperators = [
-                            ...baseOperators,
-                            {
-                                value: 'greater_than',
-                                text: 'greater than'
-                            },
-                            {
-                                value: 'less_than',
-                                text: 'less than'
-                            },
-                            {
-                                value: 'between',
-                                text: 'between'
-                            }
-                        ];
-
-                        numericOperators.forEach(op => $operatorSelect.append(
-                            `<option value="${op.value}">${op.text}</option>`));
-
-                        $valueContainer.append(
-                            '<input type="number" class="form-control form-control-sm rule-value" placeholder="Enter value" step="0.01">'
-                        );
-
-                        $operatorSelect.on('change', function() {
-                            if ($(this).val() === 'between') {
-                                $valueContainer.empty().append(`
-                                    <div class="row g-2">
-                                        <div class="col">
-                                            <input type="number" class="form-control form-control-sm rule-value-start" placeholder="Min" step="0.01">
-                                        </div>
-                                        <div class="col-auto d-flex align-items-center">
-                                            <span>and</span>
-                                        </div>
-                                        <div class="col">
-                                            <input type="number" class="form-control form-control-sm rule-value-end" placeholder="Max" step="0.01">
-                                        </div>
-                                    </div>
-                                `);
-                            } else {
-                                $valueContainer.empty().append(
-                                    '<input type="number" class="form-control form-control-sm rule-value" placeholder="Enter value" step="0.01">'
-                                );
-                            }
-                        });
-                    } else if (columnName === 'total_orders') {
-                        baseOperators.push({
-                            value: 'contains',
-                            text: 'contains'
-                        }, {
-                            value: 'starts_with',
-                            text: 'starts with'
-                        }, {
-                            value: 'ends_with',
-                            text: 'ends with'
-                        });
-
-                        baseOperators.forEach(op => {
-                            $operatorSelect.append(`<option value="${op.value}">${op.text}</option>`);
-                        });
-
-                        var $input = $(
-                            '<input type="text" class="form-control form-control-sm rule-value" placeholder="Enter value">'
-                        );
-                        $valueContainer.append($input);
-
-                        $.get(tableApi.ajax.url(), {
-                            get_states: true
-                        }, function(states) {
-                            var $datalist = $('<datalist id="states-list">');
-                            states.forEach(function(state) {
-                                $datalist.append($('<option>').val(state));
-                            });
-                            $input.attr('list', 'states-list');
-                            $valueContainer.append($datalist);
-                        });
-                    } else {
-                        const textOperators = [
-                            ...baseOperators,
-                            {
-                                value: 'contains',
-                                text: 'contains'
-                            },
-                            {
-                                value: 'starts_with',
-                                text: 'starts with'
-                            },
-                            {
-                                value: 'ends_with',
-                                text: 'ends with'
-                            },
-                            {
-                                value: 'is_empty',
-                                text: 'is empty'
-                            },
-                            {
-                                value: 'is_not_empty',
-                                text: 'is not empty'
-                            }
-                        ];
-
-                        textOperators.forEach(op => $operatorSelect.append(
-                            `<option value="${op.value}">${op.text}</option>`));
-                        $valueContainer.append(
-                            '<input type="text" class="form-control form-control-sm rule-value" placeholder="Enter value">'
-                        );
-
-                        $operatorSelect.on('change', function() {
-                            const operator = $(this).val();
-                            if (operator === 'is_empty' || operator === 'is_not_empty') {
-                                $valueContainer.find('.rule-value').prop('disabled', true).val('');
-                            } else {
-                                $valueContainer.find('.rule-value').prop('disabled', false);
-                            }
-                        });
-                    }
-                }
-
-                function updateRuleConnectors(type) {
-                    const $popup = filterPopups[type].$popup;
-                    const logic = filterPopups[type].filterLogic || 'and';
-                    $popup.find('.rule-connector').text(logic);
-                }
-
-                function updateFilterBadge(type) {
-                    const count = filterPopups[type] && filterPopups[type].activeFilterRules ? filterPopups[type]
-                        .activeFilterRules.length : 0;
-                    const $badge = $(`.filter-btn[data-table-id="${type}-table"] .filter-badge`);
-
-                    if (count > 0) {
-                        $badge.show().text(count);
-                    } else {
-                        $badge.hide();
-                    }
-                }
-
-                function getStatusColor(status) {
-                    const colors = {
-                        'pending': '#f6c23e',
-                        'inprogress': '#36b9cc',
-                        'completed': '#1cc88a',
-                        'cancelled': '#e74a3b'
-                    };
-
-                    return colors[status.toLowerCase()] || '#858796';
-                }
-
-                // Export table to Excel
-                $(document).on('click', '.export-table', function() {
-                    const tableId = $(this).data('table-id');
-                    const $table = $(`.${tableId}`);
-
-                    // Get the DataTable instance
-                    const table = $table.DataTable();
-
-                    // Get the filtered data
-                    const data = table.rows({
-                        search: 'applied'
-                    }).data().toArray();
-
-                    // Prepare the Excel data
-                    const excelData = [
-                        // Headers
-                        $table.find('thead tr').first().find('th').map(function() {
-                            return $(this).text();
-                        }).get(),
-
-                        // Data rows
-                        ...data.map(row => {
-                            return $table.find('thead tr').first().find('th').map(function(i, el) {
-                                const colName = table.column(i).dataSrc();
-                                // Handle HTML content in cells
-                                if (typeof row[colName] === 'string' && row[colName].startsWith(
-                                        '<')) {
-                                    const temp = $('<div>').html(row[colName]);
-                                    return temp.text();
-                                }
-                                return row[colName] || '';
-                            }).get();
-                        })
-                    ];
-
-                    // Create workbook
-                    const wb = XLSX.utils.book_new();
-                    const ws = XLSX.utils.aoa_to_sheet(excelData);
-                    XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
-
-                    // Generate file and download
-                    const fileName =
-                        `${tableId.replace('-table', '')}_report_${moment().format('YYYY-MM-DD')}.xlsx`;
-                    XLSX.writeFile(wb, fileName);
-                });
-
-                // Export chart to image
-                $(document).on('click', '.export-chart', function() {
-                    const chartId = $(this).data('chart-id');
-                    const chart = window.charts[chartId];
-
-                    if (!chart) {
-                        Swal.fire('Error', 'No chart data to export', 'error');
-                        return;
-                    }
-
-                    // Create a temporary canvas to ensure high quality export
-                    const tempCanvas = document.createElement('canvas');
-                    tempCanvas.width = chart.canvas.width;
-                    tempCanvas.height = chart.canvas.height;
-                    const tempCtx = tempCanvas.getContext('2d');
-                    tempCtx.fillStyle = 'white';
-                    tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-                    tempCtx.drawImage(chart.canvas, 0, 0);
-
-                    // Convert to blob and download
-                    tempCanvas.toBlob(function(blob) {
-                        const a = document.createElement('a');
-                        a.href = URL.createObjectURL(blob);
-                        a.download = `${chartId}_${moment().format('YYYY-MM-DD')}.png`;
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                    }, 'image/png');
-                });
-
-                // Close popups when clicking outside
-                $(document).on('click', function(e) {
-                    if (!$(e.target).closest('.filter-popup').length && !$(e.target).closest('.filter-btn')
-                        .length) {
-                        $('.filter-popup').hide();
-                    }
-                });
-            });
-        </script>
-    @endpush
+    </div>
 @endsection
+
+@push('footer_content')
+    <script src="https://cdn.datatables.net/1.11.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.4/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="{{ asset('assets/libs/chart.js/Chart.bundle.min.js') }}"></script>
+    <script src="{{ asset('assets/libs/sweetalert2/sweetalert2.all.min.js') }}"></script>
+
+    <script type="text/javascript">
+        $(function () {
+            // State
+            let currentTabType = 'bills';
+            let trendChart = null;
+            let statusChart = null;
+            let chartsVisible = false;
+
+            // Initialize Flatpickr for custom dates
+            const startPicker = flatpickr('#filterStartDate', {
+                dateFormat: 'Y-m-d',
+                allowInput: true,
+                onChange: function(selectedDates, dateStr) {
+                    endPicker.set('minDate', dateStr);
+                }
+            });
+
+            const endPicker = flatpickr('#filterEndDate', {
+                dateFormat: 'Y-m-d',
+                allowInput: true,
+            });
+
+            // Date range preset change
+            $('#filterDateRange').on('change', function () {
+                if ($(this).val() === 'custom') {
+                    $('.custom-date-col').show();
+                } else {
+                    $('.custom-date-col').hide();
+                    $('#filterStartDate').val('');
+                    $('#filterEndDate').val('');
+                }
+                loadReportSummary();
+                reloadActiveTable();
+            });
+
+            // Update status dropdown options based on active tab
+            function updateStatusDropdown(tabType) {
+                const $status = $('#filterStatus');
+                $status.empty();
+                $status.append('<option value="all" selected>All Statuses</option>');
+
+                if (tabType === 'bills' || tabType === 'eb') {
+                    $('#statusLabel').html('<i class="fas fa-tag me-1"></i>Bill Status');
+                    $status.append('<option value="paid">Paid</option>');
+                    $status.append('<option value="partially_paid">Partially Paid</option>');
+                    $status.append('<option value="unpaid">Unpaid</option>');
+                    $status.append('<option value="overdue">Overdue</option>');
+                    $('#paymentMethodCol').hide();
+                    $('#expenseCategoryCol').hide();
+                } else if (tabType === 'rooms') {
+                    $('#statusLabel').html('<i class="fas fa-tag me-1"></i>Room Status');
+                    $status.append('<option value="occupied">Occupied</option>');
+                    $status.append('<option value="available">Available</option>');
+                    $status.append('<option value="maintenance">Maintenance</option>');
+                    $status.append('<option value="self">Self-Occupied</option>');
+                    $('#paymentMethodCol').hide();
+                    $('#expenseCategoryCol').hide();
+                } else if (tabType === 'tenants') {
+                    $('#statusLabel').html('<i class="fas fa-tag me-1"></i>Resident Status');
+                    $status.append('<option value="active">Active Residents</option>');
+                    $status.append('<option value="inactive">Inactive Residents</option>');
+                    $('#paymentMethodCol').hide();
+                    $('#expenseCategoryCol').hide();
+                } else if (tabType === 'payments') {
+                    $('#statusLabel').html('<i class="fas fa-tag me-1"></i>Status');
+                    $status.append('<option value="all" selected>All</option>');
+                    $('#paymentMethodCol').show();
+                    $('#expenseCategoryCol').hide();
+                } else if (tabType === 'expenses') {
+                    $('#statusLabel').html('<i class="fas fa-tag me-1"></i>Expense Type');
+                    $status.append('<option value="room">Room Expense</option>');
+                    $status.append('<option value="personal">General / Personal</option>');
+                    $('#paymentMethodCol').show();
+                    $('#expenseCategoryCol').show();
+                }
+            }
+
+            // Collect active filter parameters
+            function getFilterParams() {
+                return {
+                    report_type: currentTabType,
+                    date_range: $('#filterDateRange').val(),
+                    start_date: $('#filterStartDate').val(),
+                    end_date: $('#filterEndDate').val(),
+                    room_id: $('#filterRoom').val(),
+                    tenant_id: $('#filterTenant').val(),
+                    floor: $('#filterFloor').val(),
+                    status: $('#filterStatus').val(),
+                    payment_method: $('#filterPaymentMethod').val(),
+                    category: $('#filterExpenseCategory').val()
+                };
+            }
+
+            // Load and update KPI cards
+            function loadReportSummary() {
+                const params = getFilterParams();
+                $.ajax({
+                    url: "{{ url('admin/reports/summary') }}",
+                    type: 'GET',
+                    data: params,
+                    success: function (res) {
+                        if (res && res.success && res.cards) {
+                            const c = res.cards;
+                            $('#kpiTotalInvoiced').text(c.total_invoiced_formatted);
+                            $('#kpiBillsCount').text(c.bills_count + ' Invoices');
+                            $('#kpiTotalCollected').text(c.total_collected_formatted);
+                            $('#kpiCollectionRate').text(c.collection_rate);
+                            $('#kpiOutstandingDues').text(c.outstanding_dues_formatted);
+                            $('#kpiPendingBillsCount').text(c.pending_bills_count + ' Pending');
+                            $('#kpiOverdueAmount').text(c.overdue_amount_formatted);
+                            $('#kpiOverdueCount').text(c.overdue_count + ' Overdue Bills');
+                            $('#kpiTotalExpenses').text(c.total_expenses_formatted);
+                            $('#kpiExpensesCount').text(c.expenses_count + ' Records');
+                            $('#kpiNetCashflow').text(c.net_cashflow_formatted);
+                            $('#kpiOccupancyRate').text(c.occupancy_rate);
+                        }
+                    }
+                });
+            }
+
+            // Tables instances
+            const tables = {};
+
+            // 1. Bills DataTable
+            function initBillsTable() {
+                if (tables['bills']) return;
+                tables['bills'] = $('#billsTable').DataTable({
+                    processing: true,
+                    serverSide: true,
+                    ajax: {
+                        url: "{{ url('admin/reports/table') }}",
+                        data: function (d) {
+                            const f = getFilterParams();
+                            Object.assign(d, f);
+                        }
+                    },
+                    columns: [
+                        { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, width: '4%' },
+                        { data: 'bill_number_badge', name: 'bill_number' },
+                        { data: 'billing_month_display', name: 'billing_month' },
+                        { data: 'room_badge', name: 'room.room_number' },
+                        { data: 'tenant_info', name: 'tenant.name' },
+                        { data: 'bill_type_display', name: 'bill_type' },
+                        { data: 'amount_formatted', name: 'amount' },
+                        { data: 'paid_formatted', name: 'paid_amount' },
+                        { data: 'due_formatted', name: 'due_amount' },
+                        { data: 'due_date_formatted', name: 'due_date' },
+                        { data: 'status_badge', name: 'status' },
+                        { data: 'action', name: 'action', orderable: false, searchable: false }
+                    ],
+                    order: [[1, 'desc']],
+                    pageLength: 15,
+                    language: {
+                        emptyTable: "No invoices found for the selected criteria."
+                    }
+                });
+            }
+
+            // 2. Payments DataTable
+            function initPaymentsTable() {
+                if (tables['payments']) return;
+                tables['payments'] = $('#paymentsTable').DataTable({
+                    processing: true,
+                    serverSide: true,
+                    ajax: {
+                        url: "{{ url('admin/reports/table') }}",
+                        data: function (d) {
+                            const f = getFilterParams();
+                            Object.assign(d, f);
+                        }
+                    },
+                    columns: [
+                        { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, width: '4%' },
+                        { data: 'payment_number_badge', name: 'payment_number' },
+                        { data: 'bill_number_display', name: 'bill.bill_number' },
+                        { data: 'payment_date_formatted', name: 'payment_date' },
+                        { data: 'tenant_info', name: 'tenant.name' },
+                        { data: 'room_badge', name: 'bill.room.room_number' },
+                        { data: 'payment_method_badge', name: 'payment_method' },
+                        { data: 'transaction_id_display', name: 'transaction_id' },
+                        { data: 'amount_formatted', name: 'amount' },
+                        { data: 'received_by_name', name: 'receiver.name' }
+                    ],
+                    order: [[3, 'desc']],
+                    pageLength: 15,
+                    language: {
+                        emptyTable: "No payments recorded for the selected criteria."
+                    }
+                });
+            }
+
+            // 3. Rooms DataTable
+            function initRoomsTable() {
+                if (tables['rooms']) return;
+                tables['rooms'] = $('#roomsTable').DataTable({
+                    processing: true,
+                    serverSide: true,
+                    ajax: {
+                        url: "{{ url('admin/reports/table') }}",
+                        data: function (d) {
+                            const f = getFilterParams();
+                            Object.assign(d, f);
+                        }
+                    },
+                    columns: [
+                        { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, width: '4%' },
+                        { data: 'room_badge', name: 'room_number' },
+                        { data: 'floor_display', name: 'floor' },
+                        { data: 'room_type_display', name: 'room_type' },
+                        { data: 'capacity_display', name: 'capacity' },
+                        { data: 'monthly_rent_formatted', name: 'monthly_rent' },
+                        { data: 'eb_rate_formatted', name: 'eb_unit_rate' },
+                        { data: 'maintenance_formatted', name: 'maintenance_charges' },
+                        { data: 'other_formatted', name: 'other_charges' },
+                        { data: 'total_monthly_formatted', name: 'id' },
+                        { data: 'deposit_formatted', name: 'security_deposit' },
+                        { data: 'status_badge', name: 'occupancy_status' },
+                        { data: 'current_tenant_display', name: 'currentTenant.name' }
+                    ],
+                    pageLength: 25,
+                    language: {
+                        emptyTable: "No rooms match the criteria."
+                    }
+                });
+            }
+
+            // 4. Tenants DataTable
+            function initTenantsTable() {
+                if (tables['tenants']) return;
+                tables['tenants'] = $('#tenantsTable').DataTable({
+                    processing: true,
+                    serverSide: true,
+                    ajax: {
+                        url: "{{ url('admin/reports/table') }}",
+                        data: function (d) {
+                            const f = getFilterParams();
+                            Object.assign(d, f);
+                        }
+                    },
+                    columns: [
+                        { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, width: '4%' },
+                        { data: 'resident_info', name: 'name' },
+                        { data: 'room_badge', name: 'room_number' },
+                        { data: 'commence_date_formatted', name: 'commence_date' },
+                        { data: 'monthly_rent_formatted', name: 'monthly_rent' },
+                        { data: 'deposit_formatted', name: 'security_deposit' },
+                        { data: 'total_invoiced_formatted', name: 'id', orderable: false, searchable: false },
+                        { data: 'total_paid_formatted', name: 'id', orderable: false, searchable: false },
+                        { data: 'outstanding_due_formatted', name: 'id', orderable: false, searchable: false },
+                        { data: 'status_badge', name: 'status' },
+                        { data: 'action', name: 'action', orderable: false, searchable: false }
+                    ],
+                    pageLength: 20,
+                    language: {
+                        emptyTable: "No residents found."
+                    }
+                });
+            }
+
+            // 5. Expenses DataTable
+            function initExpensesTable() {
+                if (tables['expenses']) return;
+                tables['expenses'] = $('#expensesTable').DataTable({
+                    processing: true,
+                    serverSide: true,
+                    ajax: {
+                        url: "{{ url('admin/reports/table') }}",
+                        data: function (d) {
+                            const f = getFilterParams();
+                            Object.assign(d, f);
+                        }
+                    },
+                    columns: [
+                        { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, width: '4%' },
+                        { data: 'expense_date_formatted', name: 'expense_date' },
+                        { data: 'type_badge', name: 'expense_type' },
+                        { data: 'room_badge', name: 'room.room_number' },
+                        { data: 'category_badge', name: 'category' },
+                        { data: 'title_desc', name: 'title' },
+                        { data: 'amount_formatted', name: 'amount' },
+                        { data: 'payment_method_display', name: 'payment_method' },
+                        { data: 'paid_to_display', name: 'paid_to' },
+                        { data: 'recorded_by_name', name: 'creator.name' }
+                    ],
+                    order: [[1, 'desc']],
+                    pageLength: 15,
+                    language: {
+                        emptyTable: "No expenses found for the selected criteria."
+                    }
+                });
+            }
+
+            // 6. EB DataTable
+            function initEbTable() {
+                if (tables['eb']) return;
+                tables['eb'] = $('#ebTable').DataTable({
+                    processing: true,
+                    serverSide: true,
+                    ajax: {
+                        url: "{{ url('admin/reports/table') }}",
+                        data: function (d) {
+                            const f = getFilterParams();
+                            Object.assign(d, f);
+                        }
+                    },
+                    columns: [
+                        { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, width: '4%' },
+                        { data: 'billing_month_display', name: 'billing_month' },
+                        { data: 'room_badge', name: 'room.room_number' },
+                        { data: 'tenant_name_display', name: 'tenant.name' },
+                        { data: 'previous_reading_display', name: 'eb_previous_reading' },
+                        { data: 'current_reading_display', name: 'eb_current_reading' },
+                        { data: 'consumed_units_display', name: 'eb_consumed_units' },
+                        { data: 'unit_rate_display', name: 'eb_unit_rate' },
+                        { data: 'eb_amount_formatted', name: 'eb_amount' },
+                        { data: 'bill_status_badge', name: 'status' }
+                    ],
+                    order: [[1, 'desc']],
+                    pageLength: 15,
+                    language: {
+                        emptyTable: "No electricity readings found."
+                    }
+                });
+            }
+
+            // Reload currently active table
+            function reloadActiveTable() {
+                if (tables[currentTabType]) {
+                    tables[currentTabType].ajax.reload(null, false);
+                } else {
+                    switch (currentTabType) {
+                        case 'payments': initPaymentsTable(); break;
+                        case 'rooms': initRoomsTable(); break;
+                        case 'tenants': initTenantsTable(); break;
+                        case 'expenses': initExpensesTable(); break;
+                        case 'eb': initEbTable(); break;
+                        default: initBillsTable(); break;
+                    }
+                }
+            }
+
+            // Tab switching
+            $('button[data-bs-toggle="pill"]').on('shown.bs.tab', function (e) {
+                currentTabType = $(this).data('type');
+                updateStatusDropdown(currentTabType);
+                reloadActiveTable();
+            });
+
+            // Filter Apply Button
+            $('#btnApplyFilters').on('click', function () {
+                loadReportSummary();
+                reloadActiveTable();
+                if (chartsVisible) loadCharts();
+            });
+
+            // Filter inputs auto-trigger on change
+            $('#filterRoom, #filterTenant, #filterFloor, #filterStatus, #filterPaymentMethod, #filterExpenseCategory').on('change', function () {
+                loadReportSummary();
+                reloadActiveTable();
+                if (chartsVisible) loadCharts();
+            });
+
+            // Reset Button
+            $('#btnResetFilters').on('click', function () {
+                $('#reportFilterForm')[0].reset();
+                $('#filterDateRange').val('all').trigger('change');
+                $('#filterRoom').val('all');
+                $('#filterTenant').val('all');
+                $('#filterFloor').val('all');
+                $('#filterStatus').val('all');
+                $('#filterPaymentMethod').val('all');
+                $('#filterExpenseCategory').val('all');
+                $('.custom-date-col').hide();
+                updateStatusDropdown(currentTabType);
+                loadReportSummary();
+                reloadActiveTable();
+                if (chartsVisible) loadCharts();
+            });
+
+            // Export CSV Action
+            $('#btnExportCsv').on('click', function () {
+                const params = getFilterParams();
+                const queryStr = $.param(params);
+                window.location.href = "{{ url('admin/reports/export') }}?" + queryStr;
+            });
+
+            // Toggle Charts Action
+            $('#btnToggleCharts').on('click', function () {
+                chartsVisible = !chartsVisible;
+                if (chartsVisible) {
+                    $('#chartsContainer').slideDown();
+                    $('#toggleChartsText').text('Hide Charts');
+                    loadCharts();
+                } else {
+                    $('#chartsContainer').slideUp();
+                    $('#toggleChartsText').text('Show Charts');
+                }
+            });
+
+            // Charts Loader
+            function loadCharts() {
+                $.ajax({
+                    url: "{{ url('admin/reports/charts') }}",
+                    type: 'GET',
+                    success: function (res) {
+                        if (!res) return;
+
+                        // 1. Monthly Trends Bar Chart
+                        const ctxTrend = document.getElementById('monthlyTrendChart');
+                        if (ctxTrend) {
+                            if (trendChart) trendChart.destroy();
+                            trendChart = new Chart(ctxTrend.getContext('2d'), {
+                                type: 'bar',
+                                data: {
+                                    labels: res.months,
+                                    datasets: [
+                                        {
+                                            label: 'Invoiced (₹)',
+                                            backgroundColor: '#3b82f6',
+                                            data: res.invoiced
+                                        },
+                                        {
+                                            label: 'Collected (₹)',
+                                            backgroundColor: '#10b981',
+                                            data: res.collected
+                                        },
+                                        {
+                                            label: 'Expenses (₹)',
+                                            backgroundColor: '#ef4444',
+                                            data: res.expenses
+                                        }
+                                    ]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    scales: {
+                                        yAxes: [{
+                                            ticks: {
+                                                beginAtZero: true,
+                                                callback: function (val) {
+                                                    return '₹' + Number(val).toLocaleString('en-IN');
+                                                }
+                                            }
+                                        }]
+                                    }
+                                }
+                            });
+                        }
+
+                        // 2. Bill Status Doughnut Chart
+                        const ctxStatus = document.getElementById('billStatusChart');
+                        if (ctxStatus) {
+                            if (statusChart) statusChart.destroy();
+                            statusChart = new Chart(ctxStatus.getContext('2d'), {
+                                type: 'doughnut',
+                                data: {
+                                    labels: ['Paid', 'Partial', 'Unpaid', 'Overdue'],
+                                    datasets: [{
+                                        data: [
+                                            res.status.paid || 0,
+                                            res.status.partially_paid || 0,
+                                            res.status.unpaid || 0,
+                                            res.status.overdue || 0
+                                        ],
+                                        backgroundColor: ['#10b981', '#06b6d4', '#f59e0b', '#ef4444']
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    legend: {
+                                        position: 'bottom'
+                                    }
+                                }
+                            });
+                        }
+                    }
+                });
+            }
+
+            // Initial setup
+            updateStatusDropdown('bills');
+            initBillsTable();
+            loadReportSummary();
+        });
+    </script>
+@endpush

@@ -105,10 +105,11 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'user-access:' . Use
     // Reports
     Route::controller(ReportController::class)->prefix('reports')->name('reports.')->group(function () {
         Route::get('/', 'index')->name('index');
-        Route::get('/data', 'getReportData');
-        Route::get('/table', 'getReportTableData');
-        Route::get('/summary', 'reportSummary');
-        Route::get('/charts', 'reportCharts');
+        Route::get('/data', 'getReportData')->name('data');
+        Route::get('/table', 'getReportTableData')->name('table');
+        Route::get('/summary', 'reportSummary')->name('summary');
+        Route::get('/charts', 'reportCharts')->name('charts');
+        Route::get('/export', 'exportReport')->name('export');
     });
 
     // Settings
