@@ -57,8 +57,33 @@
         <script src="{{url('assets/js/app.min.js')}}"></script>
         <script src="{{url('assets/js/custom.js')}}"></script>
         <script>
-            $(document).on('click', '.mobile-menu-close, .res-mobile-backdrop', function() {
-                $('body').removeClass('sidebar-enable');
+            $(document).ready(function() {
+                // Mobile Burger Toggle
+                $(document).on('click', '.res-mobile-menu-btn, #resMobileMenuBtn, .button-menu-mobile', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    $('body').toggleClass('sidebar-enable');
+                });
+
+                // Mobile Drawer Close Button & Backdrop
+                $(document).on('click', '.mobile-menu-close, .res-mobile-backdrop', function(e) {
+                    e.preventDefault();
+                    $('body').removeClass('sidebar-enable');
+                });
+
+                // Auto-close on link navigation for screens < 992px
+                $(document).on('click', '#side-menu a:not([data-bs-toggle])', function() {
+                    if ($(window).width() < 992) {
+                        $('body').removeClass('sidebar-enable');
+                    }
+                });
+
+                // Reset sidebar-enable on resize to desktop
+                $(window).on('resize', function() {
+                    if ($(window).width() >= 992) {
+                        $('body').removeClass('sidebar-enable');
+                    }
+                });
             });
         </script>
     </body>

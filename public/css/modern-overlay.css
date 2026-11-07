@@ -1604,41 +1604,69 @@ body[data-leftbar-size="condensed"] .res-nav-badge {
    RESPONSIVE MOBILE OVERRIDES & MODERN TOUCH DRAWER
    ========================================================================== */
 .res-mobile-menu-btn {
+  display: none !important;
   background: transparent !important;
-  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border: 1px solid rgba(0, 0, 0, 0.12) !important;
   color: var(--res-sidebar-bg) !important;
   font-size: 18px !important;
-  width: 42px !important;
-  height: 42px !important;
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
   border-radius: 10px !important;
-  display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  margin-left: 12px !important;
-  margin-right: 6px !important;
-  transition: all 0.2s ease !important;
+  margin: 0 10px 0 0 !important;
+  padding: 0 !important;
   cursor: pointer !important;
+  z-index: 1002 !important;
+  transition: all 0.2s ease !important;
 }
 
 .res-mobile-menu-btn:hover, .res-mobile-menu-btn:focus {
-  background: rgba(14, 161, 177, 0.08) !important;
+  background: rgba(14, 161, 177, 0.1) !important;
   color: #0ea1b1 !important;
   border-color: #0ea1b1 !important;
 }
 
+/* Strictly hide burger menu on desktop */
+@media (min-width: 992px) {
+  .res-mobile-menu-btn, .button-menu-mobile {
+    display: none !important;
+  }
+}
+
 @media (max-width: 991.98px) {
+  .res-mobile-menu-btn {
+    display: inline-flex !important;
+  }
+
   .navbar-custom {
-    padding: 0 10px !important;
+    padding: 0 12px 0 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    height: 70px !important;
+  }
+
+  .navbar-custom .float-start {
+    float: none !important;
     display: flex !important;
     align-items: center !important;
   }
 
+  .navbar-custom .topnav-menu.float-end {
+    float: none !important;
+    margin-left: auto !important;
+  }
+
   .logo-box, .navbar-custom .logo-dark {
     width: auto !important;
-    min-width: 50px !important;
-    padding: 0 8px !important;
+    min-width: 0 !important;
+    padding: 0 4px !important;
     border: none !important;
     background: transparent !important;
+    float: none !important;
+    height: 70px !important;
   }
 
   .res-logo-brand .res-logo-icon {
@@ -1648,7 +1676,7 @@ body[data-leftbar-size="condensed"] .res-nav-badge {
   }
 
   .res-logo-details .res-logo-title {
-    font-size: 14px !important;
+    font-size: 15px !important;
     color: var(--res-sidebar-bg) !important;
   }
 
@@ -1660,7 +1688,7 @@ body[data-leftbar-size="condensed"] .res-nav-badge {
     left: 0 !important;
     width: 280px !important;
     max-width: 85vw !important;
-    z-index: 1050 !important;
+    z-index: 1055 !important;
     transform: translateX(-100%) !important;
     transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.3s ease !important;
     display: block !important;
@@ -1681,17 +1709,17 @@ body[data-leftbar-size="condensed"] .res-nav-badge {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(15, 23, 42, 0.55);
+    background: rgba(15, 23, 42, 0.6);
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
-    z-index: 1040;
+    z-index: 1050 !important;
     opacity: 0;
     transition: opacity 0.3s ease;
   }
 
   body.sidebar-enable .res-mobile-backdrop {
-    display: block;
-    opacity: 1;
+    display: block !important;
+    opacity: 1 !important;
   }
 
   .content-page {
@@ -1736,6 +1764,23 @@ body[data-leftbar-size="condensed"] .res-nav-badge {
     font-size: 18px !important;
   }
 
+  /* Page title & action button stack cleanly on mobile */
+  .row.justify-content-between.align-items-center {
+    row-gap: 12px !important;
+    margin-top: 6px !important;
+  }
+
+  .row.justify-content-between.align-items-center .text-end {
+    text-align: left !important;
+  }
+
+  .row.justify-content-between.align-items-center .btn {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
   /* KPI Stat Cards on Mobile */
   .card-box, .card {
     padding: 14px 12px !important;
@@ -1758,16 +1803,19 @@ body[data-leftbar-size="condensed"] .res-nav-badge {
     margin-left: 0 !important;
   }
 
-  /* Align all filter rows cleanly on mobile */
+  /* Filter card child elements stack into 100% width on phone */
   .d-flex.gap-2.align-items-end {
-    flex-wrap: wrap !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
   }
 
   .d-flex.gap-2.align-items-end > * {
+    width: 100% !important;
     flex: 1 1 100% !important;
   }
 
-  /* Table Horizontal Scrolling */
+  /* Table Horizontal Scrolling with touch indicator */
   .table-responsive {
     -webkit-overflow-scrolling: touch !important;
     border: none !important;
