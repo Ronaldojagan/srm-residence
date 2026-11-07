@@ -24,7 +24,13 @@ class RoomController extends Controller
                 $query->where('floor', $request->floor);
             }
             if ($request->filled('occupancy_status')) {
-                $query->where('occupancy_status', $request->occupancy_status);
+                if ($request->occupancy_status === 'self') {
+                    $query->where(function($q) {
+                        $q->where('occupancy_status', 'self')->orWhere('is_self', 1);
+                    });
+                } else {
+                    $query->where('occupancy_status', $request->occupancy_status);
+                }
             }
             if ($request->filled('room_type')) {
                 $query->where('room_type', $request->room_type);
@@ -49,6 +55,13 @@ class RoomController extends Controller
                     </div>';
                 })
                 ->addColumn('rent_display', function ($row) {
+                    if ($row->is_self || $row->occupancy_status === 'self') {
+                        return '<div>
+                            <span class="badge bg-secondary-subtle text-secondary border px-2 py-1"><i class="fas fa-user-shield me-1"></i> Self / Owner Occupied</span>
+                            <small class="text-muted d-block mt-1 font-11">No rent or charges</small>
+                        </div>';
+                    }
+
                     $extra = [];
                     if ($row->eb_unit_rate > 0) $extra[] = 'EB: ₹' . number_format($row->eb_unit_rate, 2) . '/unit';
                     if ($row->maintenance_charges > 0) $extra[] = 'Maint: ₹' . number_format($row->maintenance_charges);
@@ -62,6 +75,9 @@ class RoomController extends Controller
                     </div>';
                 })
                 ->addColumn('occupancy_badge', function ($row) {
+                    if ($row->is_self || $row->occupancy_status === 'self') {
+                        return '<span class="badge bg-info-subtle text-info border border-info px-2 py-1"><i class="fas fa-user-shield me-1"></i> Self Occupied</span>';
+                    }
                     $tenantHtml = '';
                     if ($row->currentTenant) {
                         $tenantHtml = '<div class="mt-1 small text-dark"><i class="fas fa-user-circle text-primary me-1"></i> <span class="fw-semibold">' . e($row->currentTenant->name) . '</span></div>';
@@ -105,6 +121,9 @@ class RoomController extends Controller
             'totalRooms' => Room::count(),
             'availableRooms' => Room::where('occupancy_status', 'available')->count(),
             'occupiedRooms' => Room::where('occupancy_status', 'occupied')->count(),
+            'selfRooms' => Room::where(function($q) {
+                $q->where('occupancy_status', 'self')->orWhere('is_self', 1);
+            })->count(),
             'maintenanceRooms' => Room::where('occupancy_status', 'maintenance')->count(),
         ];
     }
@@ -121,11 +140,24 @@ class RoomController extends Controller
             'maintenance_charges' => 'nullable|numeric|min:0',
             'other_charges' => 'nullable|numeric|min:0',
             'security_deposit' => 'nullable|numeric|min:0',
-            'occupancy_status' => 'required|in:available,occupied,maintenance',
+            'occupancy_status' => 'required|in:available,occupied,maintenance,self',
+            'is_self' => 'nullable|boolean',
             'amenities' => 'nullable|string',
         ]);
 
-        $validated['security_deposit'] = $validated['security_deposit'] ?? 0;
+        $isSelf = $request->boolean('is_self') || $request->occupancy_status === 'self';
+        if ($isSelf) {
+            $validated['is_self'] = 1;
+            $validated['occupancy_status'] = 'self';
+            $validated['monthly_rent'] = 0.00;
+            $validated['security_deposit'] = 0.00;
+            $validated['eb_unit_rate'] = 0.00;
+            $validated['maintenance_charges'] = 0.00;
+            $validated['other_charges'] = 0.00;
+        } else {
+            $validated['is_self'] = 0;
+            $validated['security_deposit'] = $validated['security_deposit'] ?? 0;
+        }
         $validated['status'] = 1;
 
         Room::create($validated);
@@ -161,9 +193,24 @@ class RoomController extends Controller
             'maintenance_charges' => 'nullable|numeric|min:0',
             'other_charges' => 'nullable|numeric|min:0',
             'security_deposit' => 'nullable|numeric|min:0',
-            'occupancy_status' => 'required|in:available,occupied,maintenance',
+            'occupancy_status' => 'required|in:available,occupied,maintenance,self',
+            'is_self' => 'nullable|boolean',
             'amenities' => 'nullable|string',
         ]);
+
+        $isSelf = $request->boolean('is_self') || $request->occupancy_status === 'self';
+        if ($isSelf) {
+            $validated['is_self'] = 1;
+            $validated['occupancy_status'] = 'self';
+            $validated['monthly_rent'] = 0.00;
+            $validated['security_deposit'] = 0.00;
+            $validated['eb_unit_rate'] = 0.00;
+            $validated['maintenance_charges'] = 0.00;
+            $validated['other_charges'] = 0.00;
+        } else {
+            $validated['is_self'] = 0;
+            $validated['security_deposit'] = $validated['security_deposit'] ?? 0;
+        }
 
         $room->update($validated);
 
@@ -207,11 +254,21 @@ class RoomController extends Controller
     {
         $request->validate([
             'id' => 'required|exists:rooms,id',
-            'occupancy_status' => 'required|in:available,occupied,maintenance'
+            'occupancy_status' => 'required|in:available,occupied,maintenance,self'
         ]);
 
         $room = Room::findOrFail($request->id);
         $room->occupancy_status = $request->occupancy_status;
+        if ($request->occupancy_status === 'self') {
+            $room->is_self = 1;
+            $room->monthly_rent = 0.00;
+            $room->security_deposit = 0.00;
+            $room->eb_unit_rate = 0.00;
+            $room->maintenance_charges = 0.00;
+            $room->other_charges = 0.00;
+        } else {
+            $room->is_self = 0;
+        }
         $room->save();
 
         return response()->json([

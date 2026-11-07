@@ -52,6 +52,9 @@ class HomeController extends Controller
         $totalRooms = Room::count();
         $occupiedRooms = Room::where('occupancy_status', 'occupied')->count();
         $availableRooms = Room::where('occupancy_status', 'available')->count();
+        $selfRooms = Room::where(function($q) {
+            $q->where('occupancy_status', 'self')->orWhere('is_self', 1);
+        })->count();
         $maintenanceRooms = Room::where('occupancy_status', 'maintenance')->count();
         $occupancyRate = $totalRooms > 0 ? round(($occupiedRooms / $totalRooms) * 100, 1) : 0;
 
@@ -247,6 +250,7 @@ class HomeController extends Controller
             'totalRooms' => $totalRooms,
             'occupiedRooms' => $occupiedRooms,
             'availableRooms' => $availableRooms,
+            'selfRooms' => $selfRooms,
             'maintenanceRooms' => $maintenanceRooms,
             'occupancyRate' => $occupancyRate,
             'monthlyTurnover' => $monthlyTurnover,

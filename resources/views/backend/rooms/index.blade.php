@@ -46,28 +46,35 @@
 
     <!-- Quick Stats Cards -->
     <div class="row mt-3 g-3">
-        <div class="col-md-3">
+        <div class="col-xl col-md-4 col-sm-6">
             <div class="room-stat-card border-start border-4 border-primary">
                 <div class="text-muted small text-uppercase fw-bold">Total Rooms</div>
                 <h3 class="fw-bold my-1 text-primary" id="statTotalRooms">{{ $stats['totalRooms'] }}</h3>
                 <small class="text-muted">Total inventory units</small>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-xl col-md-4 col-sm-6">
             <div class="room-stat-card border-start border-4 border-success">
                 <div class="text-muted small text-uppercase fw-bold">Available Rooms</div>
                 <h3 class="fw-bold my-1 text-success" id="statAvailableRooms">{{ $stats['availableRooms'] }}</h3>
                 <small class="text-muted">Ready for lease</small>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-xl col-md-4 col-sm-6">
             <div class="room-stat-card border-start border-4 border-danger">
                 <div class="text-muted small text-uppercase fw-bold">Occupied Units</div>
                 <h3 class="fw-bold my-1 text-danger" id="statOccupiedRooms">{{ $stats['occupiedRooms'] }}</h3>
                 <small class="text-muted">Currently tenanted</small>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-xl col-md-4 col-sm-6">
+            <div class="room-stat-card border-start border-4 border-info">
+                <div class="text-muted small text-uppercase fw-bold">Owner Occupied (Self)</div>
+                <h3 class="fw-bold my-1 text-info" id="statSelfRooms">{{ $stats['selfRooms'] ?? 0 }}</h3>
+                <small class="text-muted">Used by owners (no rent)</small>
+            </div>
+        </div>
+        <div class="col-xl col-md-4 col-sm-6">
             <div class="room-stat-card border-start border-4 border-warning">
                 <div class="text-muted small text-uppercase fw-bold">Under Maintenance</div>
                 <h3 class="fw-bold my-1 text-warning" id="statMaintenanceRooms">{{ $stats['maintenanceRooms'] }}</h3>
@@ -98,6 +105,7 @@
                                 <option value="">All Statuses</option>
                                 <option value="available">Available</option>
                                 <option value="occupied">Occupied</option>
+                                <option value="self">Self (Owner Occupied)</option>
                                 <option value="maintenance">Maintenance</option>
                             </select>
                         </div>
@@ -191,13 +199,28 @@
                                 <input type="number" name="capacity" class="form-control" value="1" min="1" max="10" required>
                             </div>
 
+                            <div class="col-12">
+                                <div class="p-2 px-3 border border-info rounded bg-info-subtle d-flex align-items-center justify-content-between">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="fas fa-user-shield text-info fs-5"></i>
+                                        <div>
+                                            <span class="fw-bold font-13 text-dark d-block">Mark as Self (Owner Occupied)</span>
+                                            <small class="text-muted font-11">Room is occupied by owners — automatically zeroes all rent and charges.</small>
+                                        </div>
+                                    </div>
+                                    <div class="form-check form-switch mb-0">
+                                        <input class="form-check-input" type="checkbox" role="switch" name="is_self" id="add_is_self" value="1" style="width: 2.8em; height: 1.4em; cursor: pointer;">
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Monthly Rent (₹) <span class="text-danger">*</span></label>
-                                <input type="number" step="0.01" name="monthly_rent" class="form-control" placeholder="8500" required>
+                                <input type="number" step="0.01" name="monthly_rent" id="add_monthly_rent" class="form-control" placeholder="8500" value="8500" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Security Deposit (₹)</label>
-                                <input type="number" step="0.01" name="security_deposit" class="form-control" placeholder="10000" value="10000">
+                                <input type="number" step="0.01" name="security_deposit" id="add_security_deposit" class="form-control" placeholder="10000" value="10000">
                             </div>
 
                             <div class="col-12">
@@ -235,9 +258,10 @@
 
                             <div class="col-md-12">
                                 <label class="form-label fw-bold">Initial Occupancy Status <span class="text-danger">*</span></label>
-                                <select name="occupancy_status" class="form-select" required>
+                                <select name="occupancy_status" id="add_occupancy_status" class="form-select" required>
                                     <option value="available">Available (Vacant & Ready)</option>
                                     <option value="occupied">Occupied</option>
+                                    <option value="self">Self (Owner Occupied)</option>
                                     <option value="maintenance">Under Maintenance</option>
                                 </select>
                             </div>
@@ -310,6 +334,21 @@
                                 <input type="number" id="edit_capacity" name="capacity" class="form-control" min="1" max="10" required>
                             </div>
 
+                            <div class="col-12">
+                                <div class="p-2 px-3 border border-info rounded bg-info-subtle d-flex align-items-center justify-content-between">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="fas fa-user-shield text-info fs-5"></i>
+                                        <div>
+                                            <span class="fw-bold font-13 text-dark d-block">Mark as Self (Owner Occupied)</span>
+                                            <small class="text-muted font-11">Room is occupied by owners — automatically zeroes all rent and charges.</small>
+                                        </div>
+                                    </div>
+                                    <div class="form-check form-switch mb-0">
+                                        <input class="form-check-input" type="checkbox" role="switch" name="is_self" id="edit_is_self" value="1" style="width: 2.8em; height: 1.4em; cursor: pointer;">
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Monthly Rent (₹) <span class="text-danger">*</span></label>
                                 <input type="number" step="0.01" id="edit_monthly_rent" name="monthly_rent" class="form-control" required>
@@ -355,6 +394,7 @@
                                 <select id="edit_occupancy_status" name="occupancy_status" class="form-select" required>
                                     <option value="available">Available (Vacant & Ready)</option>
                                     <option value="occupied">Occupied</option>
+                                    <option value="self">Self (Owner Occupied)</option>
                                     <option value="maintenance">Under Maintenance</option>
                                 </select>
                             </div>
@@ -397,6 +437,7 @@
                         $('#statTotalRooms').text(stats.totalRooms);
                         $('#statAvailableRooms').text(stats.availableRooms);
                         $('#statOccupiedRooms').text(stats.occupiedRooms);
+                        $('#statSelfRooms').text(stats.selfRooms || 0);
                         $('#statMaintenanceRooms').text(stats.maintenanceRooms);
                     }
                 }
@@ -450,8 +491,102 @@
                     table.ajax.reload();
                 });
 
+                // Helper to toggle Self (Owner Occupied) state in Create Modal
+                function applyAddSelfState(isSelf) {
+                    if (isSelf) {
+                        $('#add_is_self').prop('checked', true);
+                        $('#add_occupancy_status').val('self');
+                        $('#add_room_rent_type_fixed').prop('checked', true);
+                        $('#add_monthly_rent').val('0.00').prop('readonly', true).addClass('bg-light');
+                        $('#add_security_deposit').val('0.00').prop('readonly', true).addClass('bg-light');
+                        $('#add_eb_unit_rate').val('0.00').prop('readonly', true).addClass('bg-light');
+                        $('#add_maintenance_charges').val('0.00').prop('readonly', true).addClass('bg-light');
+                        $('#add_other_charges').val('0.00').prop('readonly', true).addClass('bg-light');
+                    } else {
+                        $('#add_is_self').prop('checked', false);
+                        if ($('#add_occupancy_status').val() === 'self') {
+                            $('#add_occupancy_status').val('available');
+                        }
+                        $('#add_monthly_rent').prop('readonly', false).removeClass('bg-light');
+                        if (parseFloat($('#add_monthly_rent').val()) === 0 || !$('#add_monthly_rent').val()) {
+                            $('#add_monthly_rent').val('8500');
+                        }
+                        $('#add_security_deposit').prop('readonly', false).removeClass('bg-light');
+                        if (parseFloat($('#add_security_deposit').val()) === 0 || !$('#add_security_deposit').val()) {
+                            $('#add_security_deposit').val('10000');
+                        }
+                        $('#add_eb_unit_rate').prop('readonly', false).removeClass('bg-light');
+                        if (parseFloat($('#add_eb_unit_rate').val()) === 0 || !$('#add_eb_unit_rate').val()) {
+                            $('#add_eb_unit_rate').val('10.00');
+                        }
+                        if ($('#add_room_rent_type_fixed').is(':checked')) {
+                            $('#add_maintenance_charges').val('0.00').prop('readonly', true).addClass('bg-light');
+                            $('#add_other_charges').val('0.00').prop('readonly', true).addClass('bg-light');
+                        } else {
+                            $('#add_maintenance_charges').prop('readonly', false).removeClass('bg-light');
+                            $('#add_other_charges').prop('readonly', false).removeClass('bg-light');
+                        }
+                    }
+                }
+
+                // Helper to toggle Self (Owner Occupied) state in Edit Modal
+                function applyEditSelfState(isSelf) {
+                    if (isSelf) {
+                        $('#edit_is_self').prop('checked', true);
+                        $('#edit_occupancy_status').val('self');
+                        $('#edit_room_rent_type_fixed').prop('checked', true);
+                        $('#edit_monthly_rent').val('0.00').prop('readonly', true).addClass('bg-light');
+                        $('#edit_security_deposit').val('0.00').prop('readonly', true).addClass('bg-light');
+                        $('#edit_eb_unit_rate').val('0.00').prop('readonly', true).addClass('bg-light');
+                        $('#edit_maintenance_charges').val('0.00').prop('readonly', true).addClass('bg-light');
+                        $('#edit_other_charges').val('0.00').prop('readonly', true).addClass('bg-light');
+                    } else {
+                        $('#edit_is_self').prop('checked', false);
+                        if ($('#edit_occupancy_status').val() === 'self') {
+                            $('#edit_occupancy_status').val('available');
+                        }
+                        $('#edit_monthly_rent').prop('readonly', false).removeClass('bg-light');
+                        $('#edit_security_deposit').prop('readonly', false).removeClass('bg-light');
+                        $('#edit_eb_unit_rate').prop('readonly', false).removeClass('bg-light');
+                        if ($('#edit_room_rent_type_fixed').is(':checked')) {
+                            $('#edit_maintenance_charges').val('0.00').prop('readonly', true).addClass('bg-light');
+                            $('#edit_other_charges').val('0.00').prop('readonly', true).addClass('bg-light');
+                        } else {
+                            $('#edit_maintenance_charges').prop('readonly', false).removeClass('bg-light');
+                            $('#edit_other_charges').prop('readonly', false).removeClass('bg-light');
+                        }
+                    }
+                }
+
+                // Events for Mark as Self in Create Modal
+                $(document).on('change', '#add_is_self', function() {
+                    applyAddSelfState(this.checked);
+                });
+
+                $(document).on('change', '#add_occupancy_status', function() {
+                    if ($(this).val() === 'self') {
+                        applyAddSelfState(true);
+                    } else if ($('#add_is_self').is(':checked')) {
+                        applyAddSelfState(false);
+                    }
+                });
+
+                // Events for Mark as Self in Edit Modal
+                $(document).on('change', '#edit_is_self', function() {
+                    applyEditSelfState(this.checked);
+                });
+
+                $(document).on('change', '#edit_occupancy_status', function() {
+                    if ($(this).val() === 'self') {
+                        applyEditSelfState(true);
+                    } else if ($('#edit_is_self').is(':checked')) {
+                        applyEditSelfState(false);
+                    }
+                });
+
                 // Toggle Fixed Rent vs Split Charges in Create Room Modal
                 $(document).on('change', 'input[name="add_room_rent_type"]', function() {
+                    if ($('#add_is_self').is(':checked')) return;
                     if ($('#add_room_rent_type_fixed').is(':checked')) {
                         $('#add_maintenance_charges').val('0.00').prop('readonly', true).addClass('bg-light');
                         $('#add_other_charges').val('0.00').prop('readonly', true).addClass('bg-light');
@@ -463,6 +598,7 @@
 
                 // Toggle Fixed Rent vs Split Charges in Edit Room Modal
                 $(document).on('change', 'input[name="edit_room_rent_type"]', function() {
+                    if ($('#edit_is_self').is(':checked')) return;
                     if ($('#edit_room_rent_type_fixed').is(':checked')) {
                         $('#edit_maintenance_charges').val('0.00').prop('readonly', true).addClass('bg-light');
                         $('#edit_other_charges').val('0.00').prop('readonly', true).addClass('bg-light');
@@ -473,6 +609,7 @@
                 });
 
                 $('#addRoomModal').on('show.bs.modal', function() {
+                    applyAddSelfState(false);
                     $('#add_room_rent_type_custom').prop('checked', true);
                     $('#add_maintenance_charges').prop('readonly', false).removeClass('bg-light');
                     $('#add_other_charges').prop('readonly', false).removeClass('bg-light');
@@ -542,24 +679,30 @@
                                 $('#edit_floor').val(room.floor);
                                 $('#edit_room_type').val(room.room_type);
                                 $('#edit_capacity').val(room.capacity);
-                                $('#edit_monthly_rent').val(room.monthly_rent);
-                                $('#edit_eb_unit_rate').val(room.eb_unit_rate || '10.00');
-                                var maint = parseFloat(room.maintenance_charges) || 0;
-                                var other = parseFloat(room.other_charges) || 0;
-                                $('#edit_maintenance_charges').val(room.maintenance_charges || '0.00');
-                                $('#edit_other_charges').val(room.other_charges || '0.00');
-
-                                if (maint === 0 && other === 0) {
-                                    $('#edit_room_rent_type_fixed').prop('checked', true);
-                                    $('#edit_maintenance_charges').prop('readonly', true).addClass('bg-light');
-                                    $('#edit_other_charges').prop('readonly', true).addClass('bg-light');
+                                var isSelf = (room.is_self == 1 || room.occupancy_status === 'self');
+                                if (isSelf) {
+                                    applyEditSelfState(true);
                                 } else {
-                                    $('#edit_room_rent_type_custom').prop('checked', true);
-                                    $('#edit_maintenance_charges').prop('readonly', false).removeClass('bg-light');
-                                    $('#edit_other_charges').prop('readonly', false).removeClass('bg-light');
+                                    applyEditSelfState(false);
+                                    $('#edit_monthly_rent').val(room.monthly_rent);
+                                    $('#edit_security_deposit').val(room.security_deposit);
+                                    $('#edit_eb_unit_rate').val(room.eb_unit_rate || '10.00');
+                                    var maint = parseFloat(room.maintenance_charges) || 0;
+                                    var other = parseFloat(room.other_charges) || 0;
+                                    $('#edit_maintenance_charges').val(room.maintenance_charges || '0.00');
+                                    $('#edit_other_charges').val(room.other_charges || '0.00');
+
+                                    if (maint === 0 && other === 0) {
+                                        $('#edit_room_rent_type_fixed').prop('checked', true);
+                                        $('#edit_maintenance_charges').prop('readonly', true).addClass('bg-light');
+                                        $('#edit_other_charges').prop('readonly', true).addClass('bg-light');
+                                    } else {
+                                        $('#edit_room_rent_type_custom').prop('checked', true);
+                                        $('#edit_maintenance_charges').prop('readonly', false).removeClass('bg-light');
+                                        $('#edit_other_charges').prop('readonly', false).removeClass('bg-light');
+                                    }
+                                    $('#edit_occupancy_status').val(room.occupancy_status);
                                 }
-                                $('#edit_security_deposit').val(room.security_deposit);
-                                $('#edit_occupancy_status').val(room.occupancy_status);
                                 $('#edit_amenities').val(room.amenities);
 
                                 $('#editRoomModal').modal('show');

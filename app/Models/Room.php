@@ -21,6 +21,7 @@ class Room extends Model
         'other_charges',
         'security_deposit',
         'occupancy_status',
+        'is_self',
         'amenities',
         'status',
     ];
@@ -32,6 +33,7 @@ class Room extends Model
         'other_charges' => 'decimal:2',
         'security_deposit' => 'decimal:2',
         'capacity' => 'integer',
+        'is_self' => 'boolean',
         'status' => 'boolean',
     ];
 

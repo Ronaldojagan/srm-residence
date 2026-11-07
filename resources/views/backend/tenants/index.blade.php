@@ -141,6 +141,7 @@
                                     @if(isset($rooms))
                                         @foreach($rooms as $r)
                                             <option value="{{ $r->id }}" 
+                                                {{ ($r->is_self || $r->occupancy_status === 'self') ? 'disabled' : '' }}
                                                 data-number="{{ $r->room_number }}" 
                                                 data-type="{{ $r->room_type }}" 
                                                 data-rent="{{ $r->monthly_rent }}" 
@@ -148,7 +149,7 @@
                                                 data-eb="{{ $r->eb_unit_rate }}"
                                                 data-maintenance="{{ $r->maintenance_charges }}"
                                                 data-other="{{ $r->other_charges }}">
-                                                Room {{ $r->room_number }} ({{ $r->floor }} - {{ $r->room_type }}) [{{ ucfirst($r->occupancy_status) }}]
+                                                Room {{ $r->room_number }} ({{ $r->floor }} - {{ $r->room_type }}) [{{ ($r->is_self || $r->occupancy_status === 'self') ? 'Owner Occupied (Self)' : ucfirst($r->occupancy_status) }}]
                                             </option>
                                         @endforeach
                                     @endif
@@ -296,6 +297,7 @@
                                     @if(isset($rooms))
                                         @foreach($rooms as $r)
                                             <option value="{{ $r->id }}" 
+                                                {{ ($r->is_self || $r->occupancy_status === 'self') ? 'disabled' : '' }}
                                                 data-number="{{ $r->room_number }}" 
                                                 data-type="{{ $r->room_type }}" 
                                                 data-rent="{{ $r->monthly_rent }}" 
@@ -303,7 +305,7 @@
                                                 data-eb="{{ $r->eb_unit_rate }}"
                                                 data-maintenance="{{ $r->maintenance_charges }}"
                                                 data-other="{{ $r->other_charges }}">
-                                                Room {{ $r->room_number }} ({{ $r->floor }} - {{ $r->room_type }}) [{{ ucfirst($r->occupancy_status) }}]
+                                                Room {{ $r->room_number }} ({{ $r->floor }} - {{ $r->room_type }}) [{{ ($r->is_self || $r->occupancy_status === 'self') ? 'Owner Occupied (Self)' : ucfirst($r->occupancy_status) }}]
                                             </option>
                                         @endforeach
                                     @endif
