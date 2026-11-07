@@ -223,69 +223,18 @@
                                 <input type="hidden" name="room_type" id="tenant_room_type" value="Standard">
                             </div>
 
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">Base Monthly Rent (₹) <span class="text-danger">*</span></label>
-                                <input type="number" step="0.01" name="monthly_rent" id="add_monthly_rent" class="form-control charge-input" placeholder="e.g. 12000" min="0" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">Security Deposit (₹)</label>
-                                <input type="number" step="0.01" name="security_deposit" class="form-control" placeholder="e.g. 24000" min="0" value="0">
-                            </div>
-
-                            <!-- Additional Charges based on room -->
-                            <div class="col-md-3">
-                                <label class="form-label fw-semibold">EB Rate (₹/Unit)</label>
-                                <div class="input-group">
-                                    <span class="input-group-text fw-bold">₹</span>
-                                    <input type="number" step="0.01" name="eb_unit_rate" id="add_eb_unit_rate" class="form-control" placeholder="10.00" value="10.00">
-                                </div>
-                                <small class="text-muted font-11">Cost per unit (kWh)</small>
-                            </div>
-                            <div class="col-12">
-                                <div class="d-flex align-items-center gap-3 p-2 bg-light rounded border">
-                                    <span class="fw-bold small text-muted text-uppercase font-11">Rent Structure:</span>
-                                    <div class="form-check form-check-inline mb-0">
-                                        <input class="form-check-input" type="radio" name="add_tenant_rent_type" id="add_tenant_rent_type_custom" value="custom" checked>
-                                        <label class="form-check-label fw-semibold font-12" for="add_tenant_rent_type_custom">Split Charges</label>
-                                    </div>
-                                    <div class="form-check form-check-inline mb-0">
-                                        <input class="form-check-input" type="radio" name="add_tenant_rent_type" id="add_tenant_rent_type_fixed" value="fixed">
-                                        <label class="form-check-label fw-bold text-success font-12" for="add_tenant_rent_type_fixed">
-                                            <i class="fas fa-check-circle me-1"></i> Fixed Rent
-                                        </label>
-                                    </div>
-                                    <small class="text-muted ms-auto d-none d-sm-inline font-11">(Fixed Rent zeroes Maintenance & Other charges)</small>
-                                </div>
-                            </div>
-
-                            <div class="col-md-3">
-                                <label class="form-label fw-semibold">Starting EB Units</label>
-                                <div class="input-group">
-                                    <input type="number" step="0.01" name="eb_start_reading" id="add_eb_start_reading" class="form-control" placeholder="0.00" value="0.00" min="0">
-                                    <span class="input-group-text small">Units</span>
-                                </div>
-                                <small class="text-muted font-11">Initial meter reading</small>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label fw-semibold">Maintenance Charges (₹)</label>
-                                <input type="number" step="0.01" name="maintenance_charges" id="add_maintenance_charges" class="form-control charge-input" placeholder="0.00" value="0.00">
-                                <small class="text-muted font-11">Upkeep & housekeeping</small>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label fw-semibold">Other Charges (₹)</label>
-                                <input type="number" step="0.01" name="other_charges" id="add_other_charges" class="form-control charge-input" placeholder="0.00" value="0.00">
-                                <small class="text-muted font-11">Wi-Fi / water / services</small>
-                            </div>
-
-                            <!-- Live Monthly Package Calculation -->
-                            <div class="col-12">
-                                <div class="p-3 bg-light rounded border d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <span class="text-muted small text-uppercase fw-bold d-block">Fixed Monthly Due</span>
-                                        <small class="text-muted">Rent + Maintenance + Other (EB billed on usage @ <strong class="text-primary" id="add_eb_rate_display">₹10.00/unit</strong>)</small>
-                                    </div>
-                                    <div class="text-end">
-                                        <h4 class="fw-bold text-success mb-0" id="add_total_monthly_display">₹0.00</h4>
+                            <!-- Assigned Room Financial Details Card (Read-only, automatically taken from room) -->
+                            <div class="col-12 d-none" id="addRoomDetailsInfoBox">
+                                <div class="p-3 bg-light rounded border">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-8">
+                                            <span class="text-muted small text-uppercase fw-bold d-block"><i class="mdi mdi-door-closed text-primary me-1"></i> Room Financial Details (From Room Settings)</span>
+                                            <div class="font-12 text-muted mt-1" id="addRoomDetailsSummaryText">-</div>
+                                        </div>
+                                        <div class="col-md-4 text-md-end mt-2 mt-md-0">
+                                            <span class="text-muted small text-uppercase fw-bold d-block">Room Monthly Rent</span>
+                                            <h4 class="fw-bold text-success mb-0" id="addRoomRentDisplay">₹0.00</h4>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -386,69 +335,18 @@
                                 <input type="hidden" name="room_type" id="edit_room_type" value="Standard">
                             </div>
 
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">Base Monthly Rent (₹) <span class="text-danger">*</span></label>
-                                <input type="number" step="0.01" id="edit_monthly_rent" name="monthly_rent" class="form-control edit-charge-input" min="0" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">Security Deposit (₹)</label>
-                                <input type="number" step="0.01" id="edit_security_deposit" name="security_deposit" class="form-control" min="0">
-                            </div>
-
-                            <div class="col-12">
-                                <div class="d-flex align-items-center gap-3 p-2 bg-light rounded border">
-                                    <span class="fw-bold small text-muted text-uppercase font-11">Rent Structure:</span>
-                                    <div class="form-check form-check-inline mb-0">
-                                        <input class="form-check-input" type="radio" name="edit_tenant_rent_type" id="edit_tenant_rent_type_custom" value="custom" checked>
-                                        <label class="form-check-label fw-semibold font-12" for="edit_tenant_rent_type_custom">Split Charges</label>
-                                    </div>
-                                    <div class="form-check form-check-inline mb-0">
-                                        <input class="form-check-input" type="radio" name="edit_tenant_rent_type" id="edit_tenant_rent_type_fixed" value="fixed">
-                                        <label class="form-check-label fw-bold text-success font-12" for="edit_tenant_rent_type_fixed">
-                                            <i class="fas fa-check-circle me-1"></i> Fixed Rent
-                                        </label>
-                                    </div>
-                                    <small class="text-muted ms-auto d-none d-sm-inline font-11">(Fixed Rent zeroes Maintenance & Other charges)</small>
-                                </div>
-                            </div>
-
-                            <!-- Additional Charges based on room -->
-                            <div class="col-md-3">
-                                <label class="form-label fw-semibold">EB Rate (₹/Unit)</label>
-                                <div class="input-group">
-                                    <span class="input-group-text fw-bold">₹</span>
-                                    <input type="number" step="0.01" id="edit_eb_unit_rate" name="eb_unit_rate" class="form-control" placeholder="10.00">
-                                </div>
-                                <small class="text-muted font-11">Cost per unit (kWh)</small>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label fw-semibold">Starting EB Units</label>
-                                <div class="input-group">
-                                    <input type="number" step="0.01" id="edit_eb_start_reading" name="eb_start_reading" class="form-control" placeholder="0.00" min="0">
-                                    <span class="input-group-text small">Units</span>
-                                </div>
-                                <small class="text-muted font-11">Initial meter reading</small>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label fw-semibold">Maintenance Charges (₹)</label>
-                                <input type="number" step="0.01" id="edit_maintenance_charges" name="maintenance_charges" class="form-control edit-charge-input" placeholder="0.00">
-                                <small class="text-muted font-11">Upkeep & housekeeping</small>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label fw-semibold">Other Charges (₹)</label>
-                                <input type="number" step="0.01" id="edit_other_charges" name="other_charges" class="form-control edit-charge-input" placeholder="0.00">
-                                <small class="text-muted font-11">Wi-Fi / water / services</small>
-                            </div>
-
-                            <!-- Live Monthly Package Calculation in Edit -->
-                            <div class="col-12">
-                                <div class="p-3 bg-light rounded border d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <span class="text-muted small text-uppercase fw-bold d-block">Fixed Monthly Due</span>
-                                        <small class="text-muted">Rent + Maintenance + Other (EB billed on usage @ <strong class="text-primary" id="edit_eb_rate_display">₹10.00/unit</strong>)</small>
-                                    </div>
-                                    <div class="text-end">
-                                        <h4 class="fw-bold text-success mb-0" id="edit_total_monthly_display">₹0.00</h4>
+                            <!-- Assigned Room Financial Details Card (Read-only, automatically taken from room) -->
+                            <div class="col-12" id="editRoomDetailsInfoBox">
+                                <div class="p-3 bg-light rounded border">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-8">
+                                            <span class="text-muted small text-uppercase fw-bold d-block"><i class="mdi mdi-door-closed text-primary me-1"></i> Room Financial Details (From Room Settings)</span>
+                                            <div class="font-12 text-muted mt-1" id="editRoomDetailsSummaryText">-</div>
+                                        </div>
+                                        <div class="col-md-4 text-md-end mt-2 mt-md-0">
+                                            <span class="text-muted small text-uppercase fw-bold d-block">Room Monthly Rent</span>
+                                            <h4 class="fw-bold text-success mb-0" id="editRoomRentDisplay">₹0.00</h4>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -529,54 +427,6 @@
                     timerProgressBar: true
                 });
 
-                // Calculations for live monthly totals
-                function calcAddTenantTotal() {
-                    var rent = parseFloat($('#add_monthly_rent').val()) || 0;
-                    var maint = parseFloat($('#add_maintenance_charges').val()) || 0;
-                    var other = parseFloat($('#add_other_charges').val()) || 0;
-                    var total = rent + maint + other;
-                    var ebRate = parseFloat($('#add_eb_unit_rate').val()) || 0;
-                    $('#add_total_monthly_display').text('₹' + total.toLocaleString('en-IN', { minimumFractionDigits: 2 }));
-                    $('#add_eb_rate_display').text('₹' + ebRate.toFixed(2) + '/unit');
-                }
-
-                function calcEditTenantTotal() {
-                    var rent = parseFloat($('#edit_monthly_rent').val()) || 0;
-                    var maint = parseFloat($('#edit_maintenance_charges').val()) || 0;
-                    var other = parseFloat($('#edit_other_charges').val()) || 0;
-                    var total = rent + maint + other;
-                    var ebRate = parseFloat($('#edit_eb_unit_rate').val()) || 0;
-                    $('#edit_total_monthly_display').text('₹' + total.toLocaleString('en-IN', { minimumFractionDigits: 2 }));
-                    $('#edit_eb_rate_display').text('₹' + ebRate.toFixed(2) + '/unit');
-                }
-
-                $(document).on('keyup change input', '.charge-input, #add_eb_unit_rate', calcAddTenantTotal);
-                $(document).on('keyup change input', '.edit-charge-input, #edit_eb_unit_rate', calcEditTenantTotal);
-
-                // Toggle Fixed Rent vs Split Charges in Create Tenant Modal
-                $(document).on('change', 'input[name="add_tenant_rent_type"]', function() {
-                    if ($('#add_tenant_rent_type_fixed').is(':checked')) {
-                        $('#add_maintenance_charges').val('0.00').prop('readonly', true).addClass('bg-light');
-                        $('#add_other_charges').val('0.00').prop('readonly', true).addClass('bg-light');
-                    } else {
-                        $('#add_maintenance_charges').prop('readonly', false).removeClass('bg-light');
-                        $('#add_other_charges').prop('readonly', false).removeClass('bg-light');
-                    }
-                    calcAddTenantTotal();
-                });
-
-                // Toggle Fixed Rent vs Split Charges in Edit Tenant Modal
-                $(document).on('change', 'input[name="edit_tenant_rent_type"]', function() {
-                    if ($('#edit_tenant_rent_type_fixed').is(':checked')) {
-                        $('#edit_maintenance_charges').val('0.00').prop('readonly', true).addClass('bg-light');
-                        $('#edit_other_charges').val('0.00').prop('readonly', true).addClass('bg-light');
-                    } else {
-                        $('#edit_maintenance_charges').prop('readonly', false).removeClass('bg-light');
-                        $('#edit_other_charges').prop('readonly', false).removeClass('bg-light');
-                    }
-                    calcEditTenantTotal();
-                });
-
                 // Initialize Select2 multi-room pickers
                 $('#tenant_room_ids').select2({
                     dropdownParent: $('#addTenantModal'),
@@ -593,11 +443,9 @@
                 });
 
                 $('#addTenantModal').on('show.bs.modal', function() {
-                    $('#add_tenant_rent_type_custom').prop('checked', true);
-                    $('#add_maintenance_charges').prop('readonly', false).removeClass('bg-light');
-                    $('#add_other_charges').prop('readonly', false).removeClass('bg-light');
                     $('#tenant_room_ids').val(null).trigger('change.select2');
                     $('#addRoomSelectedCount').text('Select 1 or more rooms');
+                    $('#addRoomDetailsInfoBox').addClass('d-none');
                 });
 
                 // Auto-fill combined room details when rooms are selected in Create modal
@@ -609,6 +457,7 @@
                     if (count === 0) {
                         $('#tenant_room_number').val('');
                         $('#tenant_room_type').val('Standard');
+                        $('#addRoomDetailsInfoBox').addClass('d-none');
                         return;
                     }
 
@@ -633,23 +482,17 @@
 
                     $('#tenant_room_number').val(roomNumbers.join(', '));
                     $('#tenant_room_type').val(roomTypes.join(', '));
-                    $('#add_monthly_rent').val(totalRent);
-                    $('#addTenantModal input[name="security_deposit"]').val(totalDeposit);
-                    $('#add_eb_unit_rate').val(ebRate.toFixed(2));
 
-                    if (totalMaint === 0 && totalOther === 0) {
-                        $('#add_tenant_rent_type_fixed').prop('checked', true);
-                        $('#add_maintenance_charges').val('0.00').prop('readonly', true).addClass('bg-light');
-                        $('#add_other_charges').val('0.00').prop('readonly', true).addClass('bg-light');
-                    } else {
-                        $('#add_tenant_rent_type_custom').prop('checked', true);
-                        $('#add_maintenance_charges').val(totalMaint.toFixed(2)).prop('readonly', false).removeClass('bg-light');
-                        $('#add_other_charges').val(totalOther.toFixed(2)).prop('readonly', false).removeClass('bg-light');
-                    }
-                    calcAddTenantTotal();
+                    var summaryParts = ['Room(s): ' + roomNumbers.join(', ')];
+                    summaryParts.push('Deposit: ₹' + totalDeposit.toLocaleString('en-IN'));
+                    if (totalMaint > 0) summaryParts.push('Maintenance: ₹' + totalMaint.toLocaleString('en-IN'));
+                    if (totalOther > 0) summaryParts.push('Other: ₹' + totalOther.toLocaleString('en-IN'));
+                    summaryParts.push('EB: ₹' + ebRate.toFixed(2) + '/unit');
+
+                    $('#addRoomDetailsSummaryText').text(summaryParts.join(' | '));
+                    $('#addRoomRentDisplay').text('₹' + totalRent.toLocaleString('en-IN', {minimumFractionDigits: 2}));
+                    $('#addRoomDetailsInfoBox').removeClass('d-none');
                 });
-
-                var isProgrammaticEditChange = false;
 
                 // Auto-fill combined room details when rooms are selected in Edit modal
                 $('#edit_tenant_room_ids').on('change', function() {
@@ -659,51 +502,42 @@
 
                     if (count === 0) {
                         $('#edit_tenant_room_number').val('');
+                        $('#editRoomDetailsSummaryText').text('No rooms selected');
+                        $('#editRoomRentDisplay').text('₹0.00');
                         return;
                     }
 
+                    var totalRent = 0;
+                    var totalDeposit = 0;
+                    var totalMaint = 0;
+                    var totalOther = 0;
                     var roomNumbers = [];
                     var roomTypes = [];
+                    var ebRate = 10.00;
+
                     $selected.each(function() {
                         var $opt = $(this);
+                        totalRent += parseFloat($opt.data('rent')) || 0;
+                        totalDeposit += parseFloat($opt.data('deposit')) || 0;
+                        totalMaint += parseFloat($opt.data('maintenance')) || 0;
+                        totalOther += parseFloat($opt.data('other')) || 0;
                         if ($opt.data('number')) roomNumbers.push($opt.data('number'));
                         if ($opt.data('type') && !roomTypes.includes($opt.data('type'))) roomTypes.push($opt.data('type'));
+                        if ($opt.data('eb')) ebRate = parseFloat($opt.data('eb'));
                     });
 
                     $('#edit_tenant_room_number').val(roomNumbers.join(', '));
                     $('#edit_room_type').val(roomTypes.join(', '));
 
-                    if (!isProgrammaticEditChange) {
-                        var totalRent = 0;
-                        var totalDeposit = 0;
-                        var totalMaint = 0;
-                        var totalOther = 0;
-                        var ebRate = 10.00;
+                    var summaryParts = ['Room(s): ' + roomNumbers.join(', ')];
+                    summaryParts.push('Deposit: ₹' + totalDeposit.toLocaleString('en-IN'));
+                    if (totalMaint > 0) summaryParts.push('Maintenance: ₹' + totalMaint.toLocaleString('en-IN'));
+                    if (totalOther > 0) summaryParts.push('Other: ₹' + totalOther.toLocaleString('en-IN'));
+                    summaryParts.push('EB: ₹' + ebRate.toFixed(2) + '/unit');
 
-                        $selected.each(function() {
-                            var $opt = $(this);
-                            totalRent += parseFloat($opt.data('rent')) || 0;
-                            totalDeposit += parseFloat($opt.data('deposit')) || 0;
-                            totalMaint += parseFloat($opt.data('maintenance')) || 0;
-                            totalOther += parseFloat($opt.data('other')) || 0;
-                            if ($opt.data('eb')) ebRate = parseFloat($opt.data('eb'));
-                        });
-
-                        $('#edit_monthly_rent').val(totalRent);
-                        $('#edit_security_deposit').val(totalDeposit);
-                        $('#edit_eb_unit_rate').val(ebRate.toFixed(2));
-
-                        if (totalMaint === 0 && totalOther === 0) {
-                            $('#edit_tenant_rent_type_fixed').prop('checked', true);
-                            $('#edit_maintenance_charges').val('0.00').prop('readonly', true).addClass('bg-light');
-                            $('#edit_other_charges').val('0.00').prop('readonly', true).addClass('bg-light');
-                        } else {
-                            $('#edit_tenant_rent_type_custom').prop('checked', true);
-                            $('#edit_maintenance_charges').val(totalMaint.toFixed(2)).prop('readonly', false).removeClass('bg-light');
-                            $('#edit_other_charges').val(totalOther.toFixed(2)).prop('readonly', false).removeClass('bg-light');
-                        }
-                        calcEditTenantTotal();
-                    }
+                    $('#editRoomDetailsSummaryText').text(summaryParts.join(' | '));
+                    $('#editRoomRentDisplay').text('₹' + totalRent.toLocaleString('en-IN', {minimumFractionDigits: 2}));
+                    $('#editRoomDetailsInfoBox').removeClass('d-none');
                 });
 
                 // 1. ADD TENANT VIA AJAX
@@ -851,26 +685,8 @@
                                 if (tenant.commence_date) {
                                     $('#edit_commence_date').val(tenant.commence_date.substring(0, 10));
                                 }
-                                $('#edit_monthly_rent').val(tenant.monthly_rent);
-                                $('#edit_eb_unit_rate').val(tenant.eb_unit_rate !== null && tenant.eb_unit_rate !== undefined ? tenant.eb_unit_rate : '10.00');
-                                $('#edit_eb_start_reading').val(tenant.eb_start_reading !== null && tenant.eb_start_reading !== undefined ? tenant.eb_start_reading : '0.00');
-                                var tmaint = parseFloat(tenant.maintenance_charges) || 0;
-                                var tother = parseFloat(tenant.other_charges) || 0;
-                                $('#edit_maintenance_charges').val(tenant.maintenance_charges || '0.00');
-                                $('#edit_other_charges').val(tenant.other_charges || '0.00');
-
-                                if (tmaint === 0 && tother === 0) {
-                                    $('#edit_tenant_rent_type_fixed').prop('checked', true);
-                                    $('#edit_maintenance_charges').prop('readonly', true).addClass('bg-light');
-                                    $('#edit_other_charges').prop('readonly', true).addClass('bg-light');
-                                } else {
-                                    $('#edit_tenant_rent_type_custom').prop('checked', true);
-                                    $('#edit_maintenance_charges').prop('readonly', false).removeClass('bg-light');
-                                    $('#edit_other_charges').prop('readonly', false).removeClass('bg-light');
-                                }
-                                $('#edit_security_deposit').val(tenant.security_deposit);
                                 $('#edit_address').val(tenant.address);
-                                calcEditTenantTotal();
+                                $('#edit_tenant_room_ids').trigger('change');
 
                                 $('#editTenantModal').modal('show');
                             }

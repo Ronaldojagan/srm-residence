@@ -41,6 +41,51 @@ class Tenant extends Model
         'status' => 'boolean',
     ];
 
+    public function getMonthlyRentAttribute($value)
+    {
+        $rooms = $this->assigned_rooms;
+        if ($rooms->isNotEmpty()) {
+            return (float) $rooms->sum('monthly_rent');
+        }
+        return (float) $value;
+    }
+
+    public function getSecurityDepositAttribute($value)
+    {
+        $rooms = $this->assigned_rooms;
+        if ($rooms->isNotEmpty()) {
+            return (float) $rooms->sum('security_deposit');
+        }
+        return (float) $value;
+    }
+
+    public function getMaintenanceChargesAttribute($value)
+    {
+        $rooms = $this->assigned_rooms;
+        if ($rooms->isNotEmpty()) {
+            return (float) $rooms->sum('maintenance_charges');
+        }
+        return (float) $value;
+    }
+
+    public function getOtherChargesAttribute($value)
+    {
+        $rooms = $this->assigned_rooms;
+        if ($rooms->isNotEmpty()) {
+            return (float) $rooms->sum('other_charges');
+        }
+        return (float) $value;
+    }
+
+    public function getEbUnitRateAttribute($value)
+    {
+        $rooms = $this->assigned_rooms;
+        if ($rooms->isNotEmpty() && (float) $rooms->first()->eb_unit_rate > 0) {
+            return (float) $rooms->first()->eb_unit_rate;
+        }
+        return (float) ($value ?? 10.00);
+    }
+
     public function getTotalMonthlyDueAttribute(): float
     {
         return (float) $this->monthly_rent + (float) $this->maintenance_charges + (float) $this->other_charges;

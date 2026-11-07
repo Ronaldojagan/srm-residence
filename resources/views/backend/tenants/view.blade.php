@@ -611,34 +611,26 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold">Room Type <span class="text-danger">*</span></label>
-                                <input type="text" name="room_type" class="form-control" value="{{ $tenant->room_type }}" required>
-                            </div>
-                            <div class="col-md-6">
                                 <label class="form-label fw-semibold">Commence Date <span class="text-danger">*</span></label>
                                 <input type="date" name="commence_date" class="form-control" value="{{ $tenant->commence_date ? $tenant->commence_date->format('Y-m-d') : '' }}" required>
                             </div>
 
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">Monthly Rent (₹) <span class="text-danger">*</span></label>
-                                <input type="number" step="0.01" name="monthly_rent" class="form-control" value="{{ $tenant->monthly_rent }}" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">Security Deposit (₹)</label>
-                                <input type="number" step="0.01" name="security_deposit" class="form-control" value="{{ $tenant->security_deposit }}">
-                            </div>
-
-                            <div class="col-md-4">
-                                <label class="form-label fw-semibold">EB Rate (₹/Unit)</label>
-                                <input type="number" step="0.01" name="eb_unit_rate" class="form-control" value="{{ $tenant->eb_unit_rate ?? 10.00 }}">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label fw-semibold">Maintenance Charges (₹)</label>
-                                <input type="number" step="0.01" name="maintenance_charges" class="form-control" value="{{ $tenant->maintenance_charges }}">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label fw-semibold">Other Charges (₹)</label>
-                                <input type="number" step="0.01" name="other_charges" class="form-control" value="{{ $tenant->other_charges }}">
+                            <!-- Assigned Room Financial Details Card (Read-only, automatically taken from room) -->
+                            <div class="col-12" id="viewEditRoomDetailsInfoBox">
+                                <div class="p-3 bg-light rounded border">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-8">
+                                            <span class="text-muted small text-uppercase fw-bold d-block"><i class="mdi mdi-door-closed text-primary me-1"></i> Room Financial Details (From Room Settings)</span>
+                                            <div class="font-12 text-muted mt-1" id="viewEditRoomDetailsSummaryText">
+                                                Deposit: ₹{{ number_format($tenant->security_deposit) }} | Maint: ₹{{ number_format($tenant->maintenance_charges) }} | EB: ₹{{ number_format($tenant->eb_unit_rate, 2) }}/unit
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 text-md-end mt-2 mt-md-0">
+                                            <span class="text-muted small text-uppercase fw-bold d-block">Monthly Room Rent</span>
+                                            <h4 class="fw-bold text-success mb-0" id="viewEditRoomRentDisplay">₹{{ number_format($tenant->monthly_rent, 2) }}</h4>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="col-12">
@@ -722,6 +714,36 @@
                     placeholder: 'Click to select room(s)...',
                     width: '100%',
                     closeOnSelect: false
+                });
+
+                $('#view_edit_tenant_room_ids').on('change', function() {
+                    var $selected = $(this).find('option:selected');
+                    var totalRent = 0;
+                    var totalDeposit = 0;
+                    var totalMaint = 0;
+                    var totalOther = 0;
+                    var roomNumbers = [];
+                    var ebRate = 10.00;
+
+                    $selected.each(function() {
+                        var $opt = $(this);
+                        totalRent += parseFloat($opt.data('rent')) || 0;
+                        totalDeposit += parseFloat($opt.data('deposit')) || 0;
+                        totalMaint += parseFloat($opt.data('maintenance')) || 0;
+                        totalOther += parseFloat($opt.data('other')) || 0;
+                        if ($opt.data('number')) roomNumbers.push($opt.data('number'));
+                        if ($opt.data('eb')) ebRate = parseFloat($opt.data('eb'));
+                    });
+
+                    var summaryParts = [];
+                    if (roomNumbers.length > 0) summaryParts.push('Room(s): ' + roomNumbers.join(', '));
+                    summaryParts.push('Deposit: ₹' + totalDeposit.toLocaleString('en-IN'));
+                    if (totalMaint > 0) summaryParts.push('Maint: ₹' + totalMaint.toLocaleString('en-IN'));
+                    if (totalOther > 0) summaryParts.push('Other: ₹' + totalOther.toLocaleString('en-IN'));
+                    summaryParts.push('EB: ₹' + ebRate.toFixed(2) + '/unit');
+
+                    $('#viewEditRoomDetailsSummaryText').text(summaryParts.join(' | '));
+                    $('#viewEditRoomRentDisplay').text('₹' + totalRent.toLocaleString('en-IN', {minimumFractionDigits: 2}));
                 });
 
                 $('#editTenantForm').on('submit', function(e) {

@@ -117,13 +117,6 @@ class TenantController extends Controller
             'name' => ['required', 'string', 'min:2', 'max:100', 'regex:/^[\pL\s\.\'-]+$/u'],
             'email' => 'nullable|email|max:100',
             'phone' => ['required', 'string', 'regex:/^[0-9+\-\s]{10,15}$/'],
-            'room_type' => 'nullable|string|max:100',
-            'monthly_rent' => 'required|numeric|min:0',
-            'eb_unit_rate' => 'nullable|numeric|min:0|max:100',
-            'eb_start_reading' => 'nullable|numeric|min:0',
-            'maintenance_charges' => 'nullable|numeric|min:0',
-            'other_charges' => 'nullable|numeric|min:0',
-            'security_deposit' => 'nullable|numeric|min:0',
             'commence_date' => 'required|date',
             'emergency_contact' => ['nullable', 'string', 'regex:/^[0-9+\-\s]{7,15}$/'],
             'address' => 'nullable|string|max:500',
@@ -135,9 +128,6 @@ class TenantController extends Controller
             'phone.regex' => 'Please enter a valid 10-digit mobile number.',
             'email.email' => 'Please enter a valid email address.',
             'commence_date.required' => 'Move-in / commence date is required.',
-            'monthly_rent.required' => 'Monthly rent is required.',
-            'monthly_rent.min' => 'Monthly rent cannot be negative.',
-            'eb_start_reading.min' => 'Starting EB meter reading cannot be negative.',
             'emergency_contact.regex' => 'Emergency contact must be a valid phone number.',
         ]);
 
@@ -190,12 +180,15 @@ class TenantController extends Controller
 
         $validated['room_id'] = $primaryRoom->id;
         $validated['room_number'] = $roomNumbers;
-        $validated['room_type'] = !empty($validated['room_type']) ? $validated['room_type'] : ($roomTypes ?: 'Standard');
-        $validated['eb_unit_rate'] = $validated['eb_unit_rate'] ?? 10.00;
-        $validated['eb_start_reading'] = $validated['eb_start_reading'] ?? 0.00;
-        $validated['maintenance_charges'] = $validated['maintenance_charges'] ?? 0;
-        $validated['other_charges'] = $validated['other_charges'] ?? 0;
-        $validated['security_deposit'] = $validated['security_deposit'] ?? 0;
+        $validated['room_type'] = $roomTypes ?: 'Standard';
+
+        // Inherit financial & utility rates directly from assigned rooms
+        $validated['monthly_rent'] = (float) $assignedRooms->sum('monthly_rent');
+        $validated['security_deposit'] = (float) $assignedRooms->sum('security_deposit');
+        $validated['maintenance_charges'] = (float) $assignedRooms->sum('maintenance_charges');
+        $validated['other_charges'] = (float) $assignedRooms->sum('other_charges');
+        $validated['eb_unit_rate'] = (float) ($assignedRooms->first()->eb_unit_rate ?? 10.00);
+        $validated['eb_start_reading'] = 0.00;
         $validated['status'] = 1;
 
         $tenant = Tenant::create($validated);
@@ -281,13 +274,6 @@ class TenantController extends Controller
             'name' => ['required', 'string', 'min:2', 'max:100', 'regex:/^[\pL\s\.\'-]+$/u'],
             'email' => 'nullable|email|max:100',
             'phone' => ['required', 'string', 'regex:/^[0-9+\-\s]{10,15}$/'],
-            'room_type' => 'nullable|string|max:100',
-            'monthly_rent' => 'required|numeric|min:0',
-            'eb_unit_rate' => 'nullable|numeric|min:0|max:100',
-            'eb_start_reading' => 'nullable|numeric|min:0',
-            'maintenance_charges' => 'nullable|numeric|min:0',
-            'other_charges' => 'nullable|numeric|min:0',
-            'security_deposit' => 'nullable|numeric|min:0',
             'commence_date' => 'required|date',
             'emergency_contact' => ['nullable', 'string', 'regex:/^[0-9+\-\s]{7,15}$/'],
             'address' => 'nullable|string|max:500',
@@ -299,8 +285,6 @@ class TenantController extends Controller
             'phone.regex' => 'Please enter a valid mobile number.',
             'email.email' => 'Please enter a valid email address.',
             'commence_date.required' => 'Move-in / commence date is required.',
-            'monthly_rent.min' => 'Monthly rent cannot be negative.',
-            'eb_start_reading.min' => 'Starting EB meter reading cannot be negative.',
         ]);
 
         $assignedRooms = Room::whereIn('id', $roomIds)->get();
@@ -366,12 +350,14 @@ class TenantController extends Controller
 
         $validated['room_id'] = $primaryRoom->id;
         $validated['room_number'] = $roomNumbers;
-        $validated['room_type'] = !empty($validated['room_type']) ? $validated['room_type'] : ($roomTypes ?: $tenant->room_type);
-        $validated['eb_unit_rate'] = $validated['eb_unit_rate'] ?? 10.00;
-        $validated['eb_start_reading'] = $validated['eb_start_reading'] ?? 0.00;
-        $validated['maintenance_charges'] = $validated['maintenance_charges'] ?? 0;
-        $validated['other_charges'] = $validated['other_charges'] ?? 0;
-        $validated['security_deposit'] = $validated['security_deposit'] ?? 0;
+        $validated['room_type'] = $roomTypes ?: $tenant->room_type;
+
+        // Inherit financial & utility rates directly from assigned rooms
+        $validated['monthly_rent'] = (float) $assignedRooms->sum('monthly_rent');
+        $validated['security_deposit'] = (float) $assignedRooms->sum('security_deposit');
+        $validated['maintenance_charges'] = (float) $assignedRooms->sum('maintenance_charges');
+        $validated['other_charges'] = (float) $assignedRooms->sum('other_charges');
+        $validated['eb_unit_rate'] = (float) ($assignedRooms->first()->eb_unit_rate ?? 10.00);
 
         $tenant->update($validated);
         $tenant->rooms()->sync($newRoomIds);
