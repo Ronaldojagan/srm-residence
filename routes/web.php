@@ -41,6 +41,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'user-access:' . Use
     // Users
     Route::controller(UserController::class)->prefix('users')->name('users.')->group(function () {
         Route::get('/', 'index')->name('index');
+        Route::get('/export', 'export')->name('export');
         Route::post('/', 'store')->name('store');
         Route::get('/{user}/data', 'getUserData')->name('data');
         Route::get('/{user}/edit', 'edit')->name('edit');
@@ -57,6 +58,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'user-access:' . Use
     // Tenants
     Route::controller(TenantController::class)->prefix('tenants')->name('tenants.')->group(function () {
         Route::get('/', 'index')->name('index');
+        Route::get('/export', 'export')->name('export');
         Route::post('/', 'store')->name('store');
         Route::get('/{tenant}/view', 'view')->name('view');
         Route::get('/{tenant}/data', 'getData')->name('data');
@@ -68,6 +70,7 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'user-access:' . Use
     // Rooms
     Route::controller(RoomController::class)->prefix('rooms')->name('rooms.')->group(function () {
         Route::get('/', 'index')->name('index');
+        Route::get('/export', 'export')->name('export');
         Route::post('/', 'store')->name('store');
         Route::get('/{room}/data', 'getData')->name('data');
         Route::post('/{room}/update', 'update')->name('update');
@@ -79,7 +82,9 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'user-access:' . Use
     // Expenses
     Route::controller(ExpenseController::class)->prefix('expenses')->name('expenses.')->group(function () {
         Route::get('/rooms', 'roomExpenses')->name('rooms');
+        Route::get('/rooms/export', 'exportRoomExpenses')->name('rooms.export');
         Route::get('/personal', 'personalExpenses')->name('personal');
+        Route::get('/personal/export', 'exportPersonalExpenses')->name('personal.export');
         Route::get('/personal/stats', 'getPersonalStatsAjax')->name('personal.stats');
         Route::post('/', 'store')->name('store');
         Route::get('/{expense}/data', 'getData')->name('data');
@@ -92,7 +97,9 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'user-access:' . Use
         Route::get('/', 'index')->name('index');
         Route::get('/stats', 'getStats')->name('stats');
         Route::get('/bills-data', 'billsData')->name('bills.data');
+        Route::get('/bills/export', 'exportBills')->name('bills.export');
         Route::get('/payments-data', 'paymentsData')->name('payments.data');
+        Route::get('/payments/export', 'exportPayments')->name('payments.export');
         Route::post('/bills', 'storeBill')->name('bills.store');
         Route::post('/bills/quick-monthly', 'quickGenerateMonthlyRent')->name('bills.quick_monthly');
         Route::get('/bills/{id}', 'getBillDetails')->name('bills.details');

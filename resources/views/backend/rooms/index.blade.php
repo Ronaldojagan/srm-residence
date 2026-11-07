@@ -163,6 +163,9 @@
                             <button id="btnResetFilters" class="btn btn-outline-secondary btn-sm">
                                 <i class="fas fa-undo me-1"></i> Reset Filters
                             </button>
+                            <button type="button" id="btnExportRooms" class="btn btn-outline-success btn-sm ms-2">
+                                <i class="fas fa-file-excel me-1"></i> Export Excel
+                            </button>
                         </div>
                     </div>
 
@@ -532,7 +535,17 @@
                     $('#filterFloor').val('');
                     $('#filterOccupancy').val('');
                     $('#filterType').val('');
-                    table.ajax.reload();
+                    table.search('').draw();
+                });
+
+                $('#btnExportRooms').on('click', function() {
+                    var params = {
+                        floor: $('#filterFloor').val(),
+                        occupancy_status: $('#filterOccupancy').val(),
+                        room_type: $('#filterType').val(),
+                        search: table.search()
+                    };
+                    window.location.href = "{{ route('rooms.export') }}?" + $.param(params);
                 });
 
                 // Helper to toggle Self (Owner Occupied) state in Create Modal

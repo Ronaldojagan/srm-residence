@@ -121,6 +121,9 @@
                             <button id="btnResetFilters" class="btn btn-outline-secondary btn-sm">
                                 <i class="fas fa-undo me-1"></i> Reset Filters
                             </button>
+                            <button type="button" id="btnExportRoomExpenses" class="btn btn-outline-success btn-sm ms-2">
+                                <i class="fas fa-file-excel me-1"></i> Export Excel
+                            </button>
                         </div>
                     </div>
 
@@ -392,7 +395,17 @@
                     $('#filterRoom').val('');
                     $('#filterCategory').val('');
                     $('#filterPaymentMethod').val('');
-                    table.ajax.reload();
+                    table.search('').draw();
+                });
+
+                $('#btnExportRoomExpenses').on('click', function() {
+                    var params = {
+                        room_id: $('#filterRoom').val(),
+                        category: $('#filterCategory').val(),
+                        payment_method: $('#filterPaymentMethod').val(),
+                        search: table.search()
+                    };
+                    window.location.href = "{{ route('expenses.rooms.export') }}?" + $.param(params);
                 });
 
                 // 1. CREATE ROOM EXPENSE VIA AJAX

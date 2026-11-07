@@ -256,6 +256,9 @@
                                     <button type="button" id="btnResetBillFilters" class="btn btn-outline-secondary btn-sm">
                                         <i class="fas fa-undo me-1"></i> Reset
                                     </button>
+                                    <button type="button" id="btnExportBills" class="btn btn-outline-success btn-sm ms-2">
+                                        <i class="fas fa-file-excel me-1"></i> Export Excel
+                                    </button>
                                 </div>
                             </div>
 
@@ -308,6 +311,9 @@
                                 <div class="col-md-5 text-end pt-3">
                                     <button type="button" id="btnResetPayFilters" class="btn btn-outline-secondary btn-sm">
                                         <i class="fas fa-undo me-1"></i> Reset Filters
+                                    </button>
+                                    <button type="button" id="btnExportPayments" class="btn btn-outline-success btn-sm ms-2">
+                                        <i class="fas fa-file-excel me-1"></i> Export Excel
                                     </button>
                                 </div>
                             </div>
@@ -1110,7 +1116,18 @@
                     $('#filterBillType').val('');
                     $('#filterBillStatus').val('');
                     $('#filterBillMonth').val('');
-                    billsTable.ajax.reload();
+                    billsTable.search('').draw();
+                });
+
+                $('#btnExportBills').on('click', function() {
+                    var params = {
+                        tenant_id: $('#filterBillTenant').val(),
+                        bill_type: $('#filterBillType').val(),
+                        status: $('#filterBillStatus').val(),
+                        billing_month: $('#filterBillMonth').val(),
+                        search: billsTable.search()
+                    };
+                    window.location.href = "{{ route('billing.bills.export') }}?" + $.param(params);
                 });
 
                 // =========================================================================
@@ -1157,7 +1174,16 @@
                 $('#btnResetPayFilters').on('click', function() {
                     $('#filterPayTenant').val('');
                     $('#filterPayMethod').val('');
-                    paymentsTable.ajax.reload();
+                    paymentsTable.search('').draw();
+                });
+
+                $('#btnExportPayments').on('click', function() {
+                    var params = {
+                        tenant_id: $('#filterPayTenant').val(),
+                        payment_method: $('#filterPayMethod').val(),
+                        search: paymentsTable.search()
+                    };
+                    window.location.href = "{{ route('billing.payments.export') }}?" + $.param(params);
                 });
 
                 // Reload active table on tab switch

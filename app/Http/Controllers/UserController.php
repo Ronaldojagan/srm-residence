@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Yajra\DataTables\DataTables;
 
 class UserController extends Controller
@@ -317,5 +318,79 @@ class UserController extends Controller
                 'message' => 'Failed to load user details'
             ]);
         }
+    }
+
+    /**
+     * Export System Users to CSV with UTF-8 BOM respecting active filters
+     */
+    public function export(Request $request): StreamedResponse
+    {
+        $fileName = 'srm_residence_users_' . date('Ymd_His') . '.csv';
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
+        ];
+
+        $callback = function () use ($request) {
+            $handle = fopen('php://output', 'w');
+            fputs($handle, "\xEF\xBB\xBF"); // UTF-8 BOM
+
+            fputcsv($handle, [
+                'S.No',
+                'Full Name',
+                'Email Address',
+                'Phone Number',
+                'Role / Type',
+                'Status',
+                'Created At',
+            ]);
+
+            $query = User::orderBy('id', 'desc');
+
+            if ($request->filled('type') && $request->type !== 'all') {
+                $query->where('type', $request->type);
+            }
+            if ($request->filled('status') && $request->status !== 'all') {
+                $query->where('status', $request->status === 'active' ? 1 : 0);
+            }
+            if ($request->filled('search')) {
+                $s = trim($request->search);
+                $query->where(function ($q) use ($s) {
+                    $q->where('name', 'like', "%{$s}%")
+                        ->orWhere('email', 'like', "%{$s}%")
+                        ->orWhere('phone', 'like', "%{$s}%")
+                        ->orWhere('type', 'like', "%{$s}%");
+                });
+            }
+
+            $index = 1;
+            $query->chunk(100, function ($users) use ($handle, &$index) {
+                foreach ($users as $u) {
+                    $roleLabel = 'Standard User';
+                    if ($u->type === 'Admin' || $u->type === \App\Enums\UserType::SUPERADMIN) {
+                        $roleLabel = 'Administrator';
+                    } elseif ($u->type === 'delivery' || strtolower($u->type) === 'staff') {
+                        $roleLabel = 'Staff / Manager';
+                    }
+
+                    fputcsv($handle, [
+                        $index++,
+                        $u->name,
+                        $u->email,
+                        $u->phone ?: '',
+                        $roleLabel,
+                        $u->status == 1 ? 'Active' : 'Inactive',
+                        $u->created_at ? $u->created_at->format('Y-m-d H:i') : '',
+                    ]);
+                }
+            });
+
+            fclose($handle);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }

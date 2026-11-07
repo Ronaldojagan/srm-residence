@@ -7,6 +7,7 @@ use App\Models\Room;
 use App\Models\BillPayment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Yajra\DataTables\Facades\DataTables;
 
 class TenantController extends Controller
@@ -20,6 +21,18 @@ class TenantController extends Controller
     {
         if ($request->ajax()) {
             $data = Tenant::with(['room', 'rooms'])->orderByRaw('CAST(room_number AS UNSIGNED) ASC, room_number ASC');
+
+            if ($request->filled('status') && $request->status !== 'all') {
+                $data->where('status', $request->status === 'active' ? 1 : 0);
+            }
+            if ($request->filled('room_id') && $request->room_id !== 'all') {
+                $data->where(function ($q) use ($request) {
+                    $q->where('room_id', $request->room_id)
+                        ->orWhereHas('rooms', function ($rq) use ($request) {
+                            $rq->where('rooms.id', $request->room_id);
+                        });
+                });
+            }
 
             return DataTables::of($data)
                 ->orderColumn('room_number', function ($query, $order) {
@@ -475,5 +488,104 @@ class TenantController extends Controller
             'success' => true,
             'message' => 'Tenant status and room occupancy updated successfully.'
         ]);
+    }
+
+    /**
+     * Export Tenants to CSV with UTF-8 BOM respecting active filters
+     */
+    public function export(Request $request): StreamedResponse
+    {
+        $fileName = 'srm_residence_tenants_' . date('Ymd_His') . '.csv';
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
+        ];
+
+        $callback = function () use ($request) {
+            $handle = fopen('php://output', 'w');
+            fputs($handle, "\xEF\xBB\xBF"); // UTF-8 BOM for Excel
+
+            fputcsv($handle, [
+                'S.No',
+                'Resident Name',
+                'Phone Number',
+                'Email Address',
+                'Emergency Contact',
+                'Assigned Room(s)',
+                'Floor',
+                'Room Type',
+                'Commence Date',
+                'Monthly Rent (INR)',
+                'Security Deposit (INR)',
+                'Initial EB Reading',
+                'Total Invoiced (INR)',
+                'Total Paid (INR)',
+                'Current Dues (INR)',
+                'Status',
+            ]);
+
+            $query = Tenant::with(['room', 'rooms', 'bills']);
+
+            if ($request->filled('status') && $request->status !== 'all') {
+                $query->where('status', $request->status === 'active' ? 1 : 0);
+            }
+            if ($request->filled('room_id') && $request->room_id !== 'all') {
+                $query->where(function ($q) use ($request) {
+                    $q->where('room_id', $request->room_id)
+                        ->orWhereHas('rooms', fn($rq) => $rq->where('rooms.id', $request->room_id));
+                });
+            }
+            if ($request->filled('search')) {
+                $s = trim($request->search);
+                $query->where(function ($q) use ($s) {
+                    $q->where('name', 'like', "%{$s}%")
+                        ->orWhere('phone', 'like', "%{$s}%")
+                        ->orWhere('email', 'like', "%{$s}%")
+                        ->orWhere('room_number', 'like', "%{$s}%");
+                });
+            }
+
+            $query->orderByRaw('CAST(room_number AS UNSIGNED) ASC, room_number ASC');
+
+            $index = 1;
+            $query->chunk(100, function ($tenants) use ($handle, &$index) {
+                foreach ($tenants as $t) {
+                    $rooms = $t->assigned_rooms;
+                    $roomNos = $rooms->isNotEmpty() ? $rooms->pluck('room_number')->implode(', ') : ($t->room_number ?? 'N/A');
+                    $floors = $rooms->isNotEmpty() ? $rooms->pluck('floor')->filter()->unique()->implode(', ') : ($t->room->floor ?? '');
+                    $types = $rooms->isNotEmpty() ? $rooms->pluck('room_type')->filter()->unique()->implode(', ') : ($t->room_type ?? '');
+
+                    $inv = (float) $t->bills->sum('amount');
+                    $paid = (float) $t->bills->sum('paid_amount');
+                    $due = (float) $t->bills->sum('due_amount');
+
+                    fputcsv($handle, [
+                        $index++,
+                        $t->name,
+                        $t->phone ?: '',
+                        $t->email ?: '',
+                        $t->emergency_contact ?: '',
+                        $roomNos,
+                        $floors,
+                        $types,
+                        $t->commence_date ? $t->commence_date->format('Y-m-d') : '',
+                        number_format($t->monthly_rent, 2, '.', ''),
+                        number_format($t->security_deposit, 2, '.', ''),
+                        $t->eb_start_reading ?? '0',
+                        number_format($inv, 2, '.', ''),
+                        number_format($paid, 2, '.', ''),
+                        number_format($due, 2, '.', ''),
+                        $t->status ? 'Active' : 'Inactive',
+                    ]);
+                }
+            });
+
+            fclose($handle);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }

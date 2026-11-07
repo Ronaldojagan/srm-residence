@@ -15,8 +15,16 @@ class UserService
     public function index($request)
     {
         if ($request->ajax()) {
-            $data = User::orderBy('id', 'desc')->get();
-            return DataTables::of($data)
+            $query = User::orderBy('id', 'desc');
+
+            if ($request->filled('type') && $request->type !== 'all') {
+                $query->where('type', $request->type);
+            }
+            if ($request->filled('status') && $request->status !== 'all') {
+                $query->where('status', $request->status === 'active' ? 1 : 0);
+            }
+
+            return DataTables::of($query)
                 ->addIndexColumn()
                 ->addColumn('date', function ($row) {
                     $btn = $row['created_at'];

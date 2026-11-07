@@ -122,6 +122,37 @@
         <div class="col-lg-12">
             <div class="card card-shadow">
                 <div class="card-body">
+                    <!-- Filters Row -->
+                    <div class="row mb-3 g-2 align-items-center">
+                        <div class="col-md-3">
+                            <label class="form-label small text-muted mb-1">Filter by Room</label>
+                            <select id="filterTenantRoom" class="form-select filter-select">
+                                <option value="">All Rooms</option>
+                                @if(isset($rooms))
+                                    @foreach($rooms as $r)
+                                        <option value="{{ $r->id }}">Room {{ $r->room_number }} ({{ $r->floor }})</option>
+                                    @endforeach
+                                @endif
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small text-muted mb-1">Filter by Status</label>
+                            <select id="filterTenantStatus" class="form-select filter-select">
+                                <option value="">All Statuses</option>
+                                <option value="active">Active Residents</option>
+                                <option value="inactive">Inactive Residents</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 text-end pt-3">
+                            <button type="button" id="btnResetTenantFilters" class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-undo me-1"></i> Reset Filters
+                            </button>
+                            <button type="button" id="btnExportTenants" class="btn btn-outline-success btn-sm ms-2">
+                                <i class="fas fa-file-excel me-1"></i> Export Excel
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="table-responsive table-border">
                         <table class="table table-striped data-table job-table w-100">
                             <thead class="table-theme text-white">
@@ -380,7 +411,13 @@
                 var table = $('.data-table').DataTable({
                     processing: true,
                     serverSide: true,
-                    ajax: "{{ url('/admin/tenants') }}",
+                    ajax: {
+                        url: "{{ url('/admin/tenants') }}",
+                        data: function(d) {
+                            d.room_id = $('#filterTenantRoom').val();
+                            d.status = $('#filterTenantStatus').val();
+                        }
+                    },
                     order: [[3, 'asc']],
                     columns: [
                         { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
@@ -418,6 +455,26 @@
                         }
                     });
                 }
+
+                // Filter change handlers
+                $('#filterTenantRoom, #filterTenantStatus').on('change', function() {
+                    table.ajax.reload();
+                });
+
+                $('#btnResetTenantFilters').on('click', function() {
+                    $('#filterTenantRoom').val('');
+                    $('#filterTenantStatus').val('');
+                    table.search('').draw();
+                });
+
+                $('#btnExportTenants').on('click', function() {
+                    var params = {
+                        room_id: $('#filterTenantRoom').val(),
+                        status: $('#filterTenantStatus').val(),
+                        search: table.search()
+                    };
+                    window.location.href = "{{ route('tenants.export') }}?" + $.param(params);
+                });
 
                 const Toast = Swal.mixin({
                     toast: true,

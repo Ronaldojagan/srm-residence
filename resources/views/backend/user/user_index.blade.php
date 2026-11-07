@@ -38,6 +38,35 @@
         <div class="col-lg-12">
             <div class="card card-shadow">
                 <div class="card-body">
+                    <!-- Filter Row -->
+                    <div class="row mb-3 g-2 align-items-center">
+                        <div class="col-md-3">
+                            <label class="form-label small text-muted mb-1">Filter by Role</label>
+                            <select id="filterUserType" class="form-select filter-select">
+                                <option value="">All Roles</option>
+                                <option value="Admin">Administrator</option>
+                                <option value="delivery">Staff / Manager</option>
+                                <option value="customer">Standard User</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small text-muted mb-1">Filter by Status</label>
+                            <select id="filterUserStatus" class="form-select filter-select">
+                                <option value="">All Statuses</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 text-end pt-3">
+                            <button type="button" id="btnResetUserFilters" class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-undo me-1"></i> Reset Filters
+                            </button>
+                            <button type="button" id="btnExportUsers" class="btn btn-outline-success btn-sm ms-2">
+                                <i class="fas fa-file-excel me-1"></i> Export Excel
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="table-responsive table-border">
                         <table class="table table-striped data-table job-table w-100">
                             <thead class="table-theme text-white">
@@ -185,7 +214,13 @@
                 var table = $('.data-table').DataTable({
                     processing: true,
                     serverSide: true,
-                    ajax: "{{ url('/admin/users') }}",
+                    ajax: {
+                        url: "{{ url('/admin/users') }}",
+                        data: function(d) {
+                            d.type = $('#filterUserType').val();
+                            d.status = $('#filterUserStatus').val();
+                        }
+                    },
                     order: [],
                     columns: [
                         { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
@@ -213,6 +248,26 @@
                     showConfirmButton: false,
                     timer: 3000,
                     timerProgressBar: true
+                });
+
+                // Filter change triggers
+                $('#filterUserType, #filterUserStatus').on('change', function() {
+                    table.ajax.reload();
+                });
+
+                $('#btnResetUserFilters').on('click', function() {
+                    $('#filterUserType').val('');
+                    $('#filterUserStatus').val('');
+                    table.search('').draw();
+                });
+
+                $('#btnExportUsers').on('click', function() {
+                    var params = {
+                        type: $('#filterUserType').val(),
+                        status: $('#filterUserStatus').val(),
+                        search: table.search()
+                    };
+                    window.location.href = "{{ route('users.export') }}?" + $.param(params);
                 });
 
                 // 1. ADD USER VIA AJAX

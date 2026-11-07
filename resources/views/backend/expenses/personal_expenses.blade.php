@@ -111,6 +111,9 @@
                             <button id="btnResetFilters" class="btn btn-outline-secondary btn-sm">
                                 <i class="fas fa-undo me-1"></i> Reset Filters
                             </button>
+                            <button type="button" id="btnExportPersonalExpenses" class="btn btn-outline-success btn-sm ms-2">
+                                <i class="fas fa-file-excel me-1"></i> Export Excel
+                            </button>
                         </div>
                     </div>
 
@@ -511,8 +514,17 @@
                 $('#btnResetFilters').on('click', function() {
                     $('#filterMonth').val("{{ $selectedMonth }}");
                     $('#filterPaidTo').val('');
-                    table.ajax.reload();
+                    table.search('').draw();
                     reloadMonthlyStats();
+                });
+
+                $('#btnExportPersonalExpenses').on('click', function() {
+                    var params = {
+                        month: $('#filterMonth').val(),
+                        paid_to: $('#filterPaidTo').val(),
+                        search: table.search()
+                    };
+                    window.location.href = "{{ route('expenses.personal.export') }}?" + $.param(params);
                 });
 
                 // =========================================================================

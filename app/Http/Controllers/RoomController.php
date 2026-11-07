@@ -7,6 +7,7 @@ use App\Models\Tenant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Yajra\DataTables\Facades\DataTables;
 
 class RoomController extends Controller
@@ -332,6 +333,112 @@ class RoomController extends Controller
             'message' => 'Room occupancy updated successfully.',
             'stats' => $this->getStats()
         ]);
+    }
+
+    /**
+     * Export Room Inventory to CSV with UTF-8 BOM respecting active filters
+     */
+    public function export(Request $request): StreamedResponse
+    {
+        $fileName = 'srm_residence_rooms_inventory_' . date('Ymd_His') . '.csv';
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
+        ];
+
+        $callback = function () use ($request) {
+            $handle = fopen('php://output', 'w');
+            fputs($handle, "\xEF\xBB\xBF"); // UTF-8 BOM
+
+            fputcsv($handle, [
+                'S.No',
+                'Room Number',
+                'Floor',
+                'Room Type',
+                'Capacity',
+                'Monthly Rent (INR)',
+                'EB Rate (INR/unit)',
+                'Maintenance Charges (INR)',
+                'Other Charges (INR)',
+                'Total Monthly Expected (INR)',
+                'Security Deposit (INR)',
+                'Occupancy Status',
+                'Self Occupied',
+                'Current Resident(s)',
+                'Resident Phone',
+            ]);
+
+            $query = Room::with(['currentTenant', 'activeTenants']);
+
+            if ($request->filled('floor') && $request->floor !== 'all') {
+                $query->where('floor', $request->floor);
+            }
+            if ($request->filled('occupancy_status') && $request->occupancy_status !== 'all') {
+                if ($request->occupancy_status === 'self') {
+                    $query->where(function ($q) {
+                        $q->where('occupancy_status', 'self')->orWhere('is_self', 1);
+                    });
+                } else {
+                    $query->where('occupancy_status', $request->occupancy_status);
+                }
+            }
+            if ($request->filled('room_type') && $request->room_type !== 'all') {
+                $query->where('room_type', $request->room_type);
+            }
+            if ($request->filled('search')) {
+                $s = trim($request->search);
+                $query->where(function ($q) use ($s) {
+                    $q->where('room_number', 'like', "%{$s}%")
+                        ->orWhere('floor', 'like', "%{$s}%")
+                        ->orWhere('room_type', 'like', "%{$s}%")
+                        ->orWhereHas('activeTenants', function ($tq) use ($s) {
+                            $tq->where('name', 'like', "%{$s}%")->orWhere('phone', 'like', "%{$s}%");
+                        });
+                });
+            }
+
+            $query->orderByRaw('CAST(room_number AS UNSIGNED) ASC, room_number ASC');
+
+            $index = 1;
+            $query->chunk(100, function ($rooms) use ($handle, &$index) {
+                foreach ($rooms as $r) {
+                    $residentNames = $r->activeTenants->isNotEmpty()
+                        ? $r->activeTenants->pluck('name')->implode(', ')
+                        : ($r->currentTenant ? $r->currentTenant->name : 'Vacant');
+
+                    $residentPhones = $r->activeTenants->isNotEmpty()
+                        ? $r->activeTenants->pluck('phone')->filter()->implode(', ')
+                        : ($r->currentTenant ? $r->currentTenant->phone : '');
+
+                    $statusText = $r->is_self ? 'Self Occupied' : ucfirst($r->occupancy_status);
+
+                    fputcsv($handle, [
+                        $index++,
+                        $r->room_number,
+                        $r->floor,
+                        $r->room_type,
+                        $r->capacity,
+                        number_format($r->monthly_rent, 2, '.', ''),
+                        number_format($r->eb_unit_rate, 2, '.', ''),
+                        number_format($r->maintenance_charges, 2, '.', ''),
+                        number_format($r->other_charges, 2, '.', ''),
+                        number_format($r->total_monthly, 2, '.', ''),
+                        number_format($r->security_deposit, 2, '.', ''),
+                        $statusText,
+                        $r->is_self ? 'Yes' : 'No',
+                        $residentNames,
+                        $residentPhones,
+                    ]);
+                }
+            });
+
+            fclose($handle);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }
 
