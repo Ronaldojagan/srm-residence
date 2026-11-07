@@ -34,6 +34,9 @@
             .line-item-row:hover {
                 background-color: #f8fafc;
             }
+            .font-11 { font-size: 11px; }
+            .font-12 { font-size: 12px; }
+            .font-13 { font-size: 13px; }
         </style>
     @endpush
 
@@ -41,7 +44,7 @@
     <div class="row justify-content-between align-items-center mt-3">
         <div class="col-md-6">
             <h4 class="page-title-main page">Personal Expenses (Monthly Wise)</h4>
-            <p class="text-muted small mb-0">Record and track personal expenditures monthly-wise with itemized line items, amounts, and notes.</p>
+            <p class="text-muted small mb-0">Record and track personal expenditures monthly-wise with itemized line items, quantity, per rate, and notes.</p>
         </div>
         <div class="col-md-6 text-end">
             <button type="button" class="btn add-btn waves-effect waves-light button-color text-white" data-bs-toggle="modal" data-bs-target="#addPersonalExpenseModal">
@@ -63,9 +66,9 @@
         </div>
         <div class="col-md-3">
             <div class="expense-stat-card border-start border-4 border-primary">
-                <div class="text-muted small text-uppercase fw-bold">Top Spending Category</div>
-                <h4 class="fw-bold my-1 text-primary text-truncate" id="statTopCategory">{{ $stats['topCategory'] }}</h4>
-                <small class="text-muted">In selected period</small>
+                <div class="text-muted small text-uppercase fw-bold">Monthly Entries</div>
+                <h3 class="fw-bold my-1 text-primary" id="statMonthRecordsDisplay">{{ $stats['monthRecords'] ?? 0 }}</h3>
+                <small class="text-muted">Expenses logged in selected month</small>
             </div>
         </div>
         <div class="col-md-3">
@@ -91,7 +94,7 @@
                 <div class="card-body">
                     <!-- Filters row -->
                     <div class="row mb-3 g-2 align-items-center">
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label class="form-label small text-muted mb-1"><i class="far fa-calendar-alt me-1 text-primary"></i> Filter by Month</label>
                             <select id="filterMonth" class="form-select filter-select">
                                 <option value="all">All Months (Overview)</option>
@@ -100,29 +103,9 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label small text-muted mb-1"><i class="fas fa-tags me-1 text-warning"></i> Category</label>
-                            <select id="filterCategory" class="form-select filter-select">
-                                <option value="">All Categories</option>
-                                <option value="Food & Groceries">Food & Groceries</option>
-                                <option value="Travel & Fuel">Travel & Fuel</option>
-                                <option value="Medical & Health">Medical & Health</option>
-                                <option value="Mobile & Utilities">Mobile & Utilities</option>
-                                <option value="Shopping & Supplies">Shopping & Supplies</option>
-                                <option value="Entertainment">Entertainment</option>
-                                <option value="Miscellaneous">Miscellaneous</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label small text-muted mb-1"><i class="far fa-credit-card me-1 text-info"></i> Payment Method</label>
-                            <select id="filterPaymentMethod" class="form-select filter-select">
-                                <option value="">All Payment Modes</option>
-                                <option value="Cash">Cash</option>
-                                <option value="UPI / GPay">UPI / GPay</option>
-                                <option value="Bank Transfer">Bank Transfer</option>
-                                <option value="Debit / Credit Card">Debit / Credit Card</option>
-                                <option value="Cheque">Cheque</option>
-                            </select>
+                        <div class="col-md-5">
+                            <label class="form-label small text-muted mb-1"><i class="fas fa-store me-1 text-info"></i> Paid To / Vendor / Merchant</label>
+                            <input type="text" id="filterPaidTo" class="form-control filter-select" placeholder="Search by vendor, supermarket, recipient...">
                         </div>
                         <div class="col-md-3 text-end pt-3">
                             <button id="btnResetFilters" class="btn btn-outline-secondary btn-sm">
@@ -136,12 +119,12 @@
                             <thead class="table-theme text-white">
                                 <tr>
                                     <th width="5%">#</th>
-                                    <th>Title, Month & Line Items</th>
-                                    <th>Category</th>
-                                    <th>Amount</th>
-                                    <th>Date</th>
-                                    <th>Paid To / Vendor</th>
-                                    <th width="12%" class="text-center">Action</th>
+                                    <th width="32%">Title, Month & Notes</th>
+                                    <th width="20%">Line Items Breakdown</th>
+                                    <th width="15%">Total Amount</th>
+                                    <th width="12%">Date</th>
+                                    <th width="16%">Paid To / Vendor</th>
+                                    <th width="10%" class="text-center">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -183,29 +166,6 @@
                                 <input type="date" name="expense_date" id="add_expense_date" class="form-control" value="{{ date('Y-m-d') }}" required>
                             </div>
 
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Category <span class="text-danger">*</span></label>
-                                <select name="category" class="form-select" required>
-                                    <option value="Food & Groceries">Food & Groceries</option>
-                                    <option value="Travel & Fuel">Travel & Fuel</option>
-                                    <option value="Medical & Health">Medical & Health</option>
-                                    <option value="Mobile & Utilities">Mobile & Utilities</option>
-                                    <option value="Shopping & Supplies">Shopping & Supplies</option>
-                                    <option value="Entertainment">Entertainment</option>
-                                    <option value="Miscellaneous" selected>Miscellaneous</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Payment Method <span class="text-danger">*</span></label>
-                                <select name="payment_method" class="form-select" required>
-                                    <option value="UPI / GPay" selected>UPI / GPay</option>
-                                    <option value="Cash">Cash</option>
-                                    <option value="Bank Transfer">Bank Transfer</option>
-                                    <option value="Debit / Credit Card">Debit / Credit Card</option>
-                                    <option value="Cheque">Cheque</option>
-                                </select>
-                            </div>
-
                             <div class="col-md-8">
                                 <label class="form-label fw-bold">Main Title / Summary <span class="text-danger">*</span></label>
                                 <input type="text" name="title" id="add_title" class="form-control" placeholder="e.g. Monthly Grocery Bill, Fuel & Commute, Medical Expenses" required>
@@ -227,7 +187,7 @@
                                     <div class="card-header bg-white py-2 d-flex justify-content-between align-items-center">
                                         <div>
                                             <span class="fw-bold font-13 text-dark"><i class="fas fa-list-ol text-primary me-1"></i> Itemized Line Items</span>
-                                            <small class="text-muted d-block font-11">Add individual line items with specific amount and short notes</small>
+                                            <small class="text-muted d-block font-11">Add individual line items with S.No, quantity, per rate, amount and notes</small>
                                         </div>
                                         <button type="button" class="btn btn-sm btn-outline-primary" id="btnAddLineItem">
                                             <i class="fas fa-plus me-1"></i> Add Line Item
@@ -238,19 +198,22 @@
                                             <table class="table table-sm table-bordered align-middle mb-0" id="addItemsTable">
                                                 <thead class="table-light font-12">
                                                     <tr>
-                                                        <th style="width: 38%;">Item Title <span class="text-danger">*</span></th>
-                                                        <th style="width: 24%;">Amount (₹) <span class="text-danger">*</span></th>
-                                                        <th style="width: 33%;">Short Notes / Details</th>
+                                                        <th style="width: 5%; text-align: center;">S.No</th>
+                                                        <th style="width: 30%;">Item Title <span class="text-danger">*</span></th>
+                                                        <th style="width: 12%; text-align: center;">Quantity</th>
+                                                        <th style="width: 16%; text-align: right;">Per Rate (₹)</th>
+                                                        <th style="width: 16%; text-align: right;">Amount (₹) <span class="text-danger">*</span></th>
+                                                        <th style="width: 16%;">Short Notes</th>
                                                         <th style="width: 5%; text-align: center;"></th>
                                                     </tr>
                                                 </thead>
                                                 <tbody id="addItemsBody">
-                                                    <!-- Dynamic rows -->
+                                                    <!-- Dynamic rows populated via JS -->
                                                 </tbody>
                                                 <tfoot>
                                                     <tr class="table-light">
-                                                        <td class="text-end fw-bold font-12">Line Items Subtotal:</td>
-                                                        <td class="fw-bold text-danger font-13" id="addItemsSumDisplay">₹0.00</td>
+                                                        <td colspan="4" class="text-end fw-bold font-12">Line Items Subtotal:</td>
+                                                        <td class="text-end fw-bold text-danger font-13" id="addItemsSumDisplay">₹0.00</td>
                                                         <td colspan="2" class="text-muted font-11">Automatically syncs with Total Amount</td>
                                                     </tr>
                                                 </tfoot>
@@ -262,7 +225,7 @@
 
                             <div class="col-md-12">
                                 <label class="form-label fw-bold">General Notes / Remarks</label>
-                                <textarea name="notes" class="form-control" rows="2" placeholder="e.g. Paid online via Google Pay on Sunday"></textarea>
+                                <textarea name="notes" class="form-control" rows="2" placeholder="e.g. Paid online on Sunday for family monthly provisions"></textarea>
                             </div>
                         </div>
                     </div>
@@ -308,29 +271,6 @@
                                 <input type="date" id="edit_expense_date" name="expense_date" class="form-control" required>
                             </div>
 
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Category <span class="text-danger">*</span></label>
-                                <select id="edit_category" name="category" class="form-select" required>
-                                    <option value="Food & Groceries">Food & Groceries</option>
-                                    <option value="Travel & Fuel">Travel & Fuel</option>
-                                    <option value="Medical & Health">Medical & Health</option>
-                                    <option value="Mobile & Utilities">Mobile & Utilities</option>
-                                    <option value="Shopping & Supplies">Shopping & Supplies</option>
-                                    <option value="Entertainment">Entertainment</option>
-                                    <option value="Miscellaneous">Miscellaneous</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Payment Method <span class="text-danger">*</span></label>
-                                <select id="edit_payment_method" name="payment_method" class="form-select" required>
-                                    <option value="UPI / GPay">UPI / GPay</option>
-                                    <option value="Cash">Cash</option>
-                                    <option value="Bank Transfer">Bank Transfer</option>
-                                    <option value="Debit / Credit Card">Debit / Credit Card</option>
-                                    <option value="Cheque">Cheque</option>
-                                </select>
-                            </div>
-
                             <div class="col-md-8">
                                 <label class="form-label fw-bold">Main Title / Summary <span class="text-danger">*</span></label>
                                 <input type="text" id="edit_title" name="title" class="form-control" required>
@@ -351,7 +291,7 @@
                                     <div class="card-header bg-white py-2 d-flex justify-content-between align-items-center">
                                         <div>
                                             <span class="fw-bold font-13 text-dark"><i class="fas fa-list-ol text-primary me-1"></i> Itemized Line Items</span>
-                                            <small class="text-muted d-block font-11">Add, edit, or remove specific item amounts & notes</small>
+                                            <small class="text-muted d-block font-11">Add, edit, or remove specific item quantity, rates & notes</small>
                                         </div>
                                         <button type="button" class="btn btn-sm btn-outline-primary" id="btnEditAddLineItem">
                                             <i class="fas fa-plus me-1"></i> Add Line Item
@@ -362,9 +302,12 @@
                                             <table class="table table-sm table-bordered align-middle mb-0" id="editItemsTable">
                                                 <thead class="table-light font-12">
                                                     <tr>
-                                                        <th style="width: 38%;">Item Title <span class="text-danger">*</span></th>
-                                                        <th style="width: 24%;">Amount (₹) <span class="text-danger">*</span></th>
-                                                        <th style="width: 33%;">Short Notes / Details</th>
+                                                        <th style="width: 5%; text-align: center;">S.No</th>
+                                                        <th style="width: 30%;">Item Title <span class="text-danger">*</span></th>
+                                                        <th style="width: 12%; text-align: center;">Quantity</th>
+                                                        <th style="width: 16%; text-align: right;">Per Rate (₹)</th>
+                                                        <th style="width: 16%; text-align: right;">Amount (₹) <span class="text-danger">*</span></th>
+                                                        <th style="width: 16%;">Short Notes</th>
                                                         <th style="width: 5%; text-align: center;"></th>
                                                     </tr>
                                                 </thead>
@@ -373,8 +316,8 @@
                                                 </tbody>
                                                 <tfoot>
                                                     <tr class="table-light">
-                                                        <td class="text-end fw-bold font-12">Line Items Subtotal:</td>
-                                                        <td class="fw-bold text-danger font-13" id="editItemsSumDisplay">₹0.00</td>
+                                                        <td colspan="4" class="text-end fw-bold font-12">Line Items Subtotal:</td>
+                                                        <td class="text-end fw-bold text-danger font-13" id="editItemsSumDisplay">₹0.00</td>
                                                         <td colspan="2" class="text-muted font-11">Syncs with Total Amount above</td>
                                                     </tr>
                                                 </tfoot>
@@ -414,8 +357,8 @@
                 </div>
                 <div class="modal-body p-4">
                     <div class="p-3 bg-light rounded border mb-3">
-                        <div class="row g-2">
-                            <div class="col-md-6">
+                        <div class="row g-2 align-items-center">
+                            <div class="col-md-5">
                                 <span class="text-muted small">Expense Title:</span>
                                 <div class="fw-bold fs-6 text-dark" id="view_exp_title">-</div>
                             </div>
@@ -423,21 +366,17 @@
                                 <span class="text-muted small">Expense Month:</span>
                                 <div class="fw-semibold text-primary" id="view_exp_month">-</div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <span class="text-muted small">Expense Date:</span>
                                 <div class="fw-semibold text-dark" id="view_exp_date">-</div>
                             </div>
-                            <div class="col-md-4">
-                                <span class="text-muted small">Category:</span>
-                                <div id="view_exp_category">-</div>
-                            </div>
-                            <div class="col-md-4">
-                                <span class="text-muted small">Payment Mode:</span>
-                                <div class="fw-semibold text-dark" id="view_exp_payment">-</div>
-                            </div>
-                            <div class="col-md-4 text-md-end">
+                            <div class="col-md-2 text-md-end">
                                 <span class="text-muted small">Total Expense:</span>
                                 <div class="fw-bold text-danger fs-5" id="view_exp_total">₹0.00</div>
+                            </div>
+                            <div class="col-md-12 mt-2">
+                                <span class="text-muted small">Paid To / Merchant:</span>
+                                <span class="fw-semibold text-secondary ms-1" id="view_exp_paid_to">-</span>
                             </div>
                         </div>
                     </div>
@@ -447,18 +386,21 @@
                         <table class="table table-striped table-bordered align-middle">
                             <thead class="table-theme text-white font-12">
                                 <tr>
-                                    <th style="width: 5%;">#</th>
-                                    <th style="width: 40%;">Item Title</th>
-                                    <th style="width: 35%;">Short Notes / Details</th>
-                                    <th style="width: 20%; text-align: right;">Amount (₹)</th>
+                                    <th style="width: 6%; text-align: center;">S.No</th>
+                                    <th style="width: 32%;">Item Title</th>
+                                    <th style="width: 12%; text-align: center;">Quantity</th>
+                                    <th style="width: 15%; text-align: right;">Per Rate (₹)</th>
+                                    <th style="width: 15%; text-align: right;">Total Amount (₹)</th>
+                                    <th style="width: 20%;">Short Notes</th>
                                 </tr>
                             </thead>
                             <tbody id="view_exp_items_tbody">
                             </tbody>
                             <tfoot>
                                 <tr class="table-light fw-bold">
-                                    <td colspan="3" class="text-end font-13">Total Amount:</td>
+                                    <td colspan="4" class="text-end font-13">Total Amount:</td>
                                     <td class="text-end text-danger fs-6" id="view_exp_footer_total">₹0.00</td>
+                                    <td></td>
                                 </tr>
                             </tfoot>
                         </table>
@@ -496,9 +438,7 @@
                         if (stats.monthLabel) {
                             $('#statMonthLabel').text(stats.monthLabel);
                         }
-                        if (stats.topCategory) {
-                            $('#statTopCategory').text(stats.topCategory);
-                        }
+                        $('#statMonthRecordsDisplay').text(stats.monthRecords !== undefined ? stats.monthRecords : 0);
                         $('#statMonthRecords').text(stats.monthRecords !== undefined ? stats.monthRecords : 0);
                         $('#statLineItemsCount').text(stats.lineItemsCount !== undefined ? stats.lineItemsCount : 0);
                         $('#statTotalRecords').text(stats.totalRecords !== undefined ? stats.totalRecords : 0);
@@ -527,14 +467,13 @@
                         url: "{{ url('/admin/expenses/personal') }}",
                         data: function(d) {
                             d.month = $('#filterMonth').val();
-                            d.category = $('#filterCategory').val();
-                            d.payment_method = $('#filterPaymentMethod').val();
+                            d.paid_to = $('#filterPaidTo').val();
                         }
                     },
                     columns: [
                         { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
                         { data: 'title_desc', name: 'title' },
-                        { data: 'category_badge', name: 'category' },
+                        { data: 'items_summary', name: 'items', orderable: false, searchable: false },
                         { data: 'amount_display', name: 'amount' },
                         { data: 'expense_date_formatted', name: 'expense_date' },
                         { data: 'paid_to_display', name: 'paid_to' },
@@ -561,48 +500,76 @@
                     reloadMonthlyStats();
                 });
 
-                $('#filterCategory, #filterPaymentMethod').on('change', function() {
-                    table.ajax.reload();
+                var filterTimer;
+                $('#filterPaidTo').on('keyup input', function() {
+                    clearTimeout(filterTimer);
+                    filterTimer = setTimeout(function() {
+                        table.ajax.reload();
+                    }, 400);
                 });
 
                 $('#btnResetFilters').on('click', function() {
                     $('#filterMonth').val("{{ $selectedMonth }}");
-                    $('#filterCategory').val('');
-                    $('#filterPaymentMethod').val('');
+                    $('#filterPaidTo').val('');
                     table.ajax.reload();
                     reloadMonthlyStats();
                 });
 
                 // =========================================================================
-                // LINE ITEMS REPEATER LOGIC (ADD MODAL)
+                // LINE ITEMS REPEATER LOGIC (ADD & EDIT)
                 // =========================================================================
                 var addLineCounter = 0;
+                var editLineCounter = 0;
 
-                function createLineItemRow(containerId, index, title, amount, notes) {
+                function createLineItemRow(containerId, index, title, quantity, perRate, amount, notes) {
                     title = title || '';
-                    amount = amount !== undefined && amount !== null && amount !== '' ? amount : '';
+                    quantity = (quantity !== undefined && quantity !== null && quantity !== '') ? quantity : 1;
+                    perRate = (perRate !== undefined && perRate !== null && perRate !== '') ? perRate : '';
+                    amount = (amount !== undefined && amount !== null && amount !== '') ? amount : '';
                     notes = notes || '';
 
                     return '<tr class="line-item-row" data-index="' + index + '">' +
+                        '<td class="text-center align-middle">' +
+                            '<span class="badge bg-light text-muted border font-11 s-no">' + (index + 1) + '</span>' +
+                        '</td>' +
                         '<td>' +
-                            '<input type="text" name="items[' + index + '][title]" class="form-control form-control-sm line-item-title" placeholder="e.g. Milk & Bread, Travel Ticket, Medicines" value="' + $('<div>').text(title).html() + '" required>' +
+                            '<input type="text" name="items[' + index + '][title]" class="form-control form-control-sm line-item-title" placeholder="e.g. Milk & Bread, Vegetables" value="' + $('<div>').text(title).html() + '" required>' +
+                        '</td>' +
+                        '<td>' +
+                            '<input type="number" step="any" min="0.01" name="items[' + index + '][quantity]" class="form-control form-control-sm text-center line-item-qty" placeholder="1" value="' + quantity + '">' +
                         '</td>' +
                         '<td>' +
                             '<div class="input-group input-group-sm">' +
-                                '<span class="input-group-text bg-light">₹</span>' +
-                                '<input type="number" step="0.01" min="0" name="items[' + index + '][amount]" class="form-control form-control-sm text-end line-item-amt fw-bold" placeholder="0.00" value="' + amount + '" required>' +
+                                '<span class="input-group-text bg-light p-1 font-11">₹</span>' +
+                                '<input type="number" step="0.01" min="0" name="items[' + index + '][per_rate]" class="form-control form-control-sm text-end line-item-rate" placeholder="0.00" value="' + perRate + '">' +
                             '</div>' +
                         '</td>' +
                         '<td>' +
-                            '<input type="text" name="items[' + index + '][notes]" class="form-control form-control-sm line-item-notes" placeholder="e.g. From local mart, for warden duty" value="' + $('<div>').text(notes).html() + '">' +
+                            '<div class="input-group input-group-sm">' +
+                                '<span class="input-group-text bg-light p-1 font-11">₹</span>' +
+                                '<input type="number" step="0.01" min="0" name="items[' + index + '][amount]" class="form-control form-control-sm text-end line-item-amt fw-bold text-danger" placeholder="0.00" value="' + amount + '" required>' +
+                            '</div>' +
                         '</td>' +
-                        '<td class="text-center">' +
+                        '<td>' +
+                            '<input type="text" name="items[' + index + '][notes]" class="form-control form-control-sm line-item-notes" placeholder="Short notes / details" value="' + $('<div>').text(notes).html() + '">' +
+                        '</td>' +
+                        '<td class="text-center align-middle">' +
                             '<button type="button" class="btn btn-sm btn-outline-danger btn-remove-line-item" title="Remove Item"><i class="fas fa-trash-alt"></i></button>' +
                         '</td>' +
                     '</tr>';
                 }
 
-                function recalcLineItemsSum(tbodyId, sumDisplayId, mainAmtInputId) {
+                function renumberSerialNumbers(tbodyId) {
+                    $('#' + tbodyId + ' tr').each(function(idx) {
+                        $(this).find('.s-no').text(idx + 1);
+                    });
+                }
+
+                function recalcLineItemsSum(tbodyId) {
+                    var isEdit = tbodyId === 'editItemsBody';
+                    var sumDisplayId = isEdit ? 'editItemsSumDisplay' : 'addItemsSumDisplay';
+                    var mainAmtInputId = isEdit ? 'edit_amount' : 'add_amount';
+
                     var total = 0;
                     var hasRows = false;
 
@@ -621,24 +588,70 @@
                     }
                 }
 
-                // Add row button
+                // Auto calculate: when Qty or Rate changes -> Amount = Qty * Rate
+                $(document).on('input', '.line-item-qty, .line-item-rate', function() {
+                    var $tr = $(this).closest('tr');
+                    var qty = parseFloat($tr.find('.line-item-qty').val());
+                    var rate = parseFloat($tr.find('.line-item-rate').val());
+
+                    if (isNaN(qty) || qty <= 0) qty = 1;
+
+                    if (!isNaN(rate) && rate >= 0) {
+                        var total = qty * rate;
+                        $tr.find('.line-item-amt').val(total.toFixed(2));
+                    }
+                    var tbodyId = $tr.closest('tbody').attr('id');
+                    recalcLineItemsSum(tbodyId);
+                });
+
+                // Auto calculate: when Amount changes directly -> Rate = Amount / Qty
+                $(document).on('input', '.line-item-amt', function() {
+                    var $tr = $(this).closest('tr');
+                    var amt = parseFloat($(this).val());
+                    var qty = parseFloat($tr.find('.line-item-qty').val());
+
+                    if (isNaN(qty) || qty <= 0) qty = 1;
+
+                    if (!isNaN(amt) && amt >= 0 && qty > 0) {
+                        var rate = amt / qty;
+                        $tr.find('.line-item-rate').val(rate.toFixed(2));
+                    }
+                    var tbodyId = $tr.closest('tbody').attr('id');
+                    recalcLineItemsSum(tbodyId);
+                });
+
+                // Add row button (ADD MODAL)
                 $('#btnAddLineItem').on('click', function() {
-                    var rowHtml = createLineItemRow('addItemsBody', addLineCounter, '', '', '');
+                    var rowHtml = createLineItemRow('addItemsBody', addLineCounter, '', 1, '', '', '');
                     $('#addItemsBody').append(rowHtml);
                     addLineCounter++;
-                    recalcLineItemsSum('addItemsBody', 'addItemsSumDisplay', 'add_amount');
+                    renumberSerialNumbers('addItemsBody');
+                    recalcLineItemsSum('addItemsBody');
                     $('#addItemsBody tr:last .line-item-title').focus();
                 });
 
-                // Remove line item row
+                // Remove row (ADD MODAL)
                 $(document).on('click', '#addItemsBody .btn-remove-line-item', function() {
                     $(this).closest('tr').remove();
-                    recalcLineItemsSum('addItemsBody', 'addItemsSumDisplay', 'add_amount');
+                    renumberSerialNumbers('addItemsBody');
+                    recalcLineItemsSum('addItemsBody');
                 });
 
-                // Live calculate sum on amount change
-                $(document).on('input', '#addItemsBody .line-item-amt', function() {
-                    recalcLineItemsSum('addItemsBody', 'addItemsSumDisplay', 'add_amount');
+                // Add row button (EDIT MODAL)
+                $('#btnEditAddLineItem').on('click', function() {
+                    var rowHtml = createLineItemRow('editItemsBody', editLineCounter, '', 1, '', '', '');
+                    $('#editItemsBody').append(rowHtml);
+                    editLineCounter++;
+                    renumberSerialNumbers('editItemsBody');
+                    recalcLineItemsSum('editItemsBody');
+                    $('#editItemsBody tr:last .line-item-title').focus();
+                });
+
+                // Remove row (EDIT MODAL)
+                $(document).on('click', '#editItemsBody .btn-remove-line-item', function() {
+                    $(this).closest('tr').remove();
+                    renumberSerialNumbers('editItemsBody');
+                    recalcLineItemsSum('editItemsBody');
                 });
 
                 // Sync month dropdown on date change
@@ -648,7 +661,6 @@
                         var d = new Date(val);
                         if (!isNaN(d.getTime())) {
                             var mName = d.toLocaleString('default', { month: 'long', year: 'numeric' });
-                            // If option exists in dropdown, select it
                             $('#add_expense_month option').each(function() {
                                 if ($(this).text() === mName) {
                                     $('#add_expense_month').val(mName);
@@ -739,25 +751,6 @@
                 // =========================================================================
                 // 2. OPEN EDIT MODAL VIA AJAX WITH LINE ITEMS
                 // =========================================================================
-                var editLineCounter = 0;
-
-                $('#btnEditAddLineItem').on('click', function() {
-                    var rowHtml = createLineItemRow('editItemsBody', editLineCounter, '', '', '');
-                    $('#editItemsBody').append(rowHtml);
-                    editLineCounter++;
-                    recalcLineItemsSum('editItemsBody', 'editItemsSumDisplay', 'edit_amount');
-                    $('#editItemsBody tr:last .line-item-title').focus();
-                });
-
-                $(document).on('click', '#editItemsBody .btn-remove-line-item', function() {
-                    $(this).closest('tr').remove();
-                    recalcLineItemsSum('editItemsBody', 'editItemsSumDisplay', 'edit_amount');
-                });
-
-                $(document).on('input', '#editItemsBody .line-item-amt', function() {
-                    recalcLineItemsSum('editItemsBody', 'editItemsSumDisplay', 'edit_amount');
-                });
-
                 $(document).on('click', '.btn-edit-expense', function() {
                     var id = $(this).data('id');
                     $('#editExpenseErrors').addClass('d-none').html('');
@@ -771,7 +764,6 @@
                             if (response.success) {
                                 var exp = response.expense;
                                 $('#edit_expense_id').val(exp.id);
-                                $('#edit_category').val(exp.category);
                                 $('#edit_title').val(exp.title);
                                 $('#edit_amount').val(parseFloat(exp.amount).toFixed(2));
                                 if (exp.expense_date) {
@@ -780,18 +772,26 @@
                                 if (exp.expense_month) {
                                     $('#edit_expense_month').val(exp.expense_month);
                                 }
-                                $('#edit_payment_method').val(exp.payment_method);
                                 $('#edit_paid_to').val(exp.paid_to);
                                 $('#edit_notes').val(exp.notes);
 
                                 // Populate line items
                                 if (exp.items && Array.isArray(exp.items) && exp.items.length > 0) {
                                     exp.items.forEach(function(item) {
-                                        var rowHtml = createLineItemRow('editItemsBody', editLineCounter, item.title, item.amount, item.notes);
+                                        var rowHtml = createLineItemRow(
+                                            'editItemsBody',
+                                            editLineCounter,
+                                            item.title,
+                                            item.quantity !== undefined ? item.quantity : 1,
+                                            item.per_rate !== undefined ? item.per_rate : '',
+                                            item.amount,
+                                            item.notes
+                                        );
                                         $('#editItemsBody').append(rowHtml);
                                         editLineCounter++;
                                     });
-                                    recalcLineItemsSum('editItemsBody', 'editItemsSumDisplay', 'edit_amount');
+                                    renumberSerialNumbers('editItemsBody');
+                                    recalcLineItemsSum('editItemsBody');
                                 } else {
                                     $('#editItemsSumDisplay').text('₹0.00');
                                 }
@@ -890,24 +890,29 @@
                                 $('#view_exp_title').text(exp.title);
                                 $('#view_exp_month').text(exp.expense_month || '-');
                                 $('#view_exp_date').text(exp.expense_date ? exp.expense_date.substring(0, 10) : '-');
-                                $('#view_exp_category').html('<span class="badge bg-warning-subtle text-warning border border-warning px-2 py-1">' + exp.category + '</span>');
-                                $('#view_exp_payment').text(exp.payment_method);
+                                $('#view_exp_paid_to').text(exp.paid_to || '-');
                                 $('#view_exp_total').text('₹' + parseFloat(exp.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 }));
                                 $('#view_exp_footer_total').text('₹' + parseFloat(exp.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 }));
 
                                 var rows = '';
                                 if (exp.items && Array.isArray(exp.items) && exp.items.length > 0) {
                                     exp.items.forEach(function(item, idx) {
-                                        var notesHtml = item.notes ? '<span class="text-muted small">' + $('<div>').text(item.notes).html() + '</span>' : '<span class="text-muted font-11">-</span>';
+                                        var qty = item.quantity !== undefined && item.quantity !== null ? item.quantity : 1;
+                                        var rate = (item.per_rate !== undefined && item.per_rate !== null && item.per_rate !== '') ? parseFloat(item.per_rate).toFixed(2) : '-';
+                                        var amt = item.amount !== undefined && item.amount !== null ? parseFloat(item.amount).toFixed(2) : '0.00';
+                                        var notesHtml = item.notes ? '<span class="text-muted font-12">' + $('<div>').text(item.notes).html() + '</span>' : '<span class="text-muted font-11">-</span>';
+
                                         rows += '<tr>' +
-                                            '<td class="text-center text-muted font-11">' + (idx + 1) + '</td>' +
-                                            '<td><strong>' + $('<div>').text(item.title).html() + '</strong></td>' +
+                                            '<td class="text-center text-muted font-11 fw-bold">' + (idx + 1) + '</td>' +
+                                            '<td><strong class="text-dark">' + $('<div>').text(item.title).html() + '</strong></td>' +
+                                            '<td class="text-center font-12">' + qty + '</td>' +
+                                            '<td class="text-end font-12">' + (rate !== '-' ? '₹' + rate : '-') + '</td>' +
+                                            '<td class="text-end fw-bold text-danger font-13">₹' + parseFloat(amt).toLocaleString('en-IN', { minimumFractionDigits: 2 }) + '</td>' +
                                             '<td>' + notesHtml + '</td>' +
-                                            '<td class="text-end fw-bold text-danger">₹' + parseFloat(item.amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 }) + '</td>' +
                                         '</tr>';
                                     });
                                 } else {
-                                    rows = '<tr><td colspan="4" class="text-center text-muted py-3">No separate line items logged for this expense. (Recorded as single amount).</td></tr>';
+                                    rows = '<tr><td colspan="6" class="text-center text-muted py-3">No separate line items logged for this expense. (Recorded as single amount).</td></tr>';
                                 }
                                 $('#view_exp_items_tbody').html(rows);
 
