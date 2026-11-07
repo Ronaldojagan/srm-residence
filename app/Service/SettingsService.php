@@ -198,6 +198,11 @@ class SettingsService
             $qrFile = $request->file('upi_qr_code');
             $filename = 'upi_qr_' . time() . '.' . $qrFile->getClientOriginalExtension();
             \Illuminate\Support\Facades\Storage::disk('public')->putFileAs('settings', $qrFile, $filename);
+            
+            // Auto crop flyer/standee screenshots so only the clean square QR code is stored
+            $storedFullPath = \Illuminate\Support\Facades\Storage::disk('public')->path('settings/' . $filename);
+            $this->autoCropQrImage($storedFullPath);
+
             \App\Models\Setting::set('upi_qr_code', 'settings/' . $filename, 'UPI QR Code Image');
         } elseif (isset($data['remove_upi_qr_code']) && $data['remove_upi_qr_code'] == '1') {
             \App\Models\Setting::set('upi_qr_code', '', 'UPI QR Code Image');
@@ -461,5 +466,176 @@ class SettingsService
 
         session()->flash("success", "Thank you trying our app. We will remove your data. It usually takes around 2-3 days.");
         return redirect('/user-data-remove');
+    }
+
+    /**
+     * Auto crop uploaded UPI QR codes (such as Google Pay / PhonePe / Paytm standees or flyers)
+     * so that only the square QR code matrix with a clean margin is stored and displayed.
+     */
+    protected function autoCropQrImage(string $fullPath): void
+    {
+        if (!file_exists($fullPath) || !function_exists('imagecreatefromstring')) {
+            return;
+        }
+
+        $info = @getimagesize($fullPath);
+        if (!$info) {
+            return;
+        }
+
+        $width = $info[0];
+        $height = $info[1];
+        $mime = $info['mime'] ?? '';
+
+        if ($width < 50 || $height < 50) {
+            return;
+        }
+
+        $aspect = $height / $width;
+        $isPortraitStandee = ($aspect > 1.15);
+
+        $img = null;
+        switch ($mime) {
+            case 'image/jpeg':
+                $img = @imagecreatefromjpeg($fullPath);
+                break;
+            case 'image/png':
+                $img = @imagecreatefrompng($fullPath);
+                break;
+            case 'image/webp':
+                if (function_exists('imagecreatefromwebp')) {
+                    $img = @imagecreatefromwebp($fullPath);
+                }
+                break;
+            default:
+                break;
+        }
+
+        if (!$img) {
+            return;
+        }
+
+        try {
+            $cropX = 0;
+            $cropY = 0;
+            $cropSize = min($width, $height);
+
+            if ($isPortraitStandee) {
+                $step = max(1, (int)round($width / 400));
+
+                $darkPerRow = [];
+                for ($y = 0; $y < $height; $y += $step) {
+                    $count = 0;
+                    for ($x = 0; $x < $width; $x += $step) {
+                        $rgb = imagecolorat($img, $x, $y);
+                        $r = ($rgb >> 16) & 0xFF;
+                        $g = ($rgb >> 8) & 0xFF;
+                        $b = $rgb & 0xFF;
+                        $lum = 0.299 * $r + 0.587 * $g + 0.114 * $b;
+                        if ($lum < 90) {
+                            $count++;
+                        }
+                    }
+                    $darkPerRow[$y] = $count;
+                }
+
+                $testedXCount = (int)ceil($width / $step);
+                $rowThreshold = (int)round($testedXCount * 0.12);
+
+                $qrStartY = null;
+                $qrEndY = null;
+                foreach ($darkPerRow as $y => $count) {
+                    if ($count >= $rowThreshold) {
+                        if ($qrStartY === null) {
+                            $qrStartY = $y;
+                        }
+                        $qrEndY = $y;
+                    }
+                }
+
+                if ($qrStartY !== null && $qrEndY !== null && ($qrEndY - $qrStartY) > ($height * 0.15)) {
+                    $darkPerCol = [];
+                    for ($x = 0; $x < $width; $x += $step) {
+                        $count = 0;
+                        for ($y = $qrStartY; $y <= $qrEndY; $y += $step) {
+                            $rgb = imagecolorat($img, $x, $y);
+                            $r = ($rgb >> 16) & 0xFF;
+                            $g = ($rgb >> 8) & 0xFF;
+                            $b = $rgb & 0xFF;
+                            $lum = 0.299 * $r + 0.587 * $g + 0.114 * $b;
+                            if ($lum < 90) {
+                                $count++;
+                            }
+                        }
+                        $darkPerCol[$x] = $count;
+                    }
+
+                    $testedYCount = (int)ceil(($qrEndY - $qrStartY) / $step);
+                    $colThreshold = (int)round($testedYCount * 0.10);
+
+                    $qrStartX = null;
+                    $qrEndX = null;
+                    foreach ($darkPerCol as $x => $count) {
+                        if ($count >= $colThreshold) {
+                            if ($qrStartX === null) {
+                                $qrStartX = $x;
+                            }
+                            $qrEndX = $x;
+                        }
+                    }
+
+                    if ($qrStartX !== null && $qrEndX !== null && ($qrEndX - $qrStartX) > ($width * 0.15)) {
+                        $detectedW = $qrEndX - $qrStartX;
+                        $detectedH = $qrEndY - $qrStartY;
+                        $detectedSize = max($detectedW, $detectedH);
+
+                        $margin = (int)round($detectedSize * 0.045);
+                        $cropX = max(0, $qrStartX - $margin);
+                        $cropY = max(0, $qrStartY - $margin);
+                        $cropW = min($width - $cropX, $detectedSize + ($margin * 2));
+                        $cropH = min($height - $cropY, $detectedSize + ($margin * 2));
+                        $cropSize = min($cropW, $cropH);
+                    } else {
+                        $cropX = 0;
+                        $cropY = (int)round(($height - $width) / 2);
+                        $cropSize = $width;
+                    }
+                } else {
+                    $cropX = 0;
+                    $cropY = (int)round(($height - $width) / 2);
+                    $cropSize = $width;
+                }
+            } else {
+                if ($width > $height * 1.15) {
+                    $cropX = (int)round(($width - $height) / 2);
+                    $cropY = 0;
+                    $cropSize = $height;
+                } else {
+                    imagedestroy($img);
+                    return;
+                }
+            }
+
+            $cropped = imagecreatetruecolor($cropSize, $cropSize);
+            $white = imagecolorallocate($cropped, 255, 255, 255);
+            imagefill($cropped, 0, 0, $white);
+
+            imagecopyresampled($cropped, $img, 0, 0, $cropX, $cropY, $cropSize, $cropSize, $cropSize, $cropSize);
+
+            if ($mime === 'image/jpeg') {
+                imagejpeg($cropped, $fullPath, 95);
+            } elseif ($mime === 'image/png') {
+                imagepng($cropped, $fullPath, 9);
+            } elseif ($mime === 'image/webp' && function_exists('imagewebp')) {
+                imagewebp($cropped, $fullPath, 95);
+            }
+
+            imagedestroy($cropped);
+            imagedestroy($img);
+        } catch (\Throwable $e) {
+            if (is_resource($img) || (is_object($img) && $img instanceof \GdImage)) {
+                @imagedestroy($img);
+            }
+        }
     }
 }

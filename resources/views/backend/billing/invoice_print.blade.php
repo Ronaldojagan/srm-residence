@@ -343,22 +343,26 @@
         }
 
         .qr-image-container {
-            width: 100px;
-            height: 100px;
-            background: #fff;
-            border: 1px solid #cbd5e1;
-            border-radius: 8px;
+            width: 110px;
+            height: 110px;
+            background: #ffffff;
+            border: 1.5px solid #cbd5e1;
+            border-radius: 10px;
             padding: 4px;
             flex-shrink: 0;
             display: flex;
             align-items: center;
             justify-content: center;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
 
         .qr-image-container img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 6px;
+            display: block;
         }
 
         .pay-info-text {
