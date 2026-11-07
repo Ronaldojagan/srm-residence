@@ -228,7 +228,7 @@ class HomeController extends Controller
         }
 
         // Rooms under maintenance
-        $maintRooms = Room::where('occupancy_status', 'maintenance')->get();
+        $maintRooms = Room::where('occupancy_status', 'maintenance')->orderByRaw('CAST(room_number AS UNSIGNED) ASC, room_number ASC')->get();
         $maintenanceRequests = [];
         if ($maintRooms->count() > 0) {
             foreach ($maintRooms as $mr) {

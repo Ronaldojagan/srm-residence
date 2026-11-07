@@ -82,7 +82,7 @@ class ExpenseController extends Controller
         }
 
         $stats = $this->getRoomExpenseStats();
-        $rooms = Room::orderBy('room_number')->get();
+        $rooms = Room::orderByRaw('CAST(room_number AS UNSIGNED) ASC, room_number ASC')->get();
 
         return view('backend.expenses.room_expenses', compact('stats', 'rooms'));
     }

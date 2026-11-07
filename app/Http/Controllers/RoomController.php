@@ -18,7 +18,7 @@ class RoomController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $query = Room::with('currentTenant');
+            $query = Room::with('currentTenant')->orderByRaw('CAST(room_number AS UNSIGNED) ASC, room_number ASC');
 
             if ($request->filled('floor')) {
                 $query->where('floor', $request->floor);
@@ -37,6 +37,12 @@ class RoomController extends Controller
             }
 
             return DataTables::of($query)
+                ->orderColumn('room_number', function ($query, $order) {
+                    $query->orderByRaw("CAST(room_number AS UNSIGNED) {$order}, room_number {$order}");
+                })
+                ->orderColumn('room_badge', function ($query, $order) {
+                    $query->orderByRaw("CAST(room_number AS UNSIGNED) {$order}, room_number {$order}");
+                })
                 ->addIndexColumn()
                 ->addColumn('room_badge', function ($row) {
                     return '<div class="d-flex align-items-center">

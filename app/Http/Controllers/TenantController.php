@@ -77,7 +77,7 @@ class TenantController extends Controller
             'occupiedRooms' => Tenant::where('status', 1)->whereNotNull('room_id')->distinct('room_id')->count('room_id'),
         ];
 
-        $rooms = Room::orderBy('room_number')->get();
+        $rooms = Room::orderByRaw('CAST(room_number AS UNSIGNED) ASC, room_number ASC')->get();
 
         return view('backend.tenants.index', compact('stats', 'rooms'));
     }
