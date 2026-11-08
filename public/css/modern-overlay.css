@@ -449,6 +449,7 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
 .nav-badge-billing   { background: rgba(16, 185, 129, 0.16); color: #34d399; }
 .nav-badge-expenses  { background: rgba(244, 63, 94, 0.16);  color: #fb7185; }
 .nav-badge-loans     { background: rgba(245, 158, 11, 0.16); color: #fbbf24; }
+.nav-badge-salary    { background: rgba(16, 185, 129, 0.16); color: #10b981; }
 .nav-badge-reports   { background: rgba(99, 102, 241, 0.16); color: #818cf8; }
 .nav-badge-settings  { background: rgba(20, 184, 166, 0.16); color: #2dd4bf; }
 

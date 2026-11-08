@@ -7,6 +7,7 @@ use App\Http\Controllers\TenantController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\LoanController;
+use App\Http\Controllers\SalaryController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SettingsController;
@@ -129,6 +130,18 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'user-access:' . Use
         Route::get('/{loan}/schedule', 'getSchedule')->name('schedule');
         Route::post('/{loan}/record-emi', 'recordEmi')->name('record_emi');
         Route::post('/{loan}/pay-emi', 'recordEmi')->name('pay_emi');
+    });
+
+    // Salary Management (Owner / Personal Salary)
+    Route::controller(SalaryController::class)->prefix('salary')->name('salary.')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/stats', 'getStatsAjax')->name('stats');
+        Route::post('/', 'store')->name('store');
+        Route::get('/{salary}/data', 'getData')->name('data');
+        Route::get('/{salary}/voucher', 'getVoucher')->name('voucher');
+        Route::match(['PUT', 'POST', 'PATCH'], '/{salary}', 'update')->name('update');
+        Route::match(['PUT', 'POST', 'PATCH'], '/{salary}/update', 'update')->name('update_alt');
+        Route::delete('/{salary}', 'destroy')->name('destroy');
     });
 
     // Bills & Payments

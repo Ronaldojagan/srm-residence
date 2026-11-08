@@ -93,6 +93,12 @@
                         @endif
                     </a>
                 </li>
+                <li class="{{ request()->is('admin/salary*') ? 'menuitem-active' : '' }}">
+                    <a href="{{ url('/admin/salary') }}" class="{{ request()->is('admin/salary*') ? 'active' : '' }}">
+                        <span class="res-nav-badge nav-badge-salary"><i class="fas fa-wallet"></i></span>
+                        <span class="ms-1"> Salary </span>
+                    </a>
+                </li>
 
                 <!-- Section: System & Insights -->
                 <li class="menu-title">Insights & Config</li>
