@@ -215,6 +215,53 @@
             white-space: nowrap;
         }
 
+        @media screen and (max-width: 768px) {
+            body {
+                padding: 10px 8px !important;
+                background: #f1f5f9 !important;
+            }
+
+            .no-print-bar {
+                flex-direction: column !important;
+                gap: 10px !important;
+                align-items: stretch !important;
+                padding: 12px 14px !important;
+                margin-bottom: 12px !important;
+            }
+
+            .no-print-bar .btn-toolbar {
+                width: 100% !important;
+                justify-content: center !important;
+            }
+
+            .receipt-sheet {
+                padding: 20px 16px !important;
+                max-width: 100% !important;
+                border-radius: 12px !important;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05) !important;
+            }
+
+            .receipt-row {
+                font-size: 13px !important;
+                padding: 8px 0 !important;
+            }
+
+            .amount-paid-box {
+                padding: 14px !important;
+            }
+
+            .amount-paid-box .amt {
+                font-size: 24px !important;
+            }
+
+            .receipt-footer {
+                flex-direction: column !important;
+                gap: 20px !important;
+                align-items: center !important;
+                text-align: center !important;
+            }
+        }
+
         @media print {
             body {
                 background: #fff !important;

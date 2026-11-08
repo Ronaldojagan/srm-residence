@@ -1797,40 +1797,93 @@ body[data-leftbar-size="condensed"] .res-nav-badge {
     display: inline-flex !important;
     align-items: center !important;
     box-shadow: 0 1px 3px rgba(0,0,0,0.04) !important;
+    white-space: nowrap !important;
+    width: auto !important;
   }
 
-  .tab-link.active {
-    background: var(--res-primary) !important;
-    color: #ffffff !important;
-    border-color: var(--res-primary) !important;
-    border-left: 1px solid var(--res-primary) !important;
+  .tab-link .tab-subtitle {
+    display: none !important;
   }
 
-  .tab-link.active i {
-    color: #ffffff !important;
+  .integration-nav {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    gap: 8px !important;
+    padding: 6px 4px !important;
+  }
+
+  .integration-pill {
+    flex: 0 0 auto !important;
+    min-width: auto !important;
+    white-space: nowrap !important;
+  }
+
+  .form-card-footer {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+
+  .form-card-footer > .btn {
+    width: 100% !important;
+  }
+
+  /* Universal Swipeable Tabs (Billing, Reports, Users) */
+  .nav-tabs,
+  .nav-tabs-billing,
+  .report-nav-pills {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    gap: 6px !important;
+    padding-bottom: 6px !important;
+  }
+
+  .nav-tabs .nav-link,
+  .nav-tabs-billing .nav-link,
+  .report-nav-pills .nav-link {
+    flex: 0 0 auto !important;
+    white-space: nowrap !important;
+  }
+
+  .select2-container,
+  .select2-container--default,
+  .select2-container--bootstrap-5 {
+    width: 100% !important;
+    max-width: 100% !important;
   }
 
   .page-title-main {
     font-size: 18px !important;
   }
 
-  /* Page title & action button stack cleanly on mobile */
+  /* Page title & action button stack cleanly on mobile across all modules */
   .row.justify-content-between.align-items-center:not(.modal *):not(form *) {
     row-gap: 12px !important;
     margin-top: 6px !important;
   }
 
-  .row.justify-content-between.align-items-center:not(.modal *):not(form *) > .col-md-6.text-end,
-  .row.justify-content-between.align-items-center:not(.modal *):not(form *) > .col-12.text-end {
+  .row.justify-content-between.align-items-center:not(.modal *):not(form *) > [class*="col-"].text-end,
+  .page-title-box > .page-title-right,
+  .row:has(> [class*="col-"] > .page-title-main) > [class*="col-"].text-end,
+  .no-print:has(.btn-group) {
     text-align: left !important;
     display: flex !important;
     flex-direction: column !important;
     gap: 8px !important;
     width: 100% !important;
+    margin-top: 8px !important;
   }
 
-  .row.justify-content-between.align-items-center:not(.modal *):not(form *) > .col-md-6.text-end > .btn,
-  .row.justify-content-between.align-items-center:not(.modal *):not(form *) > .col-md-6.text-end > a.btn {
+  .row.justify-content-between.align-items-center:not(.modal *):not(form *) > [class*="col-"].text-end > .btn,
+  .row.justify-content-between.align-items-center:not(.modal *):not(form *) > [class*="col-"].text-end > a.btn,
+  .page-title-box > .page-title-right > .btn,
+  .page-title-box > .page-title-right > a.btn,
+  .row:has(> [class*="col-"] > .page-title-main) > [class*="col-"].text-end > .btn,
+  .row:has(> [class*="col-"] > .page-title-main) > [class*="col-"].text-end > a.btn,
+  .no-print .btn-group > .btn {
     width: 100% !important;
     display: flex !important;
     align-items: center !important;
@@ -1838,14 +1891,25 @@ body[data-leftbar-size="condensed"] .res-nav-badge {
     margin: 0 !important;
   }
 
-  .row.justify-content-between.align-items-center:not(.modal *):not(form *) > .col-md-6.text-end > .btn-group {
+  .no-print .btn-group {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 6px !important;
+  }
+
+  .no-print .btn-group > .btn {
+    border-radius: 8px !important;
+  }
+
+  .row.justify-content-between.align-items-center:not(.modal *):not(form *) > [class*="col-"].text-end > .btn-group {
     display: flex !important;
     flex-direction: column !important;
     width: 100% !important;
     gap: 8px !important;
   }
 
-  .row.justify-content-between.align-items-center:not(.modal *):not(form *) > .col-md-6.text-end > .btn-group > .btn {
+  .row.justify-content-between.align-items-center:not(.modal *):not(form *) > [class*="col-"].text-end > .btn-group > .btn {
     border-radius: 8px !important;
     width: 100% !important;
   }
@@ -1968,7 +2032,7 @@ body[data-leftbar-size="condensed"] .res-nav-badge {
     justify-content: center !important;
   }
 
-  /* Responsive Filter Toolbars & Buttons */
+  /* Responsive Filter Toolbars & Buttons across All Modules */
   .dataTables_filter, .dataTables_length {
     text-align: left !important;
     float: none !important;
@@ -1980,8 +2044,11 @@ body[data-leftbar-size="condensed"] .res-nav-badge {
     margin-left: 0 !important;
   }
 
-  .row.mb-3.g-2.align-items-end .col-md-6.text-end,
-  .row.mb-3.align-items-end .col-md-6.text-end {
+  .row.align-items-end [class*="col-"].text-end,
+  .row.g-2.align-items-end [class*="col-"].text-end,
+  .row.g-3.align-items-end [class*="col-"].text-end,
+  .card-body .row.align-items-end [class*="col-"].text-end,
+  #reportFilterForm [class*="col-"].text-end {
     text-align: left !important;
     display: flex !important;
     gap: 8px !important;
@@ -1989,22 +2056,29 @@ body[data-leftbar-size="condensed"] .res-nav-badge {
     width: 100% !important;
   }
 
-  .row.mb-3.g-2.align-items-end .col-md-6.text-end .btn,
-  .row.mb-3.align-items-end .col-md-6.text-end .btn {
-    flex: 1 !important;
+  .row.align-items-end [class*="col-"].text-end .btn,
+  .row.g-2.align-items-end [class*="col-"].text-end .btn,
+  .row.g-3.align-items-end [class*="col-"].text-end .btn,
+  .card-body .row.align-items-end [class*="col-"].text-end .btn,
+  #reportFilterForm [class*="col-"].text-end .btn {
+    flex: 1 1 0 !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
     margin: 0 !important;
+    width: auto !important;
+    white-space: nowrap !important;
   }
 
-  .d-flex.gap-2.align-items-end {
+  .filter-form .d-flex.gap-2.align-items-end,
+  .filter-card .d-flex.gap-2.align-items-end {
     flex-direction: column !important;
     align-items: stretch !important;
     gap: 10px !important;
   }
 
-  .d-flex.gap-2.align-items-end > * {
+  .filter-form .d-flex.gap-2.align-items-end > *,
+  .filter-card .d-flex.gap-2.align-items-end > * {
     width: 100% !important;
     flex: 1 1 100% !important;
   }
@@ -2109,6 +2183,13 @@ body[data-leftbar-size="condensed"] .res-nav-badge {
 
   .invoice-box .d-flex.justify-content-between.align-items-start .text-end {
     text-align: left !important;
+  }
+
+  .invoice-box .pay-details-inner,
+  #viewInvoiceModal .d-flex.align-items-center.gap-3 {
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
   }
 
   #printableInvoiceArea, #printableReceiptArea {

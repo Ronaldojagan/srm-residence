@@ -536,6 +536,136 @@
             border-left: 3px solid var(--primary);
         }
 
+        .table-items-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-bottom: 20px;
+        }
+
+        /* ==================================================== */
+        /* MOBILE VIEW RESPONSIVENESS (< 768px)                */
+        /* ==================================================== */
+        @media screen and (max-width: 768px) {
+            body {
+                padding: 10px 8px !important;
+                background: #f1f5f9 !important;
+            }
+
+            .no-print-bar {
+                flex-direction: column !important;
+                gap: 10px !important;
+                align-items: stretch !important;
+                padding: 12px 14px !important;
+                margin-bottom: 12px !important;
+            }
+
+            .no-print-bar > div {
+                display: flex !important;
+                flex-direction: column !important;
+                width: 100% !important;
+                gap: 8px !important;
+            }
+
+            .no-print-bar .btn-toolbar {
+                width: 100% !important;
+                justify-content: center !important;
+            }
+
+            .invoice-sheet {
+                padding: 18px 14px !important;
+                max-width: 100% !important;
+                border-radius: 12px !important;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05) !important;
+            }
+
+            .invoice-header {
+                flex-direction: column !important;
+                gap: 16px !important;
+                align-items: flex-start !important;
+                padding-bottom: 18px !important;
+                margin-bottom: 18px !important;
+            }
+
+            .invoice-header > div:first-child {
+                max-width: 100% !important;
+                width: 100% !important;
+            }
+
+            .invoice-title-block {
+                text-align: left !important;
+                width: 100% !important;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 6px !important;
+            }
+
+            .invoice-main-heading {
+                font-size: 22px !important;
+                letter-spacing: 0 !important;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr !important;
+                gap: 14px !important;
+                padding: 14px 12px !important;
+                margin-bottom: 18px !important;
+            }
+
+            .info-grid > div:last-child,
+            .info-col.text-right {
+                text-align: left !important;
+                border-top: 1px dashed var(--border);
+                padding-top: 12px;
+            }
+
+            .table-items {
+                min-width: 520px !important;
+            }
+
+            .bottom-grid {
+                grid-template-columns: 1fr !important;
+                gap: 16px !important;
+                margin-bottom: 18px !important;
+            }
+
+            .pay-details-inner {
+                flex-direction: column !important;
+                align-items: center !important;
+                text-align: center !important;
+                gap: 12px !important;
+            }
+
+            .qr-image-container {
+                width: 130px !important;
+                height: 130px !important;
+                margin: 0 auto !important;
+            }
+
+            .pay-info-text {
+                text-align: center !important;
+            }
+
+            .invoice-footer {
+                flex-direction: column !important;
+                gap: 20px !important;
+                align-items: center !important;
+                text-align: center !important;
+            }
+
+            .terms-block {
+                max-width: 100% !important;
+                text-align: center !important;
+            }
+
+            .signatory-block {
+                width: 100% !important;
+                max-width: 220px !important;
+                margin: 10px auto 0 auto !important;
+            }
+        }
+
         /* ==================================================== */
         /* PRINT SPECIFIC STYLES                                */
         /* ==================================================== */
@@ -724,6 +854,7 @@
         @endif
 
         <!-- Invoice Line Items Table -->
+        <div class="table-items-wrapper">
         <table class="table-items">
             <thead>
                 <tr>
@@ -761,6 +892,7 @@
                 @endif
             </tbody>
         </table>
+        </div>
 
         <!-- Amount in Words -->
         <div class="words-block">
