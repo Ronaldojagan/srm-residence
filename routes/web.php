@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Route;
 
 Auth::routes();
 
+Route::get('/ping', fn() => response()->json(['status' => 'alive', 'app' => 'SRM RESIDENCE', 'timestamp' => now()->toIso8601String()]));
 Route::get('/', fn() => view('auth.login'));
 Route::get('/home', [HomeController::class, 'index'])->name('home');
 Route::get('logs', [\Rap2hpoutre\LaravelLogViewer\LogViewerController::class, 'index']);
