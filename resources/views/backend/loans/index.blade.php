@@ -882,7 +882,7 @@
                                 $('#edit_tenure_months').val(l.tenure_months);
                                 $('#edit_emi_amount').val(l.emi_amount);
                                 $('#edit_emi_day').val(l.emi_day || 5);
-                                $('#edit_start_date').val(l.start_date ? l.start_date.substring(0, 10) : '');
+                                $('#edit_start_date').val(l.start_date_formatted || (l.start_date ? l.start_date.substring(0, 10) : ''));
                                 $('#edit_status').val(l.status);
                                 $('#edit_bank_account_debited').val(l.bank_account_debited);
                                 $('#edit_notes').val(l.notes);

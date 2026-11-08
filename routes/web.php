@@ -121,12 +121,14 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'user-access:' . Use
         Route::get('/', 'index')->name('index');
         Route::get('/stats', 'getStatsAjax')->name('stats');
         Route::post('/', 'store')->name('store');
+        Route::delete('/emis/{emi}', 'destroyEmi')->name('destroy_emi');
         Route::get('/{loan}/data', 'getData')->name('data');
-        Route::post('/{loan}/update', 'update')->name('update');
+        Route::match(['PUT', 'POST', 'PATCH'], '/{loan}', 'update')->name('update');
+        Route::match(['PUT', 'POST', 'PATCH'], '/{loan}/update', 'update')->name('update_alt');
         Route::delete('/{loan}', 'destroy')->name('destroy');
         Route::get('/{loan}/schedule', 'getSchedule')->name('schedule');
+        Route::post('/{loan}/record-emi', 'recordEmi')->name('record_emi');
         Route::post('/{loan}/pay-emi', 'recordEmi')->name('pay_emi');
-        Route::delete('/emis/{emi}', 'destroyEmi')->name('destroy_emi');
     });
 
     // Bills & Payments

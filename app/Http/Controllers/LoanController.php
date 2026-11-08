@@ -337,19 +337,30 @@ class LoanController extends Controller
     /**
      * Get Loan data for editing
      */
-    public function getData(Loan $loan)
+    public function getData($loan)
     {
+        if (!$loan instanceof Loan) {
+            $loan = Loan::findOrFail($loan);
+        }
+
+        $data = $loan->toArray();
+        $data['start_date_formatted'] = $loan->start_date ? $loan->start_date->format('Y-m-d') : '';
+
         return response()->json([
             'success' => true,
-            'loan' => $loan
+            'loan' => $data
         ]);
     }
 
     /**
      * Update Loan details
      */
-    public function update(Request $request, Loan $loan)
+    public function update(Request $request, $loan)
     {
+        if (!$loan instanceof Loan) {
+            $loan = Loan::findOrFail($loan);
+        }
+
         $validated = $request->validate([
             'loan_title' => 'required|string|max:150',
             'loan_type' => 'required|string|in:business,personal,property,appliance,vehicle,hand_loan,other',
@@ -390,15 +401,20 @@ class LoanController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Loan account updated successfully!'
+            'message' => 'Loan account updated successfully!',
+            'loan' => $loan
         ]);
     }
 
     /**
      * Delete Loan
      */
-    public function destroy(Loan $loan)
+    public function destroy($loan)
     {
+        if (!$loan instanceof Loan) {
+            $loan = Loan::findOrFail($loan);
+        }
+
         $title = $loan->loan_title;
         $loan->emis()->delete();
         $loan->delete();
@@ -412,8 +428,12 @@ class LoanController extends Controller
     /**
      * Get Complete EMI Schedule & History for a Loan
      */
-    public function getSchedule(Loan $loan)
+    public function getSchedule($loan)
     {
+        if (!$loan instanceof Loan) {
+            $loan = Loan::findOrFail($loan);
+        }
+
         $loan->load('emis');
         $paidEmis = $loan->emis->keyBy('installment_number');
 
@@ -464,8 +484,12 @@ class LoanController extends Controller
     /**
      * Record EMI installment payment
      */
-    public function recordEmi(Request $request, Loan $loan)
+    public function recordEmi(Request $request, $loan)
     {
+        if (!$loan instanceof Loan) {
+            $loan = Loan::findOrFail($loan);
+        }
+
         $validated = $request->validate([
             'installment_number' => 'required|integer|min:1',
             'payment_date' => 'required|date',
@@ -506,8 +530,12 @@ class LoanController extends Controller
     /**
      * Delete an EMI installment record
      */
-    public function destroyEmi(LoanEmi $emi)
+    public function destroyEmi($emi)
     {
+        if (!$emi instanceof LoanEmi) {
+            $emi = LoanEmi::findOrFail($emi);
+        }
+
         $loan = $emi->loan;
         $inst = $emi->installment_number;
         $emi->delete();

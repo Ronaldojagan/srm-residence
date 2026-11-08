@@ -69,9 +69,9 @@ class Loan extends Model
         $balance = max(0, $totalPayable - $paidSum);
         $this->outstanding_balance = $balance;
 
-        if ($balance <= 0 && $this->status === 'active') {
+        if ($balance <= 0) {
             $this->status = 'closed';
-        } elseif ($balance > 0 && $this->status === 'closed') {
+        } elseif (empty($this->status)) {
             $this->status = 'active';
         }
 
