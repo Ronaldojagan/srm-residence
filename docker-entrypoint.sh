@@ -21,18 +21,14 @@ if [ "$DB_CONNECTION" = "sqlite" ]; then
     fi
 fi
 
-# Run Laravel package discovery & optimizations
-php artisan package:discover --ansi || true
+# Ensure storage symlink exists
 php artisan storage:link --force || true
-php artisan config:clear
-php artisan view:clear
-php artisan route:clear
 
-# Import backup if available, or run standard migrations
-if [ -f /var/www/html/database/srm_residence_backup.sql ]; then
-    php artisan app:import-backup || php artisan migrate --force || true
-else
+# Run background database migrations if needed without blocking web server startup
+(
+    sleep 3
     php artisan migrate --force || true
-fi
+) &
 
+# Start Apache immediately so Render health check succeeds in seconds
 exec "$@"
