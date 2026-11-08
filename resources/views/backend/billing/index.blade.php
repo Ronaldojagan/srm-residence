@@ -850,11 +850,11 @@
                 </div>
                 <div class="modal-footer bg-light">
                     <button type="button" class="btn btn-secondary waves-effect" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-success text-white waves-effect waves-light" id="btn_modal_share_invoice_whatsapp" title="Share via WhatsApp">
-                        <i class="fab fa-whatsapp me-1"></i> WhatsApp
+                    <button type="button" class="btn btn-success text-white waves-effect waves-light" id="btn_modal_share_invoice_pdf" title="Share Invoice as PDF">
+                        <i class="fab fa-whatsapp me-1"></i><i class="fas fa-file-pdf me-1"></i> Share PDF
                     </button>
-                    <button type="button" class="btn btn-primary text-white waves-effect waves-light" id="btn_modal_share_invoice_native" title="Share to any app">
-                        <i class="fas fa-share-alt me-1"></i> Share
+                    <button type="button" class="btn btn-primary text-white waves-effect waves-light" id="btn_modal_share_invoice_image" title="Share Invoice as Image">
+                        <i class="fab fa-whatsapp me-1"></i><i class="fas fa-image me-1"></i> Share Image
                     </button>
                     <button type="button" class="btn btn-info text-white waves-effect waves-light" id="btn_send_modal_invoice_email">
                         <i class="fas fa-paper-plane me-1"></i> Send via Email
@@ -946,11 +946,11 @@
                 </div>
                 <div class="modal-footer bg-light">
                     <button type="button" class="btn btn-secondary waves-effect" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-success text-white waves-effect waves-light" id="btn_modal_share_receipt_whatsapp" title="Share via WhatsApp">
-                        <i class="fab fa-whatsapp me-1"></i> WhatsApp
+                    <button type="button" class="btn btn-success text-white waves-effect waves-light" id="btn_modal_share_receipt_pdf" title="Share Receipt as PDF">
+                        <i class="fab fa-whatsapp me-1"></i><i class="fas fa-file-pdf me-1"></i> Share PDF
                     </button>
-                    <button type="button" class="btn btn-primary text-white waves-effect waves-light" id="btn_modal_share_receipt_native" title="Share to any app">
-                        <i class="fas fa-share-alt me-1"></i> Share
+                    <button type="button" class="btn btn-primary text-white waves-effect waves-light" id="btn_modal_share_receipt_image" title="Share Receipt as Image">
+                        <i class="fab fa-whatsapp me-1"></i><i class="fas fa-image me-1"></i> Share Image
                     </button>
                     <a href="javascript:void(0)" class="btn btn-dark waves-effect waves-light" id="btn_open_print_receipt" target="_blank">
                         <i class="fas fa-print me-1"></i> Print Receipt
@@ -1029,6 +1029,8 @@
         <script src="https://cdn.datatables.net/1.11.4/js/jquery.dataTables.min.js"></script>
         <script src="https://cdn.datatables.net/1.11.4/js/dataTables.bootstrap5.min.js"></script>
         <script src="{{ url('assets/libs/sweetalert2/sweetalert2.all.min.js') }}"></script>
+        <script src="{{ asset('assets/libs/html2canvas.min.js') }}"></script>
+        <script src="{{ asset('assets/libs/jspdf.umd.min.js') }}"></script>
 
         <script type="text/javascript">
             $(function() {
@@ -1972,9 +1974,10 @@
                 });
 
                 // =========================================================================
-                // 8.1 SHARE INVOICE & RECEIPT (WHATSAPP & NATIVE SHARE SHEET)
+                // 8.1 SHARE INVOICE & RECEIPT AS IMAGE OR PDF (NO LINK, ATTACHED FILE)
                 // =========================================================================
-                function formatInvoiceShareMsg(data) {
+                function formatInvoiceShareMsg(data, type) {
+                    const ext = (type || 'PDF').toUpperCase();
                     return `🏠 *{{ addslashes($settings['residence_name'] ?? 'SRM RESIDENCE') }} - OFFICIAL RENT INVOICE*\n` +
                            `━━━━━━━━━━━━━━━━━━━━━━━\n` +
                            `📄 *Invoice No:* ${data.billNumber}\n` +
@@ -1986,13 +1989,15 @@
                            `⏰ *Due Date:* ${data.dueDate}\n` +
                            `💳 *Instant Pay UPI ID:* ${data.upiId || '{{ $settings["upi_id"] ?? "srmresidence@okhdfcbank" }}'}\n` +
                            `━━━━━━━━━━━━━━━━━━━━━━━\n` +
-                           `🔗 *View / Download Official Invoice:*\n${data.url}`;
+                           `📑 *Attached: Official Rent Invoice (${ext})*`;
                 }
 
-                function formatReceiptShareMsg(data) {
-                    return `✅ *{{ addslashes($settings['residence_name'] ?? 'SRM RESIDENCE') }} - OFFICIAL PAYMENT RECEIPT*\n` +
+                function formatReceiptShareMsg(data, type) {
+                    const ext = (type || 'PDF').toUpperCase();
+                    return `🧾 *{{ addslashes($settings['residence_name'] ?? 'SRM RESIDENCE') }} - PAYMENT RECEIPT*\n` +
                            `━━━━━━━━━━━━━━━━━━━━━━━\n` +
-                           `🧾 *Receipt No:* ${data.receiptNumber}\n` +
+                           `✅ *Payment Confirmed & Credited*\n` +
+                           `📄 *Receipt No:* ${data.receiptNumber}\n` +
                            `👤 *Resident:* ${data.tenantName} (${data.room})\n` +
                            `📄 *For Invoice:* ${data.billNumber}\n` +
                            `💵 *Amount Received:* ${data.amount}\n` +
@@ -2000,100 +2005,142 @@
                            `🔖 *Ref / Tx ID:* ${data.txId}\n` +
                            `📅 *Payment Date:* ${data.date}\n` +
                            `━━━━━━━━━━━━━━━━━━━━━━━\n` +
-                           `🔗 *View / Download Official Receipt:*\n${data.url}`;
+                           `📑 *Attached: Official Payment Receipt (${ext})*`;
                 }
 
-                function executeWhatsAppShare(phone, text) {
-                    var cleanPhone = (phone || '').replace(/[^0-9]/g, '');
-                    if (cleanPhone.length === 10) cleanPhone = '91' + cleanPhone;
-                    var waUrl = cleanPhone 
-                        ? `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(text)}`
-                        : `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
-                    window.open(waUrl, '_blank');
-                }
+                async function shareElementAsFile(el, type, shareData, baseFileName, $btn) {
+                    if (!el) return;
+                    var originalHtml = $btn ? $btn.html() : '';
+                    if ($btn) {
+                        $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Generating ' + type.toUpperCase() + '...');
+                    }
 
-                function executeNativeShare(title, text, url, fallbackPhone) {
-                    if (navigator.share) {
-                        navigator.share({
-                            title: title,
-                            text: text,
-                            url: url
-                        }).catch(function(err) {
-                            if (err.name !== 'AbortError') {
-                                executeWhatsAppShare(fallbackPhone, text);
-                            }
+                    try {
+                        var canvas = await html2canvas(el, {
+                            scale: 2,
+                            useCORS: true,
+                            allowTaint: true,
+                            backgroundColor: '#ffffff'
                         });
-                    } else {
-                        if (navigator.clipboard) {
-                            navigator.clipboard.writeText(text).then(function() {
-                                toastr.success('Details copied! Opening WhatsApp...');
-                                executeWhatsAppShare(fallbackPhone, text);
-                            }).catch(function() {
-                                executeWhatsAppShare(fallbackPhone, text);
+
+                        var file = null;
+                        var fileName = '';
+
+                        if (type === 'pdf') {
+                            fileName = baseFileName + '.pdf';
+                            var { jsPDF } = window.jspdf;
+                            var pdf = new jsPDF('p', 'mm', 'a4');
+                            var pageWidth = pdf.internal.pageSize.getWidth();
+                            var pageHeight = (canvas.height * pageWidth) / canvas.width;
+                            var imgData = canvas.toDataURL('image/jpeg', 0.95);
+                            pdf.addImage(imgData, 'JPEG', 0, 0, pageWidth, pageHeight, undefined, 'FAST');
+                            var blob = pdf.output('blob');
+                            file = new File([blob], fileName, { type: 'application/pdf' });
+                        } else {
+                            fileName = baseFileName + '.png';
+                            var blob = await new Promise(function(resolve) { canvas.toBlob(resolve, 'image/png'); });
+                            file = new File([blob], fileName, { type: 'image/png' });
+                        }
+
+                        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                            await navigator.share({
+                                title: shareData.title,
+                                text: shareData.text,
+                                files: [file]
                             });
                         } else {
-                            executeWhatsAppShare(fallbackPhone, text);
+                            // Fallback for Desktop / unsupported browsers:
+                            var downloadLink = document.createElement('a');
+                            downloadLink.href = URL.createObjectURL(file);
+                            downloadLink.download = fileName;
+                            document.body.appendChild(downloadLink);
+                            downloadLink.click();
+                            document.body.removeChild(downloadLink);
+
+                            var cleanPhone = (shareData.phone || '').replace(/[^0-9]/g, '');
+                            if (cleanPhone.length >= 10) {
+                                cleanPhone = cleanPhone.length === 10 ? '91' + cleanPhone : cleanPhone;
+                                var waUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(shareData.text)}`;
+                            } else {
+                                var waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareData.text)}`;
+                            }
+                            window.open(waUrl, '_blank');
+
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Invoice ' + type.toUpperCase() + ' Downloaded!',
+                                html: 'File saved to your Downloads.<br>Opening WhatsApp... Please attach the downloaded file in the chat.',
+                                confirmButtonColor: '#0a5858'
+                            });
+                        }
+                    } catch (err) {
+                        if (err.name !== 'AbortError') {
+                            console.error('File share error:', err);
+                            toastr.error('Could not share file: ' + (err.message || err));
+                        }
+                    } finally {
+                        if ($btn) {
+                            $btn.prop('disabled', false).html(originalHtml);
                         }
                     }
                 }
 
                 // Modal Share Handlers
-                $(document).on('click', '#btn_modal_share_invoice_whatsapp', function() {
-                    if (!window.currentActiveInvoice) return;
-                    executeWhatsAppShare(window.currentActiveInvoice.phone, formatInvoiceShareMsg(window.currentActiveInvoice));
-                });
-
-                $(document).on('click', '#btn_modal_share_invoice_native', function() {
+                $(document).on('click', '#btn_modal_share_invoice_pdf', function() {
                     if (!window.currentActiveInvoice) return;
                     var inv = window.currentActiveInvoice;
-                    executeNativeShare(`Invoice ${inv.billNumber} - SRM Residence`, formatInvoiceShareMsg(inv), inv.url, inv.phone);
+                    var shareData = {
+                        title: 'Rent Invoice ' + inv.billNumber,
+                        text: formatInvoiceShareMsg(inv, 'pdf'),
+                        phone: inv.phone
+                    };
+                    shareElementAsFile(document.getElementById('printableInvoiceArea'), 'pdf', shareData, 'Invoice_' + inv.billNumber, $(this));
                 });
 
-                $(document).on('click', '#btn_modal_share_receipt_whatsapp', function() {
-                    if (!window.currentActiveReceipt) return;
-                    executeWhatsAppShare(window.currentActiveReceipt.phone, formatReceiptShareMsg(window.currentActiveReceipt));
+                $(document).on('click', '#btn_modal_share_invoice_image', function() {
+                    if (!window.currentActiveInvoice) return;
+                    var inv = window.currentActiveInvoice;
+                    var shareData = {
+                        title: 'Rent Invoice ' + inv.billNumber,
+                        text: formatInvoiceShareMsg(inv, 'image'),
+                        phone: inv.phone
+                    };
+                    shareElementAsFile(document.getElementById('printableInvoiceArea'), 'image', shareData, 'Invoice_' + inv.billNumber, $(this));
                 });
 
-                $(document).on('click', '#btn_modal_share_receipt_native', function() {
+                $(document).on('click', '#btn_modal_share_receipt_pdf', function() {
                     if (!window.currentActiveReceipt) return;
                     var rcp = window.currentActiveReceipt;
-                    executeNativeShare(`Receipt ${rcp.receiptNumber} - SRM Residence`, formatReceiptShareMsg(rcp), rcp.url, rcp.phone);
+                    var shareData = {
+                        title: 'Payment Receipt ' + rcp.receiptNumber,
+                        text: formatReceiptShareMsg(rcp, 'pdf'),
+                        phone: rcp.phone
+                    };
+                    shareElementAsFile(document.getElementById('printableReceiptArea'), 'pdf', shareData, 'Receipt_' + rcp.receiptNumber, $(this));
+                });
+
+                $(document).on('click', '#btn_modal_share_receipt_image', function() {
+                    if (!window.currentActiveReceipt) return;
+                    var rcp = window.currentActiveReceipt;
+                    var shareData = {
+                        title: 'Payment Receipt ' + rcp.receiptNumber,
+                        text: formatReceiptShareMsg(rcp, 'image'),
+                        phone: rcp.phone
+                    };
+                    shareElementAsFile(document.getElementById('printableReceiptArea'), 'image', shareData, 'Receipt_' + rcp.receiptNumber, $(this));
                 });
 
                 // DataTable Row Quick Share Handlers
                 $(document).on('click', '.btn-table-share-invoice', function() {
-                    var $el = $(this);
-                    var invData = {
-                        billNumber: $el.data('bill'),
-                        tenantName: $el.data('tenant'),
-                        phone: $el.data('phone'),
-                        room: 'Room ' + $el.data('room'),
-                        month: $el.data('month'),
-                        billType: $el.data('type'),
-                        amount: '₹' + $el.data('amount'),
-                        balance: '₹' + $el.data('due'),
-                        dueDate: $el.data('duedate'),
-                        upiId: '{{ $settings["upi_id"] ?? "srmresidence@okhdfcbank" }}',
-                        url: $el.data('url')
-                    };
-                    executeNativeShare(`Invoice ${invData.billNumber} - SRM Residence`, formatInvoiceShareMsg(invData), invData.url, invData.phone);
+                    var billId = $(this).data('id');
+                    // Trigger preview modal where PDF & Image share buttons are available
+                    $('.btn-view-invoice[data-id="' + billId + '"]').trigger('click');
                 });
 
                 $(document).on('click', '.btn-table-share-receipt', function() {
-                    var $el = $(this);
-                    var rcpData = {
-                        receiptNumber: $el.data('receipt'),
-                        tenantName: $el.data('tenant'),
-                        phone: $el.data('phone'),
-                        room: 'Room ' + $el.data('room'),
-                        billNumber: $el.data('bill'),
-                        amount: '₹' + $el.data('amount'),
-                        method: $el.data('method'),
-                        txId: $el.data('tx'),
-                        date: $el.data('date'),
-                        url: $el.data('url')
-                    };
-                    executeNativeShare(`Receipt ${rcpData.receiptNumber} - SRM Residence`, formatReceiptShareMsg(rcpData), rcpData.url, rcpData.phone);
+                    var payId = $(this).data('id');
+                    // Trigger receipt modal where PDF & Image share buttons are available
+                    $('.btn-view-receipt[data-id="' + payId + '"]').trigger('click');
                 });
 
                 // =========================================================================

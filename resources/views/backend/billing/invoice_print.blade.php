@@ -717,6 +717,8 @@
             }
         }
     </style>
+    <script src="{{ asset('assets/libs/html2canvas.min.js') }}"></script>
+    <script src="{{ asset('assets/libs/jspdf.umd.min.js') }}"></script>
 </head>
 <body>
 
@@ -777,20 +779,20 @@
             </span>
         </div>
         <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-            <button type="button" class="btn-toolbar btn-whatsapp-share" onclick="shareInvoiceWhatsApp()">
-                <i class="fab fa-whatsapp"></i> Share on WhatsApp
+            <button type="button" class="btn-toolbar btn-whatsapp-share" id="btnSharePdf" onclick="shareInvoiceFile('pdf')">
+                <i class="fab fa-whatsapp me-1"></i><i class="fas fa-file-pdf me-1"></i> Share PDF
             </button>
-            <button type="button" class="btn-toolbar btn-share-native" onclick="shareInvoiceNative()">
-                <i class="fas fa-share-alt"></i> Share (Any App)
+            <button type="button" class="btn-toolbar btn-share-native" id="btnShareImg" onclick="shareInvoiceFile('image')">
+                <i class="fab fa-whatsapp me-1"></i><i class="fas fa-image me-1"></i> Share Image
             </button>
             <button type="button" class="btn-toolbar btn-primary-print" onclick="window.print()">
-                <i class="fas fa-print"></i> Print Invoice (A4)
+                <i class="fas fa-print me-1"></i> Print (A4)
             </button>
         </div>
     </div>
 
     <!-- Printable Invoice Sheet -->
-    <div class="invoice-sheet">
+    <div class="invoice-sheet" id="invoiceSheet">
 
         <!-- Header -->
         <div class="invoice-header">
@@ -1045,11 +1047,11 @@
             balance: '₹{{ number_format((float)$bill->amount - (float)$bill->paid_amount, 2) }}',
             dueDate: '{{ $bill->due_date ? $bill->due_date->format("d M, Y") : "-" }}',
             status: '{{ strtoupper($bill->status) }}',
-            upiId: '{{ $settings["upi_id"] ?? "ronaldojagan@okhdfcbank" }}',
-            url: window.location.href
+            upiId: '{{ $settings["upi_id"] ?? "ronaldojagan@okhdfcbank" }}'
         };
 
-        function getInvoiceShareMessage() {
+        function getInvoiceShareMessage(fileType) {
+            const ext = (fileType || 'PDF').toUpperCase();
             return `🏠 *{{ addslashes($settings['residence_name'] ?? 'SRM RESIDENCE') }} - OFFICIAL RENT INVOICE*\n` +
                    `━━━━━━━━━━━━━━━━━━━━━━━\n` +
                    `📄 *Invoice No:* ${invoiceShareData.invoiceNo}\n` +
@@ -1061,48 +1063,89 @@
                    `⏰ *Due Date:* ${invoiceShareData.dueDate}\n` +
                    `💳 *Instant Pay UPI ID:* ${invoiceShareData.upiId}\n` +
                    `━━━━━━━━━━━━━━━━━━━━━━━\n` +
-                   `🔗 *View / Download Official Invoice:*\n${invoiceShareData.url}`;
+                   `📑 *Attached: Official Rent Invoice (${ext})*`;
         }
 
-        function shareInvoiceWhatsApp() {
-            const msg = getInvoiceShareMessage();
-            let waUrl = '';
-            const phone = invoiceShareData.phone;
-            if (phone && phone.length >= 10) {
-                const targetPhone = phone.length === 10 ? '91' + phone : phone;
-                waUrl = `https://api.whatsapp.com/send?phone=${targetPhone}&text=${encodeURIComponent(msg)}`;
-            } else {
-                waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
+        async function shareInvoiceFile(type) {
+            const sheet = document.getElementById('invoiceSheet');
+            if (!sheet) return;
+
+            const btn = type === 'pdf' ? document.getElementById('btnSharePdf') : document.getElementById('btnShareImg');
+            const originalHtml = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i> Generating ${type.toUpperCase()}...`;
             }
-            window.open(waUrl, '_blank');
-        }
 
-        function shareInvoiceNative() {
-            const msg = getInvoiceShareMessage();
-            if (navigator.share) {
-                navigator.share({
-                    title: invoiceShareData.title,
-                    text: msg,
-                    url: invoiceShareData.url
-                }).catch((err) => {
-                    if (err.name !== 'AbortError') {
-                        fallbackCopyOrWhatsApp(msg);
+            try {
+                // High-resolution capture (retina 2x scale)
+                const canvas = await html2canvas(sheet, {
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: '#ffffff'
+                });
+
+                let file = null;
+                let fileName = '';
+
+                if (type === 'pdf') {
+                    fileName = `Invoice_${invoiceShareData.invoiceNo}.pdf`;
+                    const { jsPDF } = window.jspdf;
+                    const pdf = new jsPDF('p', 'mm', 'a4');
+                    const pageWidth = pdf.internal.pageSize.getWidth();
+                    const pageHeight = (canvas.height * pageWidth) / canvas.width;
+                    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+                    pdf.addImage(imgData, 'JPEG', 0, 0, pageWidth, pageHeight, undefined, 'FAST');
+                    const blob = pdf.output('blob');
+                    file = new File([blob], fileName, { type: 'application/pdf' });
+                } else {
+                    fileName = `Invoice_${invoiceShareData.invoiceNo}.png`;
+                    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+                    file = new File([blob], fileName, { type: 'image/png' });
+                }
+
+                const msg = getInvoiceShareMessage(type);
+
+                // Use Web Share API if supported with files (Android APK, Chrome Mobile, Safari Mobile)
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        title: invoiceShareData.title,
+                        text: msg,
+                        files: [file]
+                    });
+                } else {
+                    // Fallback for Desktop or devices without Web Share File support:
+                    // 1. Download file directly
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = URL.createObjectURL(file);
+                    downloadLink.download = fileName;
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+                    document.body.removeChild(downloadLink);
+
+                    // 2. Open WhatsApp chat with prefilled message
+                    let waUrl = '';
+                    const phone = invoiceShareData.phone;
+                    if (phone && phone.length >= 10) {
+                        const targetPhone = phone.length === 10 ? '91' + phone : phone;
+                        waUrl = `https://api.whatsapp.com/send?phone=${targetPhone}&text=${encodeURIComponent(msg)}`;
+                    } else {
+                        waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
                     }
-                });
-            } else {
-                fallbackCopyOrWhatsApp(msg);
-            }
-        }
-
-        function fallbackCopyOrWhatsApp(msg) {
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(msg).then(() => {
-                    alert('Invoice details and link copied to clipboard! You can paste and share it in any app.');
-                }).catch(() => {
-                    shareInvoiceWhatsApp();
-                });
-            } else {
-                shareInvoiceWhatsApp();
+                    window.open(waUrl, '_blank');
+                    alert(`Invoice ${type.toUpperCase()} saved to your Downloads!\nPlease attach this file in the WhatsApp chat to complete sharing.`);
+                }
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    console.error('File share error:', err);
+                    alert('Could not share file: ' + (err.message || err));
+                }
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+                }
             }
         }
     </script>

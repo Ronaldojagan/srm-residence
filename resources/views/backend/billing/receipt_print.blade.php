@@ -304,6 +304,8 @@
             }
         }
     </style>
+    <script src="{{ asset('assets/libs/html2canvas.min.js') }}"></script>
+    <script src="{{ asset('assets/libs/jspdf.umd.min.js') }}"></script>
 </head>
 <body>
 
@@ -314,19 +316,19 @@
             </a>
         </div>
         <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-            <button type="button" class="btn-toolbar btn-whatsapp-share" onclick="shareReceiptWhatsApp()">
-                <i class="fab fa-whatsapp"></i> Share on WhatsApp
+            <button type="button" class="btn-toolbar btn-whatsapp-share" id="btnShareRcpPdf" onclick="shareReceiptFile('pdf')">
+                <i class="fab fa-whatsapp me-1"></i><i class="fas fa-file-pdf me-1"></i> Share PDF
             </button>
-            <button type="button" class="btn-toolbar btn-share-native" onclick="shareReceiptNative()">
-                <i class="fas fa-share-alt"></i> Share (Any App)
+            <button type="button" class="btn-toolbar btn-share-native" id="btnShareRcpImg" onclick="shareReceiptFile('image')">
+                <i class="fab fa-whatsapp me-1"></i><i class="fas fa-image me-1"></i> Share Image
             </button>
             <button type="button" class="btn-toolbar btn-primary-print" onclick="window.print()">
-                <i class="fas fa-print"></i> Print Receipt
+                <i class="fas fa-print me-1"></i> Print Receipt
             </button>
         </div>
     </div>
 
-    <div class="receipt-sheet">
+    <div class="receipt-sheet" id="receiptSheet">
         <div class="receipt-header">
             <div class="receipt-title">{{ $settings['residence_name'] ?? 'SRM RESIDENCE' }}</div>
             <div style="font-size: 11px; color: #64748b; margin-top: 3px;">
@@ -416,11 +418,11 @@
             date: '{{ $payment->payment_date ? $payment->payment_date->format("d M, Y") : now()->format("d M, Y") }}',
             amount: '₹{{ number_format((float)$payment->amount, 2) }}',
             method: '{{ $payment->payment_method }}',
-            txnId: '{{ $payment->transaction_id ?? "-" }}',
-            url: window.location.href
+            txnId: '{{ $payment->transaction_id ?? "-" }}'
         };
 
-        function getReceiptShareMessage() {
+        function getReceiptShareMessage(fileType) {
+            const ext = (fileType || 'PDF').toUpperCase();
             return `🧾 *{{ addslashes($settings['residence_name'] ?? 'SRM RESIDENCE') }} - PAYMENT RECEIPT*\n` +
                    `━━━━━━━━━━━━━━━━━━━━━━━\n` +
                    `✅ *Payment Confirmed & Credited*\n` +
@@ -433,48 +435,84 @@
                    (receiptShareData.txnId !== '-' ? `🔢 *Ref / UTR:* ${receiptShareData.txnId}\n` : '') +
                    `📑 *Against Invoice:* ${receiptShareData.invoiceNo}\n` +
                    `━━━━━━━━━━━━━━━━━━━━━━━\n` +
-                   `🔗 *Official Digital Receipt:*\n${receiptShareData.url}`;
+                   `📑 *Attached: Official Payment Receipt (${ext})*`;
         }
 
-        function shareReceiptWhatsApp() {
-            const msg = getReceiptShareMessage();
-            let waUrl = '';
-            const phone = receiptShareData.phone;
-            if (phone && phone.length >= 10) {
-                const targetPhone = phone.length === 10 ? '91' + phone : phone;
-                waUrl = `https://api.whatsapp.com/send?phone=${targetPhone}&text=${encodeURIComponent(msg)}`;
-            } else {
-                waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
+        async function shareReceiptFile(type) {
+            const sheet = document.getElementById('receiptSheet');
+            if (!sheet) return;
+
+            const btn = type === 'pdf' ? document.getElementById('btnShareRcpPdf') : document.getElementById('btnShareRcpImg');
+            const originalHtml = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = `<i class="fas fa-spinner fa-spin me-1"></i> Generating ${type.toUpperCase()}...`;
             }
-            window.open(waUrl, '_blank');
-        }
 
-        function shareReceiptNative() {
-            const msg = getReceiptShareMessage();
-            if (navigator.share) {
-                navigator.share({
-                    title: receiptShareData.title,
-                    text: msg,
-                    url: receiptShareData.url
-                }).catch((err) => {
-                    if (err.name !== 'AbortError') {
-                        fallbackCopyOrWhatsApp(msg);
+            try {
+                const canvas = await html2canvas(sheet, {
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: '#ffffff'
+                });
+
+                let file = null;
+                let fileName = '';
+
+                if (type === 'pdf') {
+                    fileName = `Receipt_${receiptShareData.receiptNo}.pdf`;
+                    const { jsPDF } = window.jspdf;
+                    const pdf = new jsPDF('p', 'mm', 'a5');
+                    const pageWidth = pdf.internal.pageSize.getWidth();
+                    const pageHeight = (canvas.height * pageWidth) / canvas.width;
+                    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+                    pdf.addImage(imgData, 'JPEG', 0, 0, pageWidth, pageHeight, undefined, 'FAST');
+                    const blob = pdf.output('blob');
+                    file = new File([blob], fileName, { type: 'application/pdf' });
+                } else {
+                    fileName = `Receipt_${receiptShareData.receiptNo}.png`;
+                    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+                    file = new File([blob], fileName, { type: 'image/png' });
+                }
+
+                const msg = getReceiptShareMessage(type);
+
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        title: receiptShareData.title,
+                        text: msg,
+                        files: [file]
+                    });
+                } else {
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = URL.createObjectURL(file);
+                    downloadLink.download = fileName;
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+                    document.body.removeChild(downloadLink);
+
+                    let waUrl = '';
+                    const phone = receiptShareData.phone;
+                    if (phone && phone.length >= 10) {
+                        const targetPhone = phone.length === 10 ? '91' + phone : phone;
+                        waUrl = `https://api.whatsapp.com/send?phone=${targetPhone}&text=${encodeURIComponent(msg)}`;
+                    } else {
+                        waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
                     }
-                });
-            } else {
-                fallbackCopyOrWhatsApp(msg);
-            }
-        }
-
-        function fallbackCopyOrWhatsApp(msg) {
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(msg).then(() => {
-                    alert('Receipt details and link copied to clipboard! You can paste and share it in any app.');
-                }).catch(() => {
-                    shareReceiptWhatsApp();
-                });
-            } else {
-                shareReceiptWhatsApp();
+                    window.open(waUrl, '_blank');
+                    alert(`Receipt ${type.toUpperCase()} saved to your Downloads!\nPlease attach this file in the WhatsApp chat to complete sharing.`);
+                }
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    console.error('File share error:', err);
+                    alert('Could not share file: ' + (err.message || err));
+                }
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+                }
             }
         }
     </script>
