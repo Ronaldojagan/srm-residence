@@ -1,9 +1,12 @@
 name: Keep Render Alive (Prevent Spin Down)
 
 on:
+  push:
+    branches:
+      - main
   schedule:
-    # Runs every 10 minutes (Render spins down after 15 minutes of inactivity)
-    - cron: '*/10 * * * *'
+    # Runs every 5 minutes to ensure Render never spins down (Render idle timeout is 15 mins)
+    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 jobs:

@@ -25,7 +25,27 @@ use Illuminate\Support\Facades\Route;
 
 Auth::routes();
 
-Route::get('/ping', fn() => response()->json(['status' => 'alive', 'app' => 'SRM RESIDENCE', 'timestamp' => now()->toIso8601String()]));
+Route::get('/ping', function () {
+    $dbConnected = false;
+    $dbError = null;
+    $loansTableExists = false;
+    try {
+        \DB::connection()->getPdo();
+        $dbConnected = true;
+        $loansTableExists = \Illuminate\Support\Facades\Schema::hasTable('loans');
+    } catch (\Throwable $e) {
+        $dbError = $e->getMessage();
+    }
+
+    return response()->json([
+        'status' => 'alive',
+        'app' => 'SRM RESIDENCE',
+        'database' => $dbConnected ? 'connected' : 'error',
+        'db_error' => $dbError,
+        'loans_table' => $loansTableExists,
+        'timestamp' => now()->toIso8601String()
+    ]);
+});
 Route::get('/', fn() => view('auth.login'));
 Route::get('/home', [HomeController::class, 'index'])->name('home');
 Route::get('logs', [\Rap2hpoutre\LaravelLogViewer\LogViewerController::class, 'index']);
