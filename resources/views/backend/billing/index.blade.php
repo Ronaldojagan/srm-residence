@@ -756,10 +756,49 @@
                             </tbody>
                         </table>
 
-                        <!-- Financial Summary -->
-                        <div class="row justify-content-end mb-4">
+                        <!-- Bottom Grid: Direct UPI / QR Pay & Financial Summary -->
+                        <div class="row mb-4 g-3 align-items-stretch">
+                            <!-- Left: Instant UPI / QR Payment -->
+                            <div class="col-md-7">
+                                <div class="p-3 bg-light rounded border h-100">
+                                    <div class="fw-bold text-dark mb-2 font-13">
+                                        <i class="fas fa-qrcode text-primary me-1"></i> Instant UPI &amp; Direct Bank Transfer
+                                    </div>
+                                    <div class="d-flex align-items-center gap-3">
+                                        @php
+                                            $modalQrPath = null;
+                                            if (!empty($settings['upi_qr_code']) && file_exists(public_path('storage/' . $settings['upi_qr_code']))) {
+                                                $modalQrPath = asset('storage/' . $settings['upi_qr_code']);
+                                            } elseif (file_exists(public_path('img/upi_qr.png'))) {
+                                                $modalQrPath = asset('img/upi_qr.png');
+                                            } elseif (file_exists(public_path('img/upi_qr.jpeg'))) {
+                                                $modalQrPath = asset('img/upi_qr.jpeg');
+                                            }
+                                        @endphp
+                                        @if($modalQrPath)
+                                            <div style="background: #ffffff; padding: 6px; border-radius: 8px; border: 1px solid #cbd5e1; flex-shrink: 0;">
+                                                <img src="{{ $modalQrPath }}" alt="UPI QR Code" style="width: 82px; height: 82px; object-fit: contain; display: block;">
+                                            </div>
+                                        @endif
+                                        <div class="font-12">
+                                            <div><strong>UPI VPA ID:</strong> <span class="badge bg-primary-subtle text-primary font-12">{{ $settings['upi_id'] ?? 'srmresidence@okhdfcbank' }}</span></div>
+                                            <div class="text-muted mt-1"><strong>Payee Name:</strong> {{ $settings['upi_merchant_name'] ?? 'SRM RESIDENCE' }}</div>
+                                            @if(!empty($settings['bank_account_number']))
+                                                <div class="text-muted mt-1 font-11">
+                                                    <strong>Bank:</strong> {{ $settings['bank_name'] ?? 'Bank Transfer' }} | 
+                                                    <strong>A/C:</strong> {{ $settings['bank_account_number'] }} | 
+                                                    <strong>IFSC:</strong> {{ $settings['bank_ifsc_code'] ?? '-' }}
+                                                </div>
+                                            @endif
+                                            <div class="text-muted font-11 mt-1"><i class="fas fa-mobile-alt me-1 text-success"></i> Scan with GPay, PhonePe, Paytm or BHIM UPI</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right: Financial Summary -->
                             <div class="col-md-5">
-                                <div class="p-3 bg-light rounded border">
+                                <div class="p-3 bg-light rounded border h-100 d-flex flex-column justify-content-center">
                                     <div class="d-flex justify-content-between mb-2">
                                         <span class="text-muted">Total Billed:</span>
                                         <span class="fw-bold" id="inv_summary_total">₹0.00</span>

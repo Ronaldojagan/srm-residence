@@ -776,9 +776,19 @@
                         <i class="fas fa-qrcode"></i> Instant UPI & Direct Bank Transfer
                     </div>
                     <div class="pay-details-inner">
-                        @if(!empty($settings['upi_qr_code']))
+                        @php
+                            $printQrPath = null;
+                            if (!empty($settings['upi_qr_code']) && file_exists(public_path('storage/' . $settings['upi_qr_code']))) {
+                                $printQrPath = asset('storage/' . $settings['upi_qr_code']);
+                            } elseif (file_exists(public_path('img/upi_qr.png'))) {
+                                $printQrPath = asset('img/upi_qr.png');
+                            } elseif (file_exists(public_path('img/upi_qr.jpeg'))) {
+                                $printQrPath = asset('img/upi_qr.jpeg');
+                            }
+                        @endphp
+                        @if($printQrPath)
                             <div class="qr-image-container">
-                                <img src="{{ asset('storage/' . $settings['upi_qr_code']) }}" alt="UPI QR Code">
+                                <img src="{{ $printQrPath }}" alt="UPI QR Code">
                             </div>
                         @endif
                         <div class="pay-info-text">

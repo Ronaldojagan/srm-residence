@@ -1815,12 +1815,13 @@ body[data-leftbar-size="condensed"] .res-nav-badge {
   }
 
   /* Page title & action button stack cleanly on mobile */
-  .row.justify-content-between.align-items-center {
+  .row.justify-content-between.align-items-center:not(.modal *):not(form *) {
     row-gap: 12px !important;
     margin-top: 6px !important;
   }
 
-  .row.justify-content-between.align-items-center .text-end {
+  .row.justify-content-between.align-items-center:not(.modal *):not(form *) > .col-md-6.text-end,
+  .row.justify-content-between.align-items-center:not(.modal *):not(form *) > .col-12.text-end {
     text-align: left !important;
     display: flex !important;
     flex-direction: column !important;
@@ -1828,7 +1829,8 @@ body[data-leftbar-size="condensed"] .res-nav-badge {
     width: 100% !important;
   }
 
-  .row.justify-content-between.align-items-center .text-end .btn {
+  .row.justify-content-between.align-items-center:not(.modal *):not(form *) > .col-md-6.text-end > .btn,
+  .row.justify-content-between.align-items-center:not(.modal *):not(form *) > .col-md-6.text-end > a.btn {
     width: 100% !important;
     display: flex !important;
     align-items: center !important;
@@ -1836,28 +1838,40 @@ body[data-leftbar-size="condensed"] .res-nav-badge {
     margin: 0 !important;
   }
 
-  .row.justify-content-between.align-items-center .text-end .btn-group {
+  .row.justify-content-between.align-items-center:not(.modal *):not(form *) > .col-md-6.text-end > .btn-group {
     display: flex !important;
     flex-direction: column !important;
     width: 100% !important;
     gap: 8px !important;
   }
 
-  .row.justify-content-between.align-items-center .text-end .btn-group .btn {
+  .row.justify-content-between.align-items-center:not(.modal *):not(form *) > .col-md-6.text-end > .btn-group > .btn {
     border-radius: 8px !important;
+    width: 100% !important;
   }
 
-  /* Universal 2-Column KPI Stat Grid across all modules */
-  .row.g-3 > [class*="col-xl"], 
-  .row.g-3 > [class*="col-md"],
-  .row.mt-3.g-3 > div,
-  .row.g-3.mt-1 > div,
-  .row.g-3.mb-4 > div,
-  .row.mt-3 > .col-xl-3.col-md-6,
-  .row.mb-4 > .col-xl-3.col-md-6 {
+  /* Universal 2-Column KPI Stat Grid: ONLY targets stat cards, NEVER forms or modals */
+  .row:not(.modal-body *):not(form *) > div:has(> .room-stat-card),
+  .row:not(.modal-body *):not(form *) > div:has(> .tenant-stat-card),
+  .row:not(.modal-body *):not(form *) > div:has(> .stat-pill-card),
+  .row:not(.modal-body *):not(form *) > div:has(> .expense-stat-card),
+  .row:not(.modal-body *):not(form *) > div:has(> .res-report-card),
+  .row:not(.modal-body *):not(form *) > div:has(> .res-kpi-card),
+  .row:not(.modal-body *):not(form *) > div:has(> .user-view-stats-card1),
+  .row:not(.modal-body *):not(form *) > div:has(> .user-view-stats-card2) {
     flex: 0 0 50% !important;
     max-width: 50% !important;
     width: 50% !important;
+  }
+
+  /* Form & Modal Grid Isolation: Ensure form fields are 100% wide and never squished */
+  .modal-body .row > [class*="col-"]:not(.col-6),
+  .modal .row > [class*="col-"]:not(.col-6),
+  form:not(.filter-form) .row > [class*="col-"]:not(.col-6),
+  .card-body > form .row > [class*="col-"]:not(.col-6) {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+    width: 100% !important;
   }
 
   .card-box, .card {
@@ -2122,17 +2136,24 @@ body[data-leftbar-size="condensed"] .res-nav-badge {
   }
 
   .modal-footer {
-    flex-direction: column !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
     gap: 8px !important;
+    justify-content: flex-end !important;
   }
 
-  .modal-footer > * {
-    width: 100% !important;
-    margin: 0 !important;
+  @media (max-width: 575.98px) {
+    .modal-footer {
+      flex-direction: column !important;
+    }
+    .modal-footer > .btn {
+      width: 100% !important;
+      margin: 0 !important;
+    }
   }
 
   /* Form Inputs (16px font-size prevents unwanted iOS auto-zoom) */
-  input.form-control, 
+  input.form-control:not([type="checkbox"]):not([type="radio"]), 
   select.form-select, 
   textarea.form-control {
     font-size: 16px !important;
