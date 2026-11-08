@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: srm-residence
+    runtime: docker
+    plan: free
+    region: oregon
+    envVars:
+      - key: APP_NAME
+        value: "SRM RESIDENCE"
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_KEY
+        generateValue: true
+      - key: DB_CONNECTION
+        value: mysql
+      - key: LOG_CHANNEL
+        value: stderr
