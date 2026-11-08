@@ -62,6 +62,28 @@
             border: 1px solid transparent;
         }
 
+        .btn-whatsapp-share {
+            background: #25D366;
+            color: #fff;
+            border-color: #22bf5b;
+        }
+
+        .btn-whatsapp-share:hover {
+            background: #1eb855;
+            color: #fff;
+        }
+
+        .btn-share-native {
+            background: #0284c7;
+            color: #fff;
+            border-color: #0369a1;
+        }
+
+        .btn-share-native:hover {
+            background: #0369a1;
+            color: #fff;
+        }
+
         .btn-primary-print {
             background: var(--primary);
             color: #fff;
@@ -286,12 +308,22 @@
 <body>
 
     <div class="no-print-bar">
-        <a href="{{ url('/admin/billing') }}" class="btn-toolbar btn-secondary-back">
-            <i class="fas fa-arrow-left"></i> Back to Billing
-        </a>
-        <button type="button" class="btn-toolbar btn-primary-print" onclick="window.print()">
-            <i class="fas fa-print"></i> Print Receipt
-        </button>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <a href="{{ url('/admin/billing') }}" class="btn-toolbar btn-secondary-back">
+                <i class="fas fa-arrow-left"></i> Back to Billing
+            </a>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <button type="button" class="btn-toolbar btn-whatsapp-share" onclick="shareReceiptWhatsApp()">
+                <i class="fab fa-whatsapp"></i> Share on WhatsApp
+            </button>
+            <button type="button" class="btn-toolbar btn-share-native" onclick="shareReceiptNative()">
+                <i class="fas fa-share-alt"></i> Share (Any App)
+            </button>
+            <button type="button" class="btn-toolbar btn-primary-print" onclick="window.print()">
+                <i class="fas fa-print"></i> Print Receipt
+            </button>
+        </div>
     </div>
 
     <div class="receipt-sheet">
@@ -373,5 +405,78 @@
         </div>
     </div>
 
+    <script>
+        const receiptShareData = {
+            title: 'SRM RESIDENCE - Payment Receipt {{ $payment->payment_number }}',
+            resident: '{{ addslashes($payment->tenant->name ?? "Resident") }}',
+            phone: '{{ $payment->tenant && $payment->tenant->phone ? preg_replace("/[^0-9]/", "", $payment->tenant->phone) : "" }}',
+            room: '{{ addslashes($payment->bill && $payment->bill->room ? $payment->bill->room->room_number : ($payment->tenant ? $payment->tenant->room_numbers_display : "-")) }}',
+            receiptNo: '{{ $payment->payment_number }}',
+            invoiceNo: '{{ $payment->bill ? $payment->bill->bill_number : "-" }}',
+            date: '{{ $payment->payment_date ? $payment->payment_date->format("d M, Y") : now()->format("d M, Y") }}',
+            amount: '₹{{ number_format((float)$payment->amount, 2) }}',
+            method: '{{ $payment->payment_method }}',
+            txnId: '{{ $payment->transaction_id ?? "-" }}',
+            url: window.location.href
+        };
+
+        function getReceiptShareMessage() {
+            return `🧾 *{{ addslashes($settings['residence_name'] ?? 'SRM RESIDENCE') }} - PAYMENT RECEIPT*\n` +
+                   `━━━━━━━━━━━━━━━━━━━━━━━\n` +
+                   `✅ *Payment Confirmed & Credited*\n` +
+                   `📄 *Receipt No:* ${receiptShareData.receiptNo}\n` +
+                   `👤 *Resident:* ${receiptShareData.resident}\n` +
+                   `🚪 *Room:* ${receiptShareData.room}\n` +
+                   `💰 *Amount Paid:* ${receiptShareData.amount}\n` +
+                   `💳 *Payment Mode:* ${receiptShareData.method}\n` +
+                   `📅 *Payment Date:* ${receiptShareData.date}\n` +
+                   (receiptShareData.txnId !== '-' ? `🔢 *Ref / UTR:* ${receiptShareData.txnId}\n` : '') +
+                   `📑 *Against Invoice:* ${receiptShareData.invoiceNo}\n` +
+                   `━━━━━━━━━━━━━━━━━━━━━━━\n` +
+                   `🔗 *Official Digital Receipt:*\n${receiptShareData.url}`;
+        }
+
+        function shareReceiptWhatsApp() {
+            const msg = getReceiptShareMessage();
+            let waUrl = '';
+            const phone = receiptShareData.phone;
+            if (phone && phone.length >= 10) {
+                const targetPhone = phone.length === 10 ? '91' + phone : phone;
+                waUrl = `https://api.whatsapp.com/send?phone=${targetPhone}&text=${encodeURIComponent(msg)}`;
+            } else {
+                waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
+            }
+            window.open(waUrl, '_blank');
+        }
+
+        function shareReceiptNative() {
+            const msg = getReceiptShareMessage();
+            if (navigator.share) {
+                navigator.share({
+                    title: receiptShareData.title,
+                    text: msg,
+                    url: receiptShareData.url
+                }).catch((err) => {
+                    if (err.name !== 'AbortError') {
+                        fallbackCopyOrWhatsApp(msg);
+                    }
+                });
+            } else {
+                fallbackCopyOrWhatsApp(msg);
+            }
+        }
+
+        function fallbackCopyOrWhatsApp(msg) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(msg).then(() => {
+                    alert('Receipt details and link copied to clipboard! You can paste and share it in any app.');
+                }).catch(() => {
+                    shareReceiptWhatsApp();
+                });
+            } else {
+                shareReceiptWhatsApp();
+            }
+        }
+    </script>
 </body>
 </html>

@@ -766,7 +766,7 @@
                                     </div>
                                     <div class="d-flex align-items-center gap-3">
                                         <div style="background: #ffffff; padding: 6px; border-radius: 8px; border: 1px solid #cbd5e1; flex-shrink: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
-                                            <img src="@include('backend.partials.upi_qr_base64')" alt="UPI QR Code" style="width: 84px; height: 84px; object-fit: contain; display: block;">
+                                            <img src="/img/upi_qr.png" onerror="this.onerror=null; this.src='@include('backend.partials.upi_qr_base64')';" alt="UPI QR Code" style="width: 84px; height: 84px; object-fit: contain; display: block;">
                                         </div>
                                         <div class="font-12">
                                             <div><strong>UPI VPA ID:</strong> <span class="badge bg-primary-subtle text-primary font-12">{{ $settings['upi_id'] ?? 'srmresidence@okhdfcbank' }}</span></div>
@@ -850,6 +850,12 @@
                 </div>
                 <div class="modal-footer bg-light">
                     <button type="button" class="btn btn-secondary waves-effect" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-success text-white waves-effect waves-light" id="btn_modal_share_invoice_whatsapp" title="Share via WhatsApp">
+                        <i class="fab fa-whatsapp me-1"></i> WhatsApp
+                    </button>
+                    <button type="button" class="btn btn-primary text-white waves-effect waves-light" id="btn_modal_share_invoice_native" title="Share to any app">
+                        <i class="fas fa-share-alt me-1"></i> Share
+                    </button>
                     <button type="button" class="btn btn-info text-white waves-effect waves-light" id="btn_send_modal_invoice_email">
                         <i class="fas fa-paper-plane me-1"></i> Send via Email
                     </button>
@@ -940,7 +946,13 @@
                 </div>
                 <div class="modal-footer bg-light">
                     <button type="button" class="btn btn-secondary waves-effect" data-bs-dismiss="modal">Close</button>
-                    <a href="javascript:void(0)" class="btn btn-success waves-effect waves-light" id="btn_open_print_receipt" target="_blank">
+                    <button type="button" class="btn btn-success text-white waves-effect waves-light" id="btn_modal_share_receipt_whatsapp" title="Share via WhatsApp">
+                        <i class="fab fa-whatsapp me-1"></i> WhatsApp
+                    </button>
+                    <button type="button" class="btn btn-primary text-white waves-effect waves-light" id="btn_modal_share_receipt_native" title="Share to any app">
+                        <i class="fas fa-share-alt me-1"></i> Share
+                    </button>
+                    <a href="javascript:void(0)" class="btn btn-dark waves-effect waves-light" id="btn_open_print_receipt" target="_blank">
                         <i class="fas fa-print me-1"></i> Print Receipt
                     </a>
                 </div>
@@ -1805,7 +1817,23 @@
                                     $('#inv_payments_history_section').removeClass('d-none');
                                 }
 
-                                $('#btn_open_print_invoice').attr('href', "{{ url('/admin/billing/bills') }}/" + b.id + "/print");
+                                window.currentActiveInvoice = {
+                                    id: b.id,
+                                    billNumber: b.bill_number,
+                                    tenantName: b.tenant ? b.tenant.name : 'Resident',
+                                    phone: b.tenant && b.tenant.phone ? b.tenant.phone : '',
+                                    room: b.room ? 'Room ' + b.room.room_number : (b.tenant ? 'Room ' + b.tenant.room_number : '-'),
+                                    month: b.billing_month,
+                                    billType: b.bill_type,
+                                    amount: '₹' + f.amount,
+                                    balance: '₹' + f.due_amount,
+                                    dueDate: f.due_date,
+                                    status: b.status.toUpperCase(),
+                                    upiId: '{{ $settings["upi_id"] ?? "srmresidence@okhdfcbank" }}',
+                                    url: "{{ url('/admin/billing/bills') }}/" + b.id + "/print"
+                                };
+
+                                $('#btn_open_print_invoice').attr('href', window.currentActiveInvoice.url);
                                 $('#btn_send_modal_invoice_email').data('id', b.id).data('bill', b.bill_number).data('email', b.tenant && b.tenant.email ? b.tenant.email : '');
                                 $('#viewInvoiceModal').modal('show');
                             }
@@ -1921,11 +1949,151 @@
                                     $('#rcp_tx_row').addClass('d-none');
                                 }
 
-                                $('#btn_open_print_receipt').attr('href', "{{ url('/admin/billing/payments') }}/" + p.id + "/print");
+                                window.currentActiveReceipt = {
+                                    id: p.id,
+                                    receiptNumber: p.payment_number,
+                                    tenantName: p.tenant ? p.tenant.name : 'Resident',
+                                    phone: p.tenant && p.tenant.phone ? p.tenant.phone : '',
+                                    room: room,
+                                    billNumber: p.bill ? p.bill.bill_number : '-',
+                                    billType: p.bill ? p.bill.bill_type : 'Rent/Utility',
+                                    amount: '₹' + f.amount,
+                                    method: p.payment_method,
+                                    txId: p.transaction_id || '-',
+                                    date: f.payment_date,
+                                    url: "{{ url('/admin/billing/payments') }}/" + p.id + "/print"
+                                };
+
+                                $('#btn_open_print_receipt').attr('href', window.currentActiveReceipt.url);
                                 $('#viewReceiptModal').modal('show');
                             }
                         }
                     });
+                });
+
+                // =========================================================================
+                // 8.1 SHARE INVOICE & RECEIPT (WHATSAPP & NATIVE SHARE SHEET)
+                // =========================================================================
+                function formatInvoiceShareMsg(data) {
+                    return `🏠 *{{ addslashes($settings['residence_name'] ?? 'SRM RESIDENCE') }} - OFFICIAL RENT INVOICE*\n` +
+                           `━━━━━━━━━━━━━━━━━━━━━━━\n` +
+                           `📄 *Invoice No:* ${data.billNumber}\n` +
+                           `👤 *Resident:* ${data.tenantName} (${data.room})\n` +
+                           `📅 *Billing Month:* ${data.month}\n` +
+                           `📌 *Type:* ${data.billType}\n` +
+                           `💰 *Total Amount:* ${data.amount}\n` +
+                           `⏳ *Net Due Balance:* ${data.balance}\n` +
+                           `⏰ *Due Date:* ${data.dueDate}\n` +
+                           `💳 *Instant Pay UPI ID:* ${data.upiId || '{{ $settings["upi_id"] ?? "srmresidence@okhdfcbank" }}'}\n` +
+                           `━━━━━━━━━━━━━━━━━━━━━━━\n` +
+                           `🔗 *View / Download Official Invoice:*\n${data.url}`;
+                }
+
+                function formatReceiptShareMsg(data) {
+                    return `✅ *{{ addslashes($settings['residence_name'] ?? 'SRM RESIDENCE') }} - OFFICIAL PAYMENT RECEIPT*\n` +
+                           `━━━━━━━━━━━━━━━━━━━━━━━\n` +
+                           `🧾 *Receipt No:* ${data.receiptNumber}\n` +
+                           `👤 *Resident:* ${data.tenantName} (${data.room})\n` +
+                           `📄 *For Invoice:* ${data.billNumber}\n` +
+                           `💵 *Amount Received:* ${data.amount}\n` +
+                           `💳 *Payment Mode:* ${data.method}\n` +
+                           `🔖 *Ref / Tx ID:* ${data.txId}\n` +
+                           `📅 *Payment Date:* ${data.date}\n` +
+                           `━━━━━━━━━━━━━━━━━━━━━━━\n` +
+                           `🔗 *View / Download Official Receipt:*\n${data.url}`;
+                }
+
+                function executeWhatsAppShare(phone, text) {
+                    var cleanPhone = (phone || '').replace(/[^0-9]/g, '');
+                    if (cleanPhone.length === 10) cleanPhone = '91' + cleanPhone;
+                    var waUrl = cleanPhone 
+                        ? `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(text)}`
+                        : `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+                    window.open(waUrl, '_blank');
+                }
+
+                function executeNativeShare(title, text, url, fallbackPhone) {
+                    if (navigator.share) {
+                        navigator.share({
+                            title: title,
+                            text: text,
+                            url: url
+                        }).catch(function(err) {
+                            if (err.name !== 'AbortError') {
+                                executeWhatsAppShare(fallbackPhone, text);
+                            }
+                        });
+                    } else {
+                        if (navigator.clipboard) {
+                            navigator.clipboard.writeText(text).then(function() {
+                                toastr.success('Details copied! Opening WhatsApp...');
+                                executeWhatsAppShare(fallbackPhone, text);
+                            }).catch(function() {
+                                executeWhatsAppShare(fallbackPhone, text);
+                            });
+                        } else {
+                            executeWhatsAppShare(fallbackPhone, text);
+                        }
+                    }
+                }
+
+                // Modal Share Handlers
+                $(document).on('click', '#btn_modal_share_invoice_whatsapp', function() {
+                    if (!window.currentActiveInvoice) return;
+                    executeWhatsAppShare(window.currentActiveInvoice.phone, formatInvoiceShareMsg(window.currentActiveInvoice));
+                });
+
+                $(document).on('click', '#btn_modal_share_invoice_native', function() {
+                    if (!window.currentActiveInvoice) return;
+                    var inv = window.currentActiveInvoice;
+                    executeNativeShare(`Invoice ${inv.billNumber} - SRM Residence`, formatInvoiceShareMsg(inv), inv.url, inv.phone);
+                });
+
+                $(document).on('click', '#btn_modal_share_receipt_whatsapp', function() {
+                    if (!window.currentActiveReceipt) return;
+                    executeWhatsAppShare(window.currentActiveReceipt.phone, formatReceiptShareMsg(window.currentActiveReceipt));
+                });
+
+                $(document).on('click', '#btn_modal_share_receipt_native', function() {
+                    if (!window.currentActiveReceipt) return;
+                    var rcp = window.currentActiveReceipt;
+                    executeNativeShare(`Receipt ${rcp.receiptNumber} - SRM Residence`, formatReceiptShareMsg(rcp), rcp.url, rcp.phone);
+                });
+
+                // DataTable Row Quick Share Handlers
+                $(document).on('click', '.btn-table-share-invoice', function() {
+                    var $el = $(this);
+                    var invData = {
+                        billNumber: $el.data('bill'),
+                        tenantName: $el.data('tenant'),
+                        phone: $el.data('phone'),
+                        room: 'Room ' + $el.data('room'),
+                        month: $el.data('month'),
+                        billType: $el.data('type'),
+                        amount: '₹' + $el.data('amount'),
+                        balance: '₹' + $el.data('due'),
+                        dueDate: $el.data('duedate'),
+                        upiId: '{{ $settings["upi_id"] ?? "srmresidence@okhdfcbank" }}',
+                        url: $el.data('url')
+                    };
+                    executeNativeShare(`Invoice ${invData.billNumber} - SRM Residence`, formatInvoiceShareMsg(invData), invData.url, invData.phone);
+                });
+
+                $(document).on('click', '.btn-table-share-receipt', function() {
+                    var $el = $(this);
+                    var rcpData = {
+                        receiptNumber: $el.data('receipt'),
+                        tenantName: $el.data('tenant'),
+                        phone: $el.data('phone'),
+                        room: 'Room ' + $el.data('room'),
+                        billNumber: $el.data('bill'),
+                        amount: '₹' + $el.data('amount'),
+                        method: $el.data('method'),
+                        txId: $el.data('tx'),
+                        date: $el.data('date'),
+                        url: $el.data('url')
+                    };
+                    executeNativeShare(`Receipt ${rcpData.receiptNumber} - SRM Residence`, formatReceiptShareMsg(rcpData), rcpData.url, rcpData.phone);
                 });
 
                 // =========================================================================

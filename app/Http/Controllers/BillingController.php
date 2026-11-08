@@ -226,6 +226,21 @@ class BillingController extends Controller
                 $viewBtn = '<button type="button" class="btn btn-sm btn-outline-primary btn-view-invoice" data-id="' . $row->id . '" title="View Invoice Preview">
                                 <i class="fas fa-eye"></i>
                             </button>';
+                $shareBtn = '<button type="button" class="btn btn-sm btn-outline-success btn-table-share-invoice" 
+                                data-id="' . $row->id . '"
+                                data-bill="' . e($row->bill_number) . '"
+                                data-tenant="' . e($row->tenant->name ?? 'Tenant') . '"
+                                data-phone="' . e($row->tenant->phone ?? '') . '"
+                                data-room="' . e($row->room->room_number ?? ($row->tenant->room_number ?? '-')) . '"
+                                data-month="' . e($row->billing_month) . '"
+                                data-type="' . e($row->bill_type) . '"
+                                data-amount="' . number_format((float)$row->amount, 2) . '"
+                                data-due="' . number_format((float)$row->amount - (float)$row->paid_amount, 2) . '"
+                                data-duedate="' . ($row->due_date ? $row->due_date->format('d M, Y') : '-') . '"
+                                data-url="' . url('/admin/billing/bills/' . $row->id . '/print') . '"
+                                title="Share Invoice via WhatsApp or Apps">
+                                <i class="fab fa-whatsapp"></i>
+                            </button>';
                 $printBtn = '<a href="' . url('/admin/billing/bills/' . $row->id . '/print') . '" target="_blank" class="btn btn-sm btn-outline-dark" title="Print Invoice (A4)">
                                 <i class="fas fa-print"></i>
                             </a>';
@@ -244,7 +259,7 @@ class BillingController extends Controller
                                 <i class="fas fa-trash-alt"></i>
                             </button>';
 
-                return '<div class="btn-group btn-group-sm" role="group">' . $payBtn . $viewBtn . $printBtn . $mailBtn . $editBtn . $delBtn . '</div>';
+                return '<div class="btn-group btn-group-sm" role="group">' . $payBtn . $viewBtn . $shareBtn . $printBtn . $mailBtn . $editBtn . $delBtn . '</div>';
             })
             ->rawColumns(['bill_number_badge', 'tenant_room', 'bill_type_badge', 'amount_display', 'payment_progress', 'due_date_formatted', 'status_badge', 'action'])
             ->make(true);
@@ -311,6 +326,21 @@ class BillingController extends Controller
                 </div>';
             })
             ->addColumn('action', function ($row) {
+                $shareBtn = '<button type="button" class="btn btn-sm btn-outline-success btn-table-share-receipt"
+                                data-id="' . $row->id . '"
+                                data-receipt="' . e($row->payment_number) . '"
+                                data-tenant="' . e($row->tenant->name ?? 'Resident') . '"
+                                data-phone="' . e($row->tenant->phone ?? '') . '"
+                                data-room="' . e($row->bill->room->room_number ?? ($row->tenant->room_number ?? '-')) . '"
+                                data-bill="' . e($row->bill->bill_number ?? '-') . '"
+                                data-amount="' . number_format((float)$row->amount, 2) . '"
+                                data-method="' . e($row->payment_method) . '"
+                                data-tx="' . e($row->transaction_id ?? '-') . '"
+                                data-date="' . ($row->payment_date ? \Carbon\Carbon::parse($row->payment_date)->format('d M, Y') : '-') . '"
+                                data-url="' . url('/admin/billing/payments/' . $row->id . '/print') . '"
+                                title="Share Receipt via WhatsApp or Apps">
+                                <i class="fab fa-whatsapp me-1"></i> Share
+                            </button>';
                 $printBtn = '<button type="button" class="btn btn-sm btn-outline-primary btn-view-receipt" data-id="' . $row->id . '" title="View & Print Receipt">
                                 <i class="fas fa-print me-1"></i> Receipt
                             </button>';
@@ -318,7 +348,7 @@ class BillingController extends Controller
                                 <i class="fas fa-trash-alt"></i>
                             </button>';
 
-                return '<div class="btn-group btn-group-sm" role="group">' . $printBtn . $delBtn . '</div>';
+                return '<div class="btn-group btn-group-sm" role="group">' . $shareBtn . $printBtn . $delBtn . '</div>';
             })
             ->rawColumns(['payment_number_badge', 'bill_reference', 'tenant_info', 'amount_display', 'payment_date_formatted', 'payment_method_badge', 'action'])
             ->make(true);

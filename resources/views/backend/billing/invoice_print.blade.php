@@ -70,6 +70,28 @@
             border: 1px solid transparent;
         }
 
+        .btn-whatsapp-share {
+            background: #25D366;
+            color: #fff;
+            border-color: #22bf5b;
+        }
+
+        .btn-whatsapp-share:hover {
+            background: #1eb855;
+            color: #fff;
+        }
+
+        .btn-share-native {
+            background: #0284c7;
+            color: #fff;
+            border-color: #0369a1;
+        }
+
+        .btn-share-native:hover {
+            background: #0369a1;
+            color: #fff;
+        }
+
         .btn-primary-print {
             background: var(--primary);
             color: #fff;
@@ -754,7 +776,13 @@
                 Previewing Invoice: <span style="font-family: monospace; color: #0a5858;">{{ $bill->bill_number }}</span>
             </span>
         </div>
-        <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <button type="button" class="btn-toolbar btn-whatsapp-share" onclick="shareInvoiceWhatsApp()">
+                <i class="fab fa-whatsapp"></i> Share on WhatsApp
+            </button>
+            <button type="button" class="btn-toolbar btn-share-native" onclick="shareInvoiceNative()">
+                <i class="fas fa-share-alt"></i> Share (Any App)
+            </button>
             <button type="button" class="btn-toolbar btn-primary-print" onclick="window.print()">
                 <i class="fas fa-print"></i> Print Invoice (A4)
             </button>
@@ -909,7 +937,7 @@
                     </div>
                     <div class="pay-details-inner">
                         <div class="qr-image-container">
-                            <img src="@include('backend.partials.upi_qr_base64')" alt="UPI QR Code">
+                            <img src="/img/upi_qr.png" onerror="this.onerror=null; this.src='@include('backend.partials.upi_qr_base64')';" alt="UPI QR Code" style="width: 100px; height: 100px; object-fit: contain; display: block; margin: 0 auto;">
                         </div>
                         <div class="pay-info-text">
                             <div><strong>UPI VPA ID:</strong> <span class="vpa-badge">{{ $settings['upi_id'] ?? 'srmresidence@okhdfcbank' }}</span></div>
@@ -1005,5 +1033,78 @@
 
     </div>
 
+    <script>
+        const invoiceShareData = {
+            title: 'SRM RESIDENCE - Rent Invoice {{ $bill->bill_number }}',
+            resident: '{{ addslashes($bill->tenant->name ?? "Resident") }}',
+            phone: '{{ $bill->tenant && $bill->tenant->phone ? preg_replace("/[^0-9]/", "", $bill->tenant->phone) : "" }}',
+            room: '{{ addslashes($bill->room ? $bill->room->room_number : ($bill->tenant ? $bill->tenant->room_numbers_display : "-")) }}',
+            invoiceNo: '{{ $bill->bill_number }}',
+            month: '{{ $bill->billing_month }}',
+            amount: '₹{{ number_format((float)$bill->amount, 2) }}',
+            balance: '₹{{ number_format((float)$bill->amount - (float)$bill->paid_amount, 2) }}',
+            dueDate: '{{ $bill->due_date ? $bill->due_date->format("d M, Y") : "-" }}',
+            status: '{{ strtoupper($bill->status) }}',
+            upiId: '{{ $settings["upi_id"] ?? "ronaldojagan@okhdfcbank" }}',
+            url: window.location.href
+        };
+
+        function getInvoiceShareMessage() {
+            return `🏠 *{{ addslashes($settings['residence_name'] ?? 'SRM RESIDENCE') }} - OFFICIAL RENT INVOICE*\n` +
+                   `━━━━━━━━━━━━━━━━━━━━━━━\n` +
+                   `📄 *Invoice No:* ${invoiceShareData.invoiceNo}\n` +
+                   `👤 *Resident:* ${invoiceShareData.resident}\n` +
+                   `🚪 *Room:* ${invoiceShareData.room}\n` +
+                   `📅 *Billing Period:* ${invoiceShareData.month}\n` +
+                   `💰 *Total Amount:* ${invoiceShareData.amount}\n` +
+                   `⏳ *Net Due Balance:* ${invoiceShareData.balance}\n` +
+                   `⏰ *Due Date:* ${invoiceShareData.dueDate}\n` +
+                   `💳 *Instant Pay UPI ID:* ${invoiceShareData.upiId}\n` +
+                   `━━━━━━━━━━━━━━━━━━━━━━━\n` +
+                   `🔗 *View / Download Official Invoice:*\n${invoiceShareData.url}`;
+        }
+
+        function shareInvoiceWhatsApp() {
+            const msg = getInvoiceShareMessage();
+            let waUrl = '';
+            const phone = invoiceShareData.phone;
+            if (phone && phone.length >= 10) {
+                const targetPhone = phone.length === 10 ? '91' + phone : phone;
+                waUrl = `https://api.whatsapp.com/send?phone=${targetPhone}&text=${encodeURIComponent(msg)}`;
+            } else {
+                waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
+            }
+            window.open(waUrl, '_blank');
+        }
+
+        function shareInvoiceNative() {
+            const msg = getInvoiceShareMessage();
+            if (navigator.share) {
+                navigator.share({
+                    title: invoiceShareData.title,
+                    text: msg,
+                    url: invoiceShareData.url
+                }).catch((err) => {
+                    if (err.name !== 'AbortError') {
+                        fallbackCopyOrWhatsApp(msg);
+                    }
+                });
+            } else {
+                fallbackCopyOrWhatsApp(msg);
+            }
+        }
+
+        function fallbackCopyOrWhatsApp(msg) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(msg).then(() => {
+                    alert('Invoice details and link copied to clipboard! You can paste and share it in any app.');
+                }).catch(() => {
+                    shareInvoiceWhatsApp();
+                });
+            } else {
+                shareInvoiceWhatsApp();
+            }
+        }
+    </script>
 </body>
 </html>
