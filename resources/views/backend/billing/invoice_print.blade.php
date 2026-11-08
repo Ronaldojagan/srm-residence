@@ -776,21 +776,9 @@
                         <i class="fas fa-qrcode"></i> Instant UPI & Direct Bank Transfer
                     </div>
                     <div class="pay-details-inner">
-                        @php
-                            $printQrPath = null;
-                            if (!empty($settings['upi_qr_code']) && file_exists(public_path('storage/' . $settings['upi_qr_code']))) {
-                                $printQrPath = asset('storage/' . $settings['upi_qr_code']);
-                            } elseif (file_exists(public_path('img/upi_qr.png'))) {
-                                $printQrPath = asset('img/upi_qr.png');
-                            } elseif (file_exists(public_path('img/upi_qr.jpeg'))) {
-                                $printQrPath = asset('img/upi_qr.jpeg');
-                            }
-                        @endphp
-                        @if($printQrPath)
-                            <div class="qr-image-container">
-                                <img src="{{ $printQrPath }}" alt="UPI QR Code">
-                            </div>
-                        @endif
+                        <div class="qr-image-container">
+                            <img src="@include('backend.partials.upi_qr_base64')" alt="UPI QR Code">
+                        </div>
                         <div class="pay-info-text">
                             <div><strong>UPI VPA ID:</strong> <span class="vpa-badge">{{ $settings['upi_id'] ?? 'srmresidence@okhdfcbank' }}</span></div>
                             <div><strong>Payee Name:</strong> {{ $settings['upi_merchant_name'] ?? 'SRM RESIDENCE' }}</div>
