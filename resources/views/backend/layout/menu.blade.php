@@ -77,6 +77,22 @@
                         </ul>
                     </div>
                 </li>
+                <li class="{{ request()->is('admin/loans*') ? 'menuitem-active' : '' }}">
+                    <a href="{{ url('/admin/loans') }}" class="{{ request()->is('admin/loans*') ? 'active' : '' }}">
+                        <span class="res-nav-badge nav-badge-loans"><i class="fas fa-hand-holding-usd"></i></span>
+                        <span class="ms-1"> Loans & EMI </span>
+                        @php
+                            try {
+                                $activeLoansBadge = \App\Models\Loan::where('status', 'active')->count();
+                            } catch (\Throwable $e) {
+                                $activeLoansBadge = 0;
+                            }
+                        @endphp
+                        @if($activeLoansBadge > 0)
+                            <span class="badge bg-warning-subtle text-warning border border-warning ms-auto font-11">{{ $activeLoansBadge }}</span>
+                        @endif
+                    </a>
+                </li>
 
                 <!-- Section: System & Insights -->
                 <li class="menu-title">Insights & Config</li>

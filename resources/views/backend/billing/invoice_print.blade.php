@@ -939,7 +939,7 @@
                     </div>
                     <div class="pay-details-inner">
                         <div class="qr-image-container">
-                            <img src="/img/upi_qr.png" onerror="this.onerror=null; this.src='@include('backend.partials.upi_qr_base64')';" alt="UPI QR Code" style="width: 100px; height: 100px; object-fit: contain; display: block; margin: 0 auto;">
+                            <img src="@if(!empty($settings['upi_qr_code']) && file_exists(public_path('storage/' . $settings['upi_qr_code']))){{ asset('storage/' . $settings['upi_qr_code']) }}@else @include('backend.partials.upi_qr_base64') @endif" alt="UPI QR Code" style="width: 100px; height: 100px; object-fit: contain; display: block; margin: 0 auto;">
                         </div>
                         <div class="pay-info-text">
                             <div><strong>UPI VPA ID:</strong> <span class="vpa-badge">{{ $settings['upi_id'] ?? 'srmresidence@okhdfcbank' }}</span></div>

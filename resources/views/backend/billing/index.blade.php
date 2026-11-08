@@ -766,7 +766,7 @@
                                     </div>
                                     <div class="d-flex align-items-center gap-3">
                                         <div style="background: #ffffff; padding: 6px; border-radius: 8px; border: 1px solid #cbd5e1; flex-shrink: 0; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
-                                            <img src="/img/upi_qr.png" onerror="this.onerror=null; this.src='@include('backend.partials.upi_qr_base64')';" alt="UPI QR Code" style="width: 84px; height: 84px; object-fit: contain; display: block;">
+                                            <img src="@if(!empty($settings['upi_qr_code']) && file_exists(public_path('storage/' . $settings['upi_qr_code']))){{ asset('storage/' . $settings['upi_qr_code']) }}@else @include('backend.partials.upi_qr_base64') @endif" alt="UPI QR Code" style="width: 84px; height: 84px; object-fit: contain; display: block;">
                                         </div>
                                         <div class="font-12">
                                             <div><strong>UPI VPA ID:</strong> <span class="badge bg-primary-subtle text-primary font-12">{{ $settings['upi_id'] ?? 'srmresidence@okhdfcbank' }}</span></div>

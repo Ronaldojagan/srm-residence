@@ -6,6 +6,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\TenantController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\LoanController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SettingsController;
@@ -93,6 +94,19 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'user-access:' . Use
         Route::get('/{expense}/data', 'getData')->name('data');
         Route::post('/{expense}/update', 'update')->name('update');
         Route::delete('/{expense}', 'destroy')->name('destroy');
+    });
+
+    // Loans & EMI Management
+    Route::controller(LoanController::class)->prefix('loans')->name('loans.')->group(function () {
+        Route::get('/', 'index')->name('index');
+        Route::get('/stats', 'getStatsAjax')->name('stats');
+        Route::post('/', 'store')->name('store');
+        Route::get('/{loan}/data', 'getData')->name('data');
+        Route::post('/{loan}/update', 'update')->name('update');
+        Route::delete('/{loan}', 'destroy')->name('destroy');
+        Route::get('/{loan}/schedule', 'getSchedule')->name('schedule');
+        Route::post('/{loan}/pay-emi', 'recordEmi')->name('pay_emi');
+        Route::delete('/emis/{emi}', 'destroyEmi')->name('destroy_emi');
     });
 
     // Bills & Payments
