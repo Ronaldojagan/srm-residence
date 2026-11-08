@@ -3,7 +3,7 @@ services:
     name: srm-residence
     runtime: docker
     plan: free
-    region: oregon
+    region: singapore
     envVars:
       - key: APP_NAME
         value: "SRM RESIDENCE"
@@ -12,8 +12,20 @@ services:
       - key: APP_DEBUG
         value: "false"
       - key: APP_KEY
-        generateValue: true
+        value: "base64:fA1d4mKwBf3alYX8ac8vg4rtqIMUNn+114c2b7Ej53s="
       - key: DB_CONNECTION
         value: mysql
+      - key: DB_HOST
+        value: gateway01.ap-southeast-1.prod.aws.tidbcloud.com
+      - key: DB_PORT
+        value: "4000"
+      - key: DB_DATABASE
+        value: srm_residence
+      - key: DB_USERNAME
+        value: 2z3MqMDRsysQh2y.root
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_SSL
+        value: "true"
       - key: LOG_CHANNEL
         value: stderr
