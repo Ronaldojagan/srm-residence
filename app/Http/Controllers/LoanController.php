@@ -33,6 +33,9 @@ class LoanController extends Controller
             if ($request->filled('loan_type')) {
                 $query->where('loan_type', $request->loan_type);
             }
+            if ($request->filled('repayment_frequency')) {
+                $query->where('repayment_frequency', $request->repayment_frequency);
+            }
             if ($request->filled('lender_name')) {
                 $query->where('lender_name', 'like', '%' . $request->lender_name . '%');
             }
@@ -58,33 +61,42 @@ class LoanController extends Controller
                     ];
                     $badgeCls = $typeBadges[$row->loan_type] ?? 'bg-light text-dark border';
                     $typeLabel = ucwords(str_replace('_', ' ', $row->loan_type));
+                    $freqBadge = $row->frequency_badge;
 
                     return '<div>
                                 <span class="fw-semibold text-dark d-block font-13"><i class="fas fa-landmark text-primary me-1"></i>' . e($row->lender_name) . '</span>
-                                <span class="badge ' . $badgeCls . ' font-11 mt-1">' . e($typeLabel) . '</span>
+                                <div class="mt-1 d-flex align-items-center gap-1 flex-wrap">
+                                    <span class="badge ' . $badgeCls . ' font-11">' . e($typeLabel) . '</span>
+                                    ' . $freqBadge . '
+                                </div>
                             </div>';
                 })
                 ->addColumn('principal_and_emi', function ($row) {
                     $rate = (float) $row->interest_rate > 0 ? '<small class="text-muted font-11"> @ ' . $row->interest_rate . '% p.a.</small>' : '';
+                    $isWeekly = $row->is_weekly;
+                    $emiLabel = $isWeekly ? 'Weekly Payment:' : 'Monthly EMI:';
+                    $suffix = $isWeekly ? ' /wk' : ' /mo';
+                    $tenureUnit = $isWeekly ? 'Weeks' : 'Months';
+
                     return '<div>
                                 <div><span class="text-muted font-11">Principal:</span> <strong class="text-dark">₹' . number_format((float) $row->principal_amount, 2) . '</strong>' . $rate . '</div>
-                                <div class="mt-1"><span class="text-muted font-11">Monthly EMI:</span> <strong class="text-danger font-13">₹' . number_format((float) $row->emi_amount, 2) . '</strong><small class="text-muted font-11"> /mo</small></div>
-                                <small class="text-muted font-11"><i class="fas fa-calendar-alt me-1"></i>Tenure: ' . $row->tenure_months . ' Months</small>
+                                <div class="mt-1"><span class="text-muted font-11">' . $emiLabel . '</span> <strong class="text-danger font-13">₹' . number_format((float) $row->emi_amount, 2) . '</strong><small class="text-muted font-11">' . $suffix . '</small></div>
+                                <small class="text-muted font-11"><i class="fas fa-clock me-1"></i>Tenure: ' . $row->tenure_months . ' ' . $tenureUnit . '</small>
                             </div>';
                 })
                 ->addColumn('repayment_progress', function ($row) {
-                    $totalPayable = (float) ($row->emi_amount * $row->tenure_months);
-                    if ($totalPayable < (float) $row->principal_amount) {
-                        $totalPayable = (float) $row->principal_amount;
-                    }
                     $repaid = (float) $row->total_repaid;
                     $pct = $row->progress_percentage;
-                    $paidEmisCount = $row->emis()->where('status', 'paid')->count();
+                    $totalPaidCount = (int) $row->total_paid_units;
+                    $unit = $row->is_weekly ? 'wks' : 'mos';
+                    $priorCleared = (int) $row->already_paid_units > 0 
+                        ? '<small class="text-secondary d-block font-10">(' . $row->already_paid_units . ' ' . $unit . ' prior cleared)</small>' 
+                        : '';
 
                     return '<div style="min-width: 140px;">
                                 <div class="d-flex justify-content-between font-11 mb-1">
                                     <span class="text-success fw-bold">₹' . number_format($repaid, 0) . '</span>
-                                    <span class="text-muted">' . $pct . '% (' . $paidEmisCount . '/' . $row->tenure_months . ')</span>
+                                    <span class="text-muted">' . $pct . '% (' . $totalPaidCount . '/' . $row->tenure_months . ')</span>
                                 </div>
                                 <div class="progress" style="height: 6px; border-radius: 4px;">
                                     <div class="progress-bar bg-success" role="progressbar" style="width: ' . $pct . '%;" aria-valuenow="' . $pct . '" aria-valuemin="0" aria-valuemax="100"></div>
@@ -92,27 +104,29 @@ class LoanController extends Controller
                                 <div class="font-11 text-muted mt-1 text-end">
                                     Bal: <strong class="text-danger">₹' . number_format((float) $row->outstanding_balance, 0) . '</strong>
                                 </div>
+                                ' . $priorCleared . '
                             </div>';
                 })
                 ->addColumn('next_due_date', function ($row) {
-                    if ($row->status === 'closed') {
+                    if ($row->status === 'closed' || (float)$row->outstanding_balance <= 0) {
                         return '<span class="badge bg-secondary font-11"><i class="fas fa-check-circle me-1"></i>Loan Fully Paid</span>';
                     }
                     $nextDue = $row->next_due_date;
-                    $day = $row->emi_day ?: 5;
-                    $dateStr = $nextDue ? $nextDue->format('d M, Y') : ($day . 'th of month');
-                    $isSoon = $nextDue && $nextDue->diffInDays(now(), false) >= -5 && $nextDue->diffInDays(now(), false) <= 0;
+                    $isWeekly = $row->is_weekly;
+                    $dateStr = $nextDue ? $nextDue->format('d M, Y') : ($isWeekly ? 'Next Week' : ($row->emi_day ?: 5) . 'th of month');
+                    $isSoon = $nextDue && $nextDue->diffInDays(now(), false) >= -3 && $nextDue->diffInDays(now(), false) <= 0;
                     $badgeCls = $isSoon ? 'bg-danger text-white' : 'bg-warning-subtle text-dark border border-warning';
+                    $cycleText = $isWeekly ? 'Every 7 days (Weekly)' : ('Day ' . ($row->emi_day ?: 5) . ' of month');
 
                     return '<div>
                                 <span class="badge ' . $badgeCls . ' font-11 px-2 py-1">
                                     <i class="fas fa-clock me-1"></i>Due: ' . $dateStr . '
                                 </span>
-                                <small class="text-muted d-block font-11 mt-1">Day ' . $day . ' of every month</small>
+                                <small class="text-muted d-block font-11 mt-1">' . $cycleText . '</small>
                             </div>';
                 })
                 ->addColumn('status_badge', function ($row) {
-                    if ($row->status === 'closed') {
+                    if ($row->status === 'closed' || (float)$row->outstanding_balance <= 0) {
                         return '<span class="badge bg-success text-white px-2 py-1 font-12"><i class="fas fa-check-double me-1"></i>Closed</span>';
                     } elseif ($row->status === 'overdue') {
                         return '<span class="badge bg-danger text-white px-2 py-1 font-12"><i class="fas fa-exclamation-triangle me-1"></i>Overdue</span>';
@@ -121,21 +135,22 @@ class LoanController extends Controller
                 })
                 ->addColumn('action', function ($row) {
                     $payBtn = '';
-                    if ($row->status !== 'closed') {
+                    if ($row->status !== 'closed' && (float)$row->outstanding_balance > 0) {
                         $payBtn = '<button type="button" class="btn btn-sm btn-outline-success btn-record-loan-emi" 
                                     data-id="' . $row->id . '" 
                                     data-title="' . e($row->loan_title) . '" 
                                     data-lender="' . e($row->lender_name) . '"
                                     data-amount="' . $row->emi_amount . '"
-                                    title="Record EMI Payment">
-                                    <i class="fas fa-credit-card me-1"></i> Pay EMI
+                                    data-frequency="' . $row->repayment_frequency . '"
+                                    title="Record Payment">
+                                    <i class="fas fa-credit-card me-1"></i> Pay
                                 </button>';
                     }
 
                     $scheduleBtn = '<button type="button" class="btn btn-sm btn-outline-info btn-view-loan-schedule" 
                                         data-id="' . $row->id . '" 
                                         data-title="' . e($row->loan_title) . '" 
-                                        title="View EMI Schedule & Ledger">
+                                        title="View Repayment Schedule & Ledger">
                                         <i class="fas fa-list-ol"></i>
                                     </button>';
 
@@ -179,15 +194,20 @@ class LoanController extends Controller
                 ->addIndexColumn()
                 ->addColumn('loan_info', function ($row) {
                     if (!$row->loan) return '<span class="text-muted">Deleted Loan</span>';
+                    $freq = $row->loan->frequency_badge;
                     return '<div>
                                 <strong class="text-dark font-13">' . e($row->loan->loan_title) . '</strong>
-                                <small class="text-muted d-block font-11"><i class="fas fa-landmark me-1"></i>' . e($row->loan->lender_name) . '</small>
+                                <div class="mt-1 d-flex align-items-center gap-1">
+                                    <small class="text-muted font-11"><i class="fas fa-landmark me-1"></i>' . e($row->loan->lender_name) . '</small>
+                                    ' . $freq . '
+                                </div>
                             </div>';
                 })
                 ->addColumn('installment_badge', function ($row) {
                     $total = $row->loan ? $row->loan->tenure_months : '-';
+                    $unit = ($row->loan && $row->loan->is_weekly) ? 'Week' : 'Month';
                     return '<span class="badge bg-primary-subtle text-primary border border-primary px-2 py-1 font-12">
-                                Installment #' . $row->installment_number . ' of ' . $total . '
+                                Installment #' . $row->installment_number . ' of ' . $total . ' (' . $unit . ')
                             </span>';
                 })
                 ->addColumn('payment_date_formatted', function ($row) {
@@ -257,14 +277,25 @@ class LoanController extends Controller
      */
     private function calculateLoanStats(): array
     {
-        $activeLoans = Loan::where('status', 'active')->get();
+        $activeLoans = Loan::where('status', 'active')->where('outstanding_balance', '>', 0)->get();
         $allLoans = Loan::all();
 
         $totalActive = $activeLoans->count();
         $totalBorrowed = (float) $allLoans->sum('principal_amount');
-        $totalRepaid = (float) LoanEmi::where('status', 'paid')->sum('amount');
+        
+        // Total repaid = sum of already_paid_amount on all loans + sum of all paid EMIs in loan_emis table
+        $totalRepaid = (float) $allLoans->sum('total_repaid');
         $totalOutstanding = (float) $activeLoans->sum('outstanding_balance');
-        $monthlyEmiOutflow = (float) $activeLoans->sum('emi_amount');
+
+        // Monthly EMI outflow: For monthly loans, emi_amount. For weekly loans, emi_amount * 4.33
+        $monthlyEmiOutflow = 0;
+        foreach ($activeLoans as $al) {
+            if ($al->repayment_frequency === 'weekly') {
+                $monthlyEmiOutflow += ((float) $al->emi_amount * 4.33);
+            } else {
+                $monthlyEmiOutflow += (float) $al->emi_amount;
+            }
+        }
 
         return [
             'totalActive' => $totalActive,
@@ -287,41 +318,65 @@ class LoanController extends Controller
         $validated = $request->validate([
             'loan_title' => 'required|string|max:150',
             'loan_type' => 'required|string|in:business,personal,property,appliance,vehicle,hand_loan,other',
+            'repayment_frequency' => 'required|string|in:monthly,weekly',
             'lender_name' => 'required|string|max:150',
             'account_number' => 'nullable|string|max:100',
             'principal_amount' => 'required|numeric|min:1',
             'interest_rate' => 'nullable|numeric|min:0|max:100',
-            'tenure_months' => 'required|integer|min:1|max:360',
+            'tenure_months' => 'required|integer|min:1|max:520', // Total weeks or months
+            'already_paid_units' => 'nullable|integer|min:0',
+            'already_paid_amount' => 'nullable|numeric|min:0',
             'emi_amount' => 'required|numeric|min:1',
-            'emi_day' => 'required|integer|min:1|max:31',
+            'emi_day' => 'nullable|integer|min:1|max:31',
             'start_date' => 'required|date',
             'bank_account_debited' => 'nullable|string|max:150',
             'notes' => 'nullable|string|max:1000',
         ]);
 
         $startDate = Carbon::parse($validated['start_date']);
-        $endDate = $startDate->copy()->addMonths((int) $validated['tenure_months']);
+        $frequency = $validated['repayment_frequency'] ?? 'monthly';
+        $tenure = (int) $validated['tenure_months'];
 
-        $totalPayable = (float) ($validated['emi_amount'] * $validated['tenure_months']);
+        if ($frequency === 'weekly') {
+            $endDate = $startDate->copy()->addWeeks($tenure);
+        } else {
+            $endDate = $startDate->copy()->addMonths($tenure);
+        }
+
+        $emiAmount = (float) $validated['emi_amount'];
+        $alreadyUnits = (int) ($validated['already_paid_units'] ?? 0);
+        $alreadyAmount = (float) ($validated['already_paid_amount'] ?? 0);
+
+        if ($alreadyAmount == 0 && $alreadyUnits > 0) {
+            $alreadyAmount = (float) ($alreadyUnits * $emiAmount);
+        }
+
+        $totalPayable = (float) ($emiAmount * $tenure);
         if ($totalPayable < (float) $validated['principal_amount']) {
             $totalPayable = (float) $validated['principal_amount'];
         }
 
+        $outstanding = max(0, $totalPayable - $alreadyAmount);
+        $status = $outstanding <= 0 ? 'closed' : 'active';
+
         $loan = Loan::create([
             'loan_title' => $validated['loan_title'],
             'loan_type' => $validated['loan_type'],
+            'repayment_frequency' => $frequency,
             'lender_name' => $validated['lender_name'],
             'account_number' => $validated['account_number'] ?? null,
             'principal_amount' => $validated['principal_amount'],
             'interest_rate' => $validated['interest_rate'] ?? 0,
-            'tenure_months' => $validated['tenure_months'],
-            'emi_amount' => $validated['emi_amount'],
-            'emi_day' => $validated['emi_day'],
+            'tenure_months' => $tenure,
+            'already_paid_units' => $alreadyUnits,
+            'already_paid_amount' => $alreadyAmount,
+            'emi_amount' => $emiAmount,
+            'emi_day' => $validated['emi_day'] ?? 5,
             'start_date' => $startDate,
             'end_date' => $endDate,
-            'total_repaid' => 0,
-            'outstanding_balance' => $totalPayable,
-            'status' => 'active',
+            'total_repaid' => $alreadyAmount,
+            'outstanding_balance' => $outstanding,
+            'status' => $status,
             'bank_account_debited' => $validated['bank_account_debited'] ?? null,
             'notes' => $validated['notes'] ?? null,
             'created_by' => Auth::id(),
@@ -345,6 +400,8 @@ class LoanController extends Controller
 
         $data = $loan->toArray();
         $data['start_date_formatted'] = $loan->start_date ? $loan->start_date->format('Y-m-d') : '';
+        $data['is_weekly'] = $loan->is_weekly;
+        $data['frequency_label'] = $loan->frequency_label;
 
         return response()->json([
             'success' => true,
@@ -364,13 +421,16 @@ class LoanController extends Controller
         $validated = $request->validate([
             'loan_title' => 'required|string|max:150',
             'loan_type' => 'required|string|in:business,personal,property,appliance,vehicle,hand_loan,other',
+            'repayment_frequency' => 'required|string|in:monthly,weekly',
             'lender_name' => 'required|string|max:150',
             'account_number' => 'nullable|string|max:100',
             'principal_amount' => 'required|numeric|min:1',
             'interest_rate' => 'nullable|numeric|min:0|max:100',
-            'tenure_months' => 'required|integer|min:1|max:360',
+            'tenure_months' => 'required|integer|min:1|max:520',
+            'already_paid_units' => 'nullable|integer|min:0',
+            'already_paid_amount' => 'nullable|numeric|min:0',
             'emi_amount' => 'required|numeric|min:1',
-            'emi_day' => 'required|integer|min:1|max:31',
+            'emi_day' => 'nullable|integer|min:1|max:31',
             'start_date' => 'required|date',
             'status' => 'required|string|in:active,closed,overdue',
             'bank_account_debited' => 'nullable|string|max:150',
@@ -378,18 +438,34 @@ class LoanController extends Controller
         ]);
 
         $startDate = Carbon::parse($validated['start_date']);
-        $endDate = $startDate->copy()->addMonths((int) $validated['tenure_months']);
+        $frequency = $validated['repayment_frequency'] ?? 'monthly';
+        $tenure = (int) $validated['tenure_months'];
+
+        if ($frequency === 'weekly') {
+            $endDate = $startDate->copy()->addWeeks($tenure);
+        } else {
+            $endDate = $startDate->copy()->addMonths($tenure);
+        }
+
+        $alreadyUnits = (int) ($validated['already_paid_units'] ?? 0);
+        $alreadyAmount = (float) ($validated['already_paid_amount'] ?? 0);
+        if ($alreadyAmount == 0 && $alreadyUnits > 0) {
+            $alreadyAmount = (float) ($alreadyUnits * (float)$validated['emi_amount']);
+        }
 
         $loan->update([
             'loan_title' => $validated['loan_title'],
             'loan_type' => $validated['loan_type'],
+            'repayment_frequency' => $frequency,
             'lender_name' => $validated['lender_name'],
             'account_number' => $validated['account_number'] ?? null,
             'principal_amount' => $validated['principal_amount'],
             'interest_rate' => $validated['interest_rate'] ?? 0,
-            'tenure_months' => $validated['tenure_months'],
+            'tenure_months' => $tenure,
+            'already_paid_units' => $alreadyUnits,
+            'already_paid_amount' => $alreadyAmount,
             'emi_amount' => $validated['emi_amount'],
-            'emi_day' => $validated['emi_day'],
+            'emi_day' => $validated['emi_day'] ?? 5,
             'start_date' => $startDate,
             'end_date' => $endDate,
             'status' => $validated['status'],
@@ -440,27 +516,49 @@ class LoanController extends Controller
         $schedule = [];
         $startDate = Carbon::parse($loan->start_date);
         $dueDay = (int) ($loan->emi_day ?: 5);
+        $isWeekly = $loan->is_weekly;
+        $alreadyUnits = (int) $loan->already_paid_units;
 
         for ($i = 1; $i <= $loan->tenure_months; $i++) {
-            $dueDate = $startDate->copy()->addMonths($i - 1)->day(min($dueDay, 28));
-            $isPaid = isset($paidEmis[$i]);
-            $emiRecord = $isPaid ? $paidEmis[$i] : null;
+            if ($isWeekly) {
+                $dueDate = $startDate->copy()->addWeeks($i - 1);
+            } else {
+                $dueDate = $startDate->copy()->addMonths($i - 1)->day(min($dueDay, 28));
+            }
 
-            $schedule[] = [
-                'installment_number' => $i,
-                'due_date' => $dueDate->format('d M, Y'),
-                'is_paid' => $isPaid,
-                'amount' => $isPaid ? (float) $emiRecord->amount : (float) $loan->emi_amount,
-                'payment_date' => $isPaid ? $emiRecord->payment_date->format('d M, Y') : null,
-                'payment_method' => $isPaid ? $emiRecord->payment_method : null,
-                'transaction_id' => $isPaid ? $emiRecord->transaction_id : null,
-                'notes' => $isPaid ? $emiRecord->notes : null,
-                'status' => $isPaid ? 'Paid' : ($dueDate->isPast() ? 'Overdue' : 'Upcoming')
-            ];
+            // Check if covered by prior payments
+            if ($i <= $alreadyUnits) {
+                $schedule[] = [
+                    'installment_number' => $i,
+                    'due_date' => $dueDate->format('d M, Y'),
+                    'is_paid' => true,
+                    'amount' => (float) $loan->emi_amount,
+                    'payment_date' => $dueDate->format('d M, Y'),
+                    'payment_method' => 'Prior Cleared',
+                    'transaction_id' => 'Initial Balance',
+                    'notes' => 'Installment cleared prior to system logging',
+                    'status' => 'Paid (Prior)'
+                ];
+            } else {
+                $isPaid = isset($paidEmis[$i]);
+                $emiRecord = $isPaid ? $paidEmis[$i] : null;
+
+                $schedule[] = [
+                    'installment_number' => $i,
+                    'due_date' => $dueDate->format('d M, Y'),
+                    'is_paid' => $isPaid,
+                    'amount' => $isPaid ? (float) $emiRecord->amount : (float) $loan->emi_amount,
+                    'payment_date' => $isPaid ? $emiRecord->payment_date->format('d M, Y') : null,
+                    'payment_method' => $isPaid ? $emiRecord->payment_method : null,
+                    'transaction_id' => $isPaid ? $emiRecord->transaction_id : null,
+                    'notes' => $isPaid ? $emiRecord->notes : null,
+                    'status' => $isPaid ? 'Paid' : ($dueDate->isPast() ? 'Overdue' : 'Upcoming')
+                ];
+            }
         }
 
         // Next installment recommendation
-        $nextInstallment = $loan->emis->count() + 1;
+        $nextInstallment = min($loan->tenure_months, (int) $loan->total_paid_units + 1);
 
         return response()->json([
             'success' => true,
@@ -468,12 +566,18 @@ class LoanController extends Controller
                 'id' => $loan->id,
                 'loan_title' => $loan->loan_title,
                 'lender_name' => $loan->lender_name,
+                'repayment_frequency' => $loan->repayment_frequency,
+                'frequency_label' => $loan->frequency_label,
+                'is_weekly' => $loan->is_weekly,
                 'principal_amount' => '₹' . number_format((float) $loan->principal_amount, 2),
                 'emi_amount' => '₹' . number_format((float) $loan->emi_amount, 2),
                 'total_repaid' => '₹' . number_format((float) $loan->total_repaid, 2),
+                'already_paid_units' => $loan->already_paid_units,
+                'already_paid_amount' => '₹' . number_format((float) $loan->already_paid_amount, 2),
                 'outstanding_balance' => '₹' . number_format((float) $loan->outstanding_balance, 2),
                 'progress_percentage' => $loan->progress_percentage,
                 'tenure_months' => $loan->tenure_months,
+                'tenure_unit' => $loan->tenure_unit,
                 'next_installment' => $nextInstallment,
                 'status' => strtoupper($loan->status)
             ],
