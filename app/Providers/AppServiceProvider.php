@@ -42,23 +42,29 @@ class AppServiceProvider extends ServiceProvider
         $unreadRequestCount = 0;
         $recentRequest = collect();
 
-        if (Schema::hasTable('product_alerts')) {
-            $unreadAlertsCount = ProductAlert::where('is_read', false)->where('user_id', auth()->id())->count();
-            $recentAlerts = ProductAlert::with('product')
-                ->where('is_read', false)
-                ->where('user_id', auth()->id())
-                ->latest()
-                ->take(5)
-                ->get();
-        }
+        try {
+            if (!app()->runningInConsole()) {
+                if (Schema::hasTable('product_alerts')) {
+                    $unreadAlertsCount = ProductAlert::where('is_read', false)->where('user_id', auth()->id())->count();
+                    $recentAlerts = ProductAlert::with('product')
+                        ->where('is_read', false)
+                        ->where('user_id', auth()->id())
+                        ->latest()
+                        ->take(5)
+                        ->get();
+                }
 
-        if (Schema::hasTable('product_requests')) {
-            $unreadRequestCount = ProductRequest::where('is_read', false)->count();
-            $recentRequest = ProductRequest::with('product')
-                ->where('is_read', false)
-                ->latest()
-                ->take(5)
-                ->get();
+                if (Schema::hasTable('product_requests')) {
+                    $unreadRequestCount = ProductRequest::where('is_read', false)->count();
+                    $recentRequest = ProductRequest::with('product')
+                        ->where('is_read', false)
+                        ->latest()
+                        ->take(5)
+                        ->get();
+                }
+            }
+        } catch (\Throwable $e) {
+            // Suppress database connection errors during build/CLI bootstrap
         }
 
         View::share([
@@ -68,6 +74,12 @@ class AppServiceProvider extends ServiceProvider
             'recentRequest' => $recentRequest,
         ]);
 
-        \App\Service\SettingsService::configureMailer();
+        try {
+            if (!app()->runningInConsole()) {
+                \App\Service\SettingsService::configureMailer();
+            }
+        } catch (\Throwable $e) {
+            // Suppress mailer config error during build/CLI bootstrap
+        }
     }
 }

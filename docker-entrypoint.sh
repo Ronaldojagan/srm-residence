@@ -21,7 +21,8 @@ if [ "$DB_CONNECTION" = "sqlite" ]; then
     fi
 fi
 
-# Run Laravel optimizations
+# Run Laravel package discovery & optimizations
+php artisan package:discover --ansi || true
 php artisan storage:link --force || true
 php artisan config:clear
 php artisan view:clear

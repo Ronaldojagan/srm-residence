@@ -55,12 +55,13 @@ WORKDIR /var/www/html
 # Copy application files
 COPY . .
 
-# Set permissions
-RUN chown -R www-data:www-data /var/www/html \
+# Set permissions and ensure empty sqlite exists for build phase
+RUN touch database/database.sqlite \
+    && chown -R www-data:www-data /var/www/html \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Install dependencies (production)
-RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+# Install dependencies (production, no-scripts prevents build-time database dependency)
+RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist --no-scripts
 
 # Copy entrypoint script
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
