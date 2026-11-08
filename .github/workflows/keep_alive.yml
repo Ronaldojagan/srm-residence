@@ -1,0 +1,18 @@
+name: Keep Render Alive (Prevent Spin Down)
+
+on:
+  schedule:
+    # Runs every 10 minutes (Render spins down after 15 minutes of inactivity)
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    name: Ping Render Cloud Service
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping SRM Residence Server
+        run: |
+          echo "Pinging SRM Residence on Render to keep instance warm..."
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -m 45 "https://srm-residence.onrender.com/ping" || echo "000")
+          echo "HTTP Response: $HTTP_CODE"
