@@ -19,11 +19,19 @@ class ImportBackup extends Command
             return 1;
         }
 
-        $this->info("Reading backup file: {$path}...");
+        $this->info("Preparing SQL statements...");
         $sql = File::get($path);
 
+        // Strip MySQL table locks for TiDB / cloud compatibility
+        $sql = preg_replace('/^LOCK TABLES[^;]*;/m', '', $sql);
+        $sql = preg_replace('/^UNLOCK TABLES;/m', '', $sql);
+        $sql = preg_replace('/^\/\*!40000 ALTER TABLE.*?DISABLE KEYS \*\/;/m', '', $sql);
+        $sql = preg_replace('/^\/\*!40000 ALTER TABLE.*?ENABLE KEYS \*\/;/m', '', $sql);
+
         $this->info("Executing SQL statements...");
+        DB::statement('SET FOREIGN_KEY_CHECKS = 0;');
         DB::unprepared($sql);
+        DB::statement('SET FOREIGN_KEY_CHECKS = 1;');
 
         $this->info("Database restored successfully with all tenants, rooms, billing, and settings!");
         return 0;
