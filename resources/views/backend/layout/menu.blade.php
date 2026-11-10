@@ -99,6 +99,32 @@
                         <span class="ms-1"> Salary </span>
                     </a>
                 </li>
+                <li class="{{ request()->is('admin/accounts*') ? 'menuitem-active' : '' }}">
+                    <a href="#sidebarAccounts" data-bs-toggle="collapse" class="{{ request()->is('admin/accounts*') ? '' : 'collapsed' }}" aria-expanded="{{ request()->is('admin/accounts*') ? 'true' : 'false' }}">
+                        <span class="res-nav-badge nav-badge-accounts"><i class="fas fa-book-open"></i></span>
+                        <span class="ms-1"> Accounts </span>
+                        <span class="menu-arrow"></span>
+                    </a>
+                    <div class="collapse {{ request()->is('admin/accounts*') ? 'show' : '' }}" id="sidebarAccounts">
+                        <ul class="nav-second-level">
+                            <li class="{{ request()->is('admin/accounts/journal*') ? 'menuitem-active' : '' }}">
+                                <a href="{{ url('/admin/accounts/journal') }}" class="{{ request()->is('admin/accounts/journal*') ? 'active' : '' }}">
+                                    <i class="fas fa-receipt me-2 font-11"></i> Journal
+                                </a>
+                            </li>
+                            <li class="{{ request()->is('admin/accounts/pnl*') ? 'menuitem-active' : '' }}">
+                                <a href="{{ url('/admin/accounts/pnl') }}" class="{{ request()->is('admin/accounts/pnl*') ? 'active' : '' }}">
+                                    <i class="fas fa-chart-pie me-2 font-11"></i> Profit & Loss (P&L)
+                                </a>
+                            </li>
+                            <li class="{{ request()->is('admin/accounts/balance-sheet*') ? 'menuitem-active' : '' }}">
+                                <a href="{{ url('/admin/accounts/balance-sheet') }}" class="{{ request()->is('admin/accounts/balance-sheet*') ? 'active' : '' }}">
+                                    <i class="fas fa-balance-scale me-2 font-11"></i> Balance Sheet
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li>
 
                 <!-- Section: System & Insights -->
                 <li class="menu-title">Insights & Config</li>

@@ -8,6 +8,7 @@ use App\Http\Controllers\RoomController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\LoanController;
 use App\Http\Controllers\SalaryController;
+use App\Http\Controllers\AccountController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SettingsController;
@@ -142,6 +143,31 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'user-access:' . Use
         Route::match(['PUT', 'POST', 'PATCH'], '/{salary}', 'update')->name('update');
         Route::match(['PUT', 'POST', 'PATCH'], '/{salary}/update', 'update')->name('update_alt');
         Route::delete('/{salary}', 'destroy')->name('destroy');
+    });
+
+    // Accounts Management (Journal, Profit & Loss, Balance Sheet)
+    Route::controller(AccountController::class)->prefix('accounts')->name('accounts.')->group(function () {
+        Route::get('/', 'index')->name('index');
+        
+        // Journal
+        Route::get('/journal', 'journal')->name('journal');
+        Route::get('/journal/data', 'journalData')->name('journal.data');
+        Route::get('/journal/stats', 'journalStats')->name('journal.stats');
+        Route::post('/journal', 'storeJournalEntry')->name('journal.store');
+        Route::get('/journal/{entry}/data', 'getJournalEntryData')->name('journal.entry_data');
+        Route::match(['PUT', 'POST', 'PATCH'], '/journal/{entry}', 'updateJournalEntry')->name('journal.update');
+        Route::delete('/journal/{entry}', 'destroyJournalEntry')->name('journal.destroy');
+        Route::get('/journal/export', 'exportJournal')->name('journal.export');
+
+        // Profit & Loss (P&L)
+        Route::get('/pnl', 'pnl')->name('pnl');
+        Route::get('/pnl/data', 'pnlData')->name('pnl.data');
+        Route::get('/pnl/export', 'exportPnl')->name('pnl.export');
+
+        // Balance Sheet
+        Route::get('/balance-sheet', 'balanceSheet')->name('balance_sheet');
+        Route::get('/balance-sheet/data', 'balanceSheetData')->name('balance_sheet.data');
+        Route::get('/balance-sheet/export', 'exportBalanceSheet')->name('balance_sheet.export');
     });
 
     // Bills & Payments
