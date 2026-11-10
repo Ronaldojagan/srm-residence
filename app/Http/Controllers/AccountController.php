@@ -110,7 +110,7 @@ class AccountController extends Controller
                 $icon = match ($row->source_type) {
                     'bill_payment' => 'fas fa-receipt text-success',
                     'expense' => 'fas fa-wallet text-danger',
-                    'salary' => 'fas fa-id-card-alt text-primary',
+                    'salary' => 'fas fa-hand-holding-dollar text-success',
                     'loan_emi' => 'fas fa-hand-holding-usd text-warning',
                     'journal' => 'fas fa-file-invoice text-info',
                     default => 'fas fa-file-alt text-secondary',
@@ -135,7 +135,7 @@ class AccountController extends Controller
                 $primaryBadge = match ($row->source_type) {
                     'bill_payment' => 'badge bg-success-subtle text-success',
                     'expense' => 'badge bg-danger-subtle text-danger',
-                    'salary' => 'badge bg-primary-subtle text-primary',
+                    'salary' => 'badge bg-success-subtle text-success',
                     'loan_emi' => 'badge bg-warning-subtle text-warning',
                     'journal' => 'badge bg-info-subtle text-info',
                     default => 'badge bg-secondary-subtle text-secondary',
@@ -566,7 +566,14 @@ class AccountController extends Controller
             ->groupBy('category')
             ->get();
 
-        $totalRevenue = $rentIncome + $ebIncome + $maintenanceIncome + $otherBillIncome + $journalIncomeTotal;
+        // 3. Family Salary Income (Salary received by family members brought into residence & personal funds)
+        $familySalaryIncome = (float) DB::table('salaries')
+            ->whereNull('deleted_at')
+            ->where('status', 'credited')
+            ->whereBetween(DB::raw('COALESCE(credit_date, DATE(created_at))'), [$startDate, $endDate])
+            ->sum('net_salary');
+
+        $totalRevenue = $rentIncome + $ebIncome + $maintenanceIncome + $otherBillIncome + $journalIncomeTotal + $familySalaryIncome;
 
         $incomeBreakdown = [
             [
@@ -591,6 +598,16 @@ class AccountController extends Controller
                 'icon' => 'fas fa-tools text-info',
             ],
         ];
+
+        if ($familySalaryIncome > 0) {
+            $incomeBreakdown[] = [
+                'category' => 'Family Salary Income',
+                'description' => 'Monthly salary earnings received by family members brought into residence funds',
+                'amount' => $familySalaryIncome,
+                'share_pct' => $totalRevenue > 0 ? round(($familySalaryIncome / $totalRevenue) * 100, 1) : 0,
+                'icon' => 'fas fa-hand-holding-dollar text-success',
+            ];
+        }
 
         if ($otherBillIncome > 0) {
             $incomeBreakdown[] = [
@@ -641,46 +658,34 @@ class AccountController extends Controller
 
         // ----------------------------------------------------
         // C. INDIRECT & OVERHEAD EXPENSES
+        // Note: Salaries are Family Income (Inflow), not an expense.
         // ----------------------------------------------------
-        // 1. Salaries & Remuneration
-        $salariesTotal = (float) DB::table('salaries')
-            ->whereNull('deleted_at')
-            ->where('status', 'credited')
-            ->whereBetween(DB::raw('COALESCE(credit_date, DATE(created_at))'), [$startDate, $endDate])
-            ->sum('net_salary');
-
-        // 2. Personal Expenses
+        // 1. Personal Expenses
         $personalExpensesTotal = (float) DB::table('expenses')
             ->whereNull('deleted_at')
             ->where('expense_type', 'personal')
             ->whereBetween('expense_date', [$startDate, $endDate])
             ->sum('amount');
 
-        // 3. Financing Costs / Loan Interest & EMIs
+        // 2. Financing Costs / Loan Interest & EMIs
         $loanEmisTotal = (float) DB::table('loan_emis')
             ->whereNull('deleted_at')
             ->where('status', 'paid')
             ->whereBetween('payment_date', [$startDate, $endDate])
             ->sum('amount');
 
-        // 4. Other Indirect Journal Expenses
+        // 3. Other Indirect Journal Expenses
         $journalExpensesTotal = (float) DB::table('journal_entries')
             ->whereNull('deleted_at')
             ->whereIn('entry_type', ['expense', 'drawing'])
             ->whereBetween('entry_date', [$startDate, $endDate])
             ->sum('amount');
 
-        $totalIndirectExpenses = $salariesTotal + $personalExpensesTotal + $loanEmisTotal + $journalExpensesTotal;
+        $totalIndirectExpenses = $personalExpensesTotal + $loanEmisTotal + $journalExpensesTotal;
 
         $indirectExpenseBreakdown = [
             [
-                'category' => 'Salaries & Staff Remuneration',
-                'description' => 'Owner & staff net salary disbursements',
-                'amount' => $salariesTotal,
-                'icon' => 'fas fa-users-cog text-primary',
-            ],
-            [
-                'category' => 'Personal & Administrative Expenses',
+                'category' => 'Personal & Family Expenses',
                 'description' => 'Personal drawings and non-room expense logs',
                 'amount' => $personalExpensesTotal,
                 'icon' => 'fas fa-user-tag text-info',
@@ -719,13 +724,13 @@ class AccountController extends Controller
             $mEnd = $curr->copy()->subMonths($i)->endOfMonth()->format('Y-m-d');
             $mLabel = $curr->copy()->subMonths($i)->format('M Y');
 
-            // Inflow
+            // Inflow: Bill collections + Family Salary income + Journal income/capital
             $mIn = (float) DB::table('bill_payments')->whereNull('deleted_at')->whereBetween('payment_date', [$mStart, $mEnd])->sum('amount')
+                 + (float) DB::table('salaries')->whereNull('deleted_at')->where('status', 'credited')->whereBetween(DB::raw('COALESCE(credit_date, DATE(created_at))'), [$mStart, $mEnd])->sum('net_salary')
                  + (float) DB::table('journal_entries')->whereNull('deleted_at')->whereIn('entry_type', ['income', 'capital'])->whereBetween('entry_date', [$mStart, $mEnd])->sum('amount');
 
-            // Outflow
+            // Outflow: Expenses + Loan EMIs + Journal expense/drawings
             $mExp = (float) DB::table('expenses')->whereNull('deleted_at')->whereBetween('expense_date', [$mStart, $mEnd])->sum('amount')
-                  + (float) DB::table('salaries')->whereNull('deleted_at')->where('status', 'credited')->whereBetween(DB::raw('COALESCE(credit_date, DATE(created_at))'), [$mStart, $mEnd])->sum('net_salary')
                   + (float) DB::table('loan_emis')->whereNull('deleted_at')->where('status', 'paid')->whereBetween('payment_date', [$mStart, $mEnd])->sum('amount')
                   + (float) DB::table('journal_entries')->whereNull('deleted_at')->whereIn('entry_type', ['expense', 'drawing'])->whereBetween('entry_date', [$mStart, $mEnd])->sum('amount');
 
@@ -1103,10 +1108,10 @@ class AccountController extends Controller
                 'salary' AS source_type,
                 CONCAT('SAL-', LPAD(s.id, 4, '0')) AS voucher_no,
                 COALESCE(s.credit_date, DATE(s.created_at)) AS trans_date,
-                'expense' AS flow_type,
-                'Salary & Staff' AS primary_category,
+                'income' AS flow_type,
+                'Family Salary Income' AS primary_category,
                 s.salary_title AS sub_category,
-                s.recipient_name AS party_name,
+                CASE WHEN s.recipient_name LIKE '%Family%' THEN s.recipient_name ELSE CONCAT(s.recipient_name, ' (Family Earner)') END AS party_name,
                 s.payment_method,
                 s.net_salary AS amount,
                 s.transaction_reference AS ref_code,

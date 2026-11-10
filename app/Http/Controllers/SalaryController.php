@@ -51,6 +51,7 @@ class SalaryController extends Controller
                 ->addColumn('recipient_and_title', function ($row) {
                     return '<div>
                                 <span class="fw-bold text-dark font-14">' . e($row->recipient_name) . '</span>
+                                <span class="badge bg-success-subtle text-success border border-success font-10 px-1 py-0 ms-1">Family Earner</span>
                                 <small class="text-muted d-block font-11"><i class="fas fa-tag me-1 text-secondary"></i>' . e($row->salary_title) . '</small>
                             </div>';
                 })

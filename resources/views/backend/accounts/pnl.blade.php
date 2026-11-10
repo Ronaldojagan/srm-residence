@@ -197,7 +197,7 @@
                     </div>
                     <h3 class="mb-1 fw-bold text-success" id="pnl-card-revenue">{{ $pnl['totalRevenueFormatted'] }}</h3>
                     <div class="text-muted font-11 pt-1 border-top mt-2">
-                        <span>Room rent & EB collections</span>
+                        <span>Room rent, EB & family salary</span>
                     </div>
                 </div>
             </div>
@@ -220,12 +220,12 @@
             <div class="col-12 col-sm-6 col-xl-3">
                 <div class="pnl-stat-card border-start border-4 border-info">
                     <div class="d-flex align-items-center justify-content-between mb-2">
-                        <span class="text-uppercase text-muted font-11 fw-bold letter-spacing-1">Overheads & Salaries</span>
-                        <div class="text-info"><i class="fas fa-users-cog font-18"></i></div>
+                        <span class="text-uppercase text-muted font-11 fw-bold letter-spacing-1">Personal & Financing Overheads</span>
+                        <div class="text-info"><i class="fas fa-hand-holding-usd font-18"></i></div>
                     </div>
                     <h3 class="mb-1 fw-bold text-dark" id="pnl-card-indirect">{{ $pnl['totalIndirectExpensesFormatted'] }}</h3>
                     <div class="text-muted font-11 pt-1 border-top mt-2">
-                        <span>Salaries, EMIs & personal drawings</span>
+                        <span>Personal expenses & loan EMI payments</span>
                     </div>
                 </div>
             </div>
@@ -332,7 +332,7 @@
 
                         <!-- SECTION 3: INDIRECT EXPENSES -->
                         <tr class="section-header-row">
-                            <td colspan="4"><i class="fas fa-briefcase text-info me-2"></i> Section C: Indirect Expenses, Salaries & Financing</td>
+                            <td colspan="4"><i class="fas fa-briefcase text-info me-2"></i> Section C: Indirect Expenses, Personal & Financing</td>
                         </tr>
                         @foreach($pnl['indirectExpenseBreakdown'] as $ind)
                             <tr>
@@ -564,7 +564,7 @@
                         '</tr>';
 
                         // Section C: Indirect Expenses
-                        rows += '<tr class="section-header-row"><td colspan="4"><i class="fas fa-briefcase text-info me-2"></i> Section C: Indirect Expenses, Salaries & Financing</td></tr>';
+                        rows += '<tr class="section-header-row"><td colspan="4"><i class="fas fa-briefcase text-info me-2"></i> Section C: Indirect Expenses, Personal & Financing</td></tr>';
                         p.indirectExpenseBreakdown.forEach(function (ind) {
                             const indRatio = p.totalRevenue > 0 ? ((ind.amount / p.totalRevenue) * 100).toFixed(1) : '0';
                             rows += '<tr>' +
@@ -576,7 +576,7 @@
                         });
                         const indTotalRatio = p.totalRevenue > 0 ? ((p.totalIndirectExpenses / p.totalRevenue) * 100).toFixed(1) : '0';
                         rows += '<tr class="subtotal-row">' +
-                            '<td colspan="2" class="text-uppercase text-dark">Total Indirect Overheads & Salaries (C)</td>' +
+                            '<td colspan="2" class="text-uppercase text-dark">Total Indirect Overheads & Financing (C)</td>' +
                             '<td class="text-end text-danger font-14 fw-bold">₹' + Number(p.totalIndirectExpenses).toLocaleString('en-IN', {minimumFractionDigits: 2}) + '</td>' +
                             '<td class="text-end text-muted font-12">' + indTotalRatio + '%</td>' +
                         '</tr>';

@@ -96,7 +96,7 @@
                 <li class="{{ request()->is('admin/salary*') ? 'menuitem-active' : '' }}">
                     <a href="{{ url('/admin/salary') }}" class="{{ request()->is('admin/salary*') ? 'active' : '' }}">
                         <span class="res-nav-badge nav-badge-salary"><i class="fas fa-wallet"></i></span>
-                        <span class="ms-1"> Salary </span>
+                        <span class="ms-1"> Family Salary </span>
                     </a>
                 </li>
                 <li class="{{ request()->is('admin/accounts*') ? 'menuitem-active' : '' }}">

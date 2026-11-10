@@ -58,15 +58,15 @@
     <div class="row justify-content-between align-items-center mt-3 g-2">
         <div class="col-md-7">
             <h4 class="page-title-main page mb-1">
-                <i class="fas fa-wallet text-success me-2"></i>Owner & Personal Salary Management
+                <i class="fas fa-wallet text-success me-2"></i>Family Salary Income Management
             </h4>
             <p class="text-muted small mb-0">
-                Track and record your monthly salary earnings, executive remuneration, allowances, deductions, and bank credit vouchers.
+                Track monthly salary income received by our family members (Jagan, family earners) brought into residence and personal funds.
             </p>
         </div>
         <div class="col-md-5 text-md-end text-start">
             <button type="button" class="btn add-btn waves-effect waves-light button-color text-white px-3" data-bs-toggle="modal" data-bs-target="#addSalaryModal">
-                <i class="fas fa-plus-circle me-1"></i> Record Salary Credit
+                <i class="fas fa-plus-circle me-1"></i> Record Family Salary Received
             </button>
         </div>
     </div>
@@ -77,9 +77,9 @@
             <div class="salary-stat-card border-start border-4 border-success">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <div class="text-muted small text-uppercase fw-bold">Total Salary (Year <span id="statYearLabel">{{ $stats['year'] }}</span>)</div>
+                        <div class="text-muted small text-uppercase fw-bold">Total Family Salary (Year <span id="statYearLabel">{{ $stats['year'] }}</span>)</div>
                         <h3 class="fw-bold my-1 text-success" id="statTotalThisYear">{{ $stats['totalPaidThisYearFormatted'] }}</h3>
-                        <small class="text-muted">Total net salary credited</small>
+                        <small class="text-muted">Total net salary received</small>
                     </div>
                     <div class="rounded-circle p-3 bg-success-subtle text-success">
                         <i class="fas fa-coins fs-4"></i>
@@ -92,9 +92,9 @@
             <div class="salary-stat-card border-start border-4 border-primary">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <div class="text-muted small text-uppercase fw-bold">This Month Salary</div>
+                        <div class="text-muted small text-uppercase fw-bold">This Month Family Salary</div>
                         <h3 class="fw-bold my-1 text-primary" id="statThisMonth">{{ $stats['thisMonthSalaryFormatted'] }}</h3>
-                        <small class="text-muted">Current month earnings</small>
+                        <small class="text-muted">Current month earnings received</small>
                     </div>
                     <div class="rounded-circle p-3 bg-primary-subtle text-primary">
                         <i class="fas fa-calendar-check fs-4"></i>
@@ -183,8 +183,8 @@
                     </select>
                 </div>
                 <div class="col-md-3 col-sm-8">
-                    <label class="font-11 text-muted mb-1">Search Recipient / Title</label>
-                    <input type="text" id="filterRecipientName" class="form-control filter-control" placeholder="e.g. Jagan, Director, Salary...">
+                    <label class="font-11 text-muted mb-1">Search Earner / Title</label>
+                    <input type="text" id="filterRecipientName" class="form-control filter-control" placeholder="e.g. Jagan, Ragavan, Job Salary...">
                 </div>
                 <div class="col-md-1 col-sm-4 text-end mt-auto">
                     <button type="button" id="btnResetSalaryFilters" class="btn btn-sm btn-light border w-100 font-12 py-2" title="Reset Filters">
@@ -200,10 +200,10 @@
                         <tr>
                             <th width="4%">#</th>
                             <th width="14%">Salary Month</th>
-                            <th width="20%">Recipient & Title</th>
+                            <th width="22%">Family Earner & Title</th>
                             <th width="18%">Breakdown</th>
-                            <th width="14%">Net Salary Credited</th>
-                            <th width="16%">Credit Date & Mode</th>
+                            <th width="14%">Net Salary Received</th>
+                            <th width="14%">Credit Date & Mode</th>
                             <th width="8%">Status</th>
                             <th width="6%">Document</th>
                             <th width="10%" class="text-center">Action</th>
@@ -225,7 +225,7 @@
                     @csrf
                     <div class="modal-header bg-light">
                         <h5 class="modal-title fw-bold" id="addSalaryModalLabel">
-                            <i class="fas fa-plus-circle text-success me-2"></i>Record Salary Credit
+                            <i class="fas fa-plus-circle text-success me-2"></i>Record Family Salary Income Received
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
@@ -236,13 +236,13 @@
                                 <input type="month" name="salary_month" class="form-control" value="{{ $currentMonth }}" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label font-13 fw-semibold">Recipient / Beneficiary Name <span class="text-danger">*</span></label>
-                                <input type="text" name="recipient_name" class="form-control" value="{{ Auth::user()->name ?? 'Jagan' }}" placeholder="e.g. Jagan" required>
+                                <label class="form-label font-13 fw-semibold">Family Member / Earner Name <span class="text-danger">*</span></label>
+                                <input type="text" name="recipient_name" class="form-control" value="{{ Auth::user()->name ?? 'Jagan' }}" placeholder="e.g. Jagan, Ragavan" required>
                             </div>
 
                             <div class="col-md-12">
-                                <label class="form-label font-13 fw-semibold">Salary Title / Description <span class="text-danger">*</span></label>
-                                <input type="text" name="salary_title" class="form-control" value="Monthly Executive Salary" placeholder="e.g. Monthly Executive Salary, Director Remuneration, Owner Drawings" required>
+                                <label class="form-label font-13 fw-semibold">Salary Title / Income Source <span class="text-danger">*</span></label>
+                                <input type="text" name="salary_title" class="form-control" value="Monthly Job Salary" placeholder="e.g. Monthly Job Salary, IT / Company Salary, Professional Remuneration" required>
                             </div>
 
                             <div class="col-md-4">
@@ -357,12 +357,12 @@
                                 <input type="month" name="salary_month" id="edit_salary_month" class="form-control" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label font-13 fw-semibold">Recipient / Beneficiary Name <span class="text-danger">*</span></label>
+                                <label class="form-label font-13 fw-semibold">Family Member / Earner Name <span class="text-danger">*</span></label>
                                 <input type="text" name="recipient_name" id="edit_recipient_name" class="form-control" required>
                             </div>
 
                             <div class="col-md-12">
-                                <label class="form-label font-13 fw-semibold">Salary Title / Description <span class="text-danger">*</span></label>
+                                <label class="form-label font-13 fw-semibold">Salary Title / Income Source <span class="text-danger">*</span></label>
                                 <input type="text" name="salary_title" id="edit_salary_title" class="form-control" required>
                             </div>
 
@@ -485,7 +485,7 @@
                         <!-- Recipient & Period Details -->
                         <div class="row g-3 mb-4">
                             <div class="col-6">
-                                <label class="text-muted font-11 text-uppercase fw-bold">Beneficiary / Recipient</label>
+                                <label class="text-muted font-11 text-uppercase fw-bold">Family Earner / Member</label>
                                 <h5 class="fw-bold text-dark mb-0" id="v_recipient">-</h5>
                                 <div class="text-secondary font-12" id="v_title">-</div>
                             </div>

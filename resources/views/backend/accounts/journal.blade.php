@@ -152,7 +152,7 @@
                 </div>
                 <h3 class="mb-1 fw-bold text-success" id="stat-filtered-inflow">{{ $stats['filteredInflowFormatted'] }}</h3>
                 <div class="text-muted font-11 pt-1 border-top mt-2">
-                    <span>Rent collections & operating income</span>
+                    <span>Rent, family salary & operating receipts</span>
                 </div>
             </div>
         </div>
@@ -168,7 +168,7 @@
                 </div>
                 <h3 class="mb-1 fw-bold text-danger" id="stat-filtered-outflow">{{ $stats['filteredOutflowFormatted'] }}</h3>
                 <div class="text-muted font-11 pt-1 border-top mt-2">
-                    <span>Expenses, salaries & EMI payments</span>
+                    <span>Room & personal expenses, EMI payments</span>
                 </div>
             </div>
         </div>
@@ -233,7 +233,7 @@
                         <option value="all">All Modules</option>
                         <option value="bill_payment">Rent & Collections</option>
                         <option value="expense">Expenses (Room & Personal)</option>
-                        <option value="salary">Salaries Paid</option>
+                        <option value="salary">Family Salary (Income)</option>
                         <option value="loan_emi">Loan EMIs</option>
                         <option value="journal">Manual Journal Vouchers</option>
                     </select>
