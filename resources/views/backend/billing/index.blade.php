@@ -2485,10 +2485,6 @@
                     var billId = $(this).data('id');
                     $('.btn-open-share-hub[data-id="' + billId + '"]').trigger('click');
                 });
-                    var billId = $(this).data('id');
-                    // Trigger preview modal where PDF & Image share buttons are available
-                    $('.btn-view-invoice[data-id="' + billId + '"]').trigger('click');
-                });
 
                 $(document).on('click', '.btn-table-share-receipt', function() {
                     var payId = $(this).data('id');
