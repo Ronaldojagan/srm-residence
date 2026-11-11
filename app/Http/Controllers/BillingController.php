@@ -242,60 +242,22 @@ class BillingController extends Controller
                 $due = number_format((float)$row->amount - (float)$row->paid_amount, 2);
                 $dueDate = $row->due_date ? $row->due_date->format('d M, Y') : '-';
 
-                $shareDropdown = '<div class="btn-group btn-group-sm d-inline-block" role="group">
-                    <button type="button" class="btn btn-sm btn-outline-info dropdown-toggle" data-bs-toggle="dropdown" data-bs-popper-config=\'{"strategy":"fixed"}\' aria-expanded="false" title="Share Invoice (WhatsApp, Apps, Print, Email)">
-                        <i class="fas fa-share-alt"></i>
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 font-12 py-1" style="min-width: 210px; z-index: 1060;">
-                        <li>
-                            <a class="dropdown-item py-2 d-flex align-items-center gap-2 btn-action-share-whatsapp" href="javascript:void(0)"
+                $shareBtn = '<button type="button" class="btn btn-sm btn-outline-info btn-open-share-hub" 
                                 data-id="' . $row->id . '"
                                 data-bill="' . $billNo . '"
                                 data-tenant="' . $tenantName . '"
                                 data-phone="' . $tenantPhone . '"
+                                data-email="' . $tenantEmail . '"
                                 data-room="' . $roomNo . '"
                                 data-month="' . $month . '"
                                 data-type="' . $type . '"
                                 data-amount="' . $amt . '"
                                 data-due="' . $due . '"
                                 data-duedate="' . $dueDate . '"
-                                data-url="' . $printUrl . '">
-                                <i class="fab fa-whatsapp text-success font-16"></i>
-                                <span class="fw-semibold">WhatsApp</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item py-2 d-flex align-items-center gap-2 btn-action-share-native" href="javascript:void(0)"
-                                data-id="' . $row->id . '"
-                                data-bill="' . $billNo . '"
-                                data-tenant="' . $tenantName . '"
-                                data-room="' . $roomNo . '"
-                                data-month="' . $month . '"
-                                data-amount="' . $amt . '"
-                                data-due="' . $due . '"
-                                data-url="' . $printUrl . '">
-                                <i class="fas fa-share-nodes text-primary font-14"></i>
-                                <span>Share via Apps / Link</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item py-2 d-flex align-items-center gap-2" href="' . $printUrl . '" target="_blank">
-                                <i class="fas fa-print text-dark font-14"></i>
-                                <span>Print Invoice (A4)</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item py-2 d-flex align-items-center gap-2 btn-send-invoice-mail" href="javascript:void(0)"
-                                data-id="' . $row->id . '" 
-                                data-bill="' . $billNo . '"
-                                data-tenant="' . $tenantName . '" 
-                                data-email="' . $tenantEmail . '">
-                                <i class="fas fa-paper-plane text-info font-14"></i>
-                                <span>Send Invoice via Email</span>
-                            </a>
-                        </li>
-                    </ul>
-                </div>';
+                                data-url="' . $printUrl . '"
+                                title="Share Invoice (WhatsApp, Apps, Print, Email)">
+                                <i class="fas fa-share-alt"></i>
+                            </button>';
 
                 $editBtn = '<button type="button" class="btn btn-sm btn-outline-secondary btn-edit-bill" data-id="' . $row->id . '" title="Edit Invoice">
                                 <i class="fas fa-edit"></i>
@@ -304,7 +266,7 @@ class BillingController extends Controller
                                 <i class="fas fa-trash-alt"></i>
                             </button>';
 
-                return '<div class="btn-group btn-group-sm" role="group">' . $payBtn . $viewBtn . $shareDropdown . $editBtn . $delBtn . '</div>';
+                return '<div class="btn-group btn-group-sm" role="group">' . $payBtn . $viewBtn . $shareBtn . $editBtn . $delBtn . '</div>';
             })
             ->rawColumns(['checkbox', 'bill_number_badge', 'tenant_room', 'bill_type_badge', 'amount_display', 'payment_progress', 'due_date_formatted', 'status_badge', 'action'])
             ->make(true);

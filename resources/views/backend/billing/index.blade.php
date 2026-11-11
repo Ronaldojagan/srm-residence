@@ -916,6 +916,110 @@
         </div>
     </div>
 
+    <!-- 4.1. UNIFIED SHARE INVOICE HUB MODAL -->
+    <div class="modal fade" id="shareInvoiceHubModal" tabindex="-1" aria-labelledby="shareInvoiceHubModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+                <div class="modal-header button-color text-white py-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="rounded-circle bg-white text-dark p-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                            <i class="fas fa-share-alt font-16" style="color: #0a5858;"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title text-white mb-0 font-16 fw-bold" id="shareInvoiceHubModalLabel">Share Invoice</h5>
+                            <small class="text-white-50 font-12" id="hub_invoice_subtitle">SRM Residence</small>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <!-- Invoice Summary Card -->
+                    <div class="p-3 rounded-3 mb-3 border bg-light">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="fw-bold text-dark font-14" id="hub_tenant_name">Tenant Name</span>
+                            <span class="badge bg-success-subtle text-success border border-success font-11 px-2 py-1" id="hub_bill_type">Monthly Rent</span>
+                        </div>
+                        <div class="text-muted font-12 d-flex justify-content-between">
+                            <span><i class="fas fa-door-open me-1"></i>Room: <strong class="text-dark" id="hub_room_no">-</strong></span>
+                            <span>Month: <strong class="text-dark" id="hub_month">-</strong></span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center pt-2 mt-2 border-top">
+                            <span class="text-muted font-12">Total: <strong class="text-dark" id="hub_total_amt">₹0.00</strong></span>
+                            <span class="font-13 fw-bold text-danger">Balance Due: <span id="hub_due_amt">₹0.00</span></span>
+                        </div>
+                    </div>
+
+                    <div class="font-11 text-uppercase text-muted fw-bold mb-2" style="letter-spacing: 0.5px;">Choose Sharing Method:</div>
+
+                    <!-- 4 Sharing Action Options -->
+                    <div class="d-grid gap-2">
+                        <!-- 1. WhatsApp -->
+                        <button type="button" class="btn btn-outline-success text-start p-3 d-flex align-items-center gap-3 rounded-3 border-2" id="btnHubWhatsApp" style="transition: all 0.2s;">
+                            <div class="rounded-circle bg-success text-white p-2 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; flex-shrink: 0;">
+                                <i class="fab fa-whatsapp fs-4"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="fw-bold text-dark font-14">Share via WhatsApp</div>
+                                <small class="text-muted font-11 d-block" id="hub_whatsapp_desc">Send pre-filled invoice message & link to tenant</small>
+                            </div>
+                            <i class="fas fa-chevron-right text-muted font-12"></i>
+                        </button>
+
+                        <!-- 2. Share with Apps / Native Share -->
+                        <button type="button" class="btn btn-outline-primary text-start p-3 d-flex align-items-center gap-3 rounded-3 border-2" id="btnHubNativeShare" style="transition: all 0.2s;">
+                            <div class="rounded-circle bg-primary text-white p-2 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; flex-shrink: 0;">
+                                <i class="fas fa-share-nodes fs-4"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="fw-bold text-dark font-14">Share via Apps / Copy Link</div>
+                                <small class="text-muted font-11 d-block">Open phone share drawer (Telegram, Drive, etc.) or copy URL</small>
+                            </div>
+                            <i class="fas fa-chevron-right text-muted font-12"></i>
+                        </button>
+
+                        <!-- 3. Print Invoice (A4) -->
+                        <button type="button" class="btn btn-outline-dark text-start p-3 d-flex align-items-center gap-3 rounded-3 border-2" id="btnHubPrintA4" style="transition: all 0.2s;">
+                            <div class="rounded-circle bg-dark text-white p-2 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; flex-shrink: 0;">
+                                <i class="fas fa-print fs-4"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="fw-bold text-dark font-14">Print Official Invoice (A4)</div>
+                                <small class="text-muted font-11 d-block">Official printable tax invoice layout with residence seal & signature</small>
+                            </div>
+                            <i class="fas fa-chevron-right text-muted font-12"></i>
+                        </button>
+
+                        <!-- 4. Send via Email -->
+                        <button type="button" class="btn btn-outline-info text-start p-3 d-flex align-items-center gap-3 rounded-3 border-2" id="btnHubEmail" style="transition: all 0.2s;">
+                            <div class="rounded-circle bg-info text-white p-2 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; flex-shrink: 0;">
+                                <i class="fas fa-paper-plane fs-4"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="fw-bold text-dark font-14">Send Invoice via Email</div>
+                                <small class="text-muted font-11 d-block" id="hub_email_desc">Email computerized invoice statement to tenant</small>
+                            </div>
+                            <i class="fas fa-chevron-right text-muted font-12"></i>
+                        </button>
+                    </div>
+
+                    <!-- Direct Copyable Link Row -->
+                    <div class="mt-3 pt-3 border-top">
+                        <label class="form-label font-11 text-muted mb-1 fw-bold">Online Invoice URL:</label>
+                        <div class="input-group input-group-sm">
+                            <input type="text" class="form-control font-12 bg-white" id="hub_invoice_url_input" readonly>
+                            <button class="btn btn-secondary font-12" type="button" id="btnHubCopyUrl">
+                                <i class="fas fa-copy me-1"></i> Copy
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light py-2">
+                    <button type="button" class="btn btn-secondary btn-sm px-3" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 5. VIEW & PRINT RECEIPT MODAL -->
     <div class="modal fade" id="viewReceiptModal" tabindex="-1" aria-labelledby="viewReceiptModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -2263,35 +2367,71 @@
                     Toast.fire({ icon: 'success', title: 'Invoice link copied to clipboard!' });
                 }
 
-                // Direct WhatsApp Share from Single Share Button
-                $(document).on('click', '.btn-action-share-whatsapp', function() {
-                    var $el = $(this);
-                    var billNo = $el.data('bill') || 'Invoice';
-                    var tenant = $el.data('tenant') || 'Tenant';
-                    var phone = ($el.data('phone') || '').toString().replace(/[^0-9]/g, '');
-                    var room = $el.data('room') || '-';
-                    var month = $el.data('month') || '';
-                    var type = $el.data('type') || 'Rent';
-                    var amount = $el.data('amount') || '0.00';
-                    var due = $el.data('due') || '0.00';
-                    var dueDate = $el.data('duedate') || '-';
-                    var url = $el.data('url') || window.location.href;
+                // =========================================================================
+                // UNIFIED SHARE INVOICE HUB LOGIC
+                // =========================================================================
+                var activeHubBill = null;
 
+                $(document).on('click', '.btn-open-share-hub', function() {
+                    var $el = $(this);
+                    activeHubBill = {
+                        id: $el.data('id'),
+                        billNumber: $el.data('bill') || 'Invoice',
+                        tenant: $el.data('tenant') || 'Tenant',
+                        phone: ($el.data('phone') || '').toString().replace(/[^0-9]/g, ''),
+                        email: $el.data('email') || '',
+                        room: $el.data('room') || '-',
+                        month: $el.data('month') || '',
+                        type: $el.data('type') || 'Monthly Rent',
+                        amount: $el.data('amount') || '0.00',
+                        due: $el.data('due') || '0.00',
+                        dueDate: $el.data('duedate') || '-',
+                        url: $el.data('url') || window.location.href
+                    };
+
+                    $('#hub_invoice_subtitle').text(activeHubBill.billNumber + ' • ' + activeHubBill.tenant);
+                    $('#hub_tenant_name').text(activeHubBill.tenant);
+                    $('#hub_bill_type').text(activeHubBill.type);
+                    $('#hub_room_no').text(activeHubBill.room);
+                    $('#hub_month').text(activeHubBill.month);
+                    $('#hub_total_amt').text('₹' + activeHubBill.amount);
+                    $('#hub_due_amt').text('₹' + activeHubBill.due);
+                    $('#hub_invoice_url_input').val(activeHubBill.url);
+
+                    if (activeHubBill.phone && activeHubBill.phone.length >= 10) {
+                        $('#hub_whatsapp_desc').text('Send to ' + activeHubBill.tenant + ' (' + activeHubBill.phone + ')');
+                    } else {
+                        $('#hub_whatsapp_desc').text('Send formatted invoice summary & link to tenant WhatsApp');
+                    }
+
+                    if (activeHubBill.email) {
+                        $('#hub_email_desc').text('Send to ' + activeHubBill.email);
+                    } else {
+                        $('#hub_email_desc').text('Email computerized invoice statement to tenant');
+                    }
+
+                    $('#shareInvoiceHubModal').modal('show');
+                });
+
+                // 1. WhatsApp Button Click in Hub
+                $(document).on('click', '#btnHubWhatsApp', function() {
+                    if (!activeHubBill) return;
+                    var b = activeHubBill;
                     var msg = `*SRM RESIDENCE - INVOICE*\n` +
-                              `Dear ${tenant},\n\n` +
-                              `Your invoice for *${month}* has been issued.\n\n` +
-                              `📄 *Invoice No:* ${billNo}\n` +
-                              `🏠 *Room / Bed:* ${room}\n` +
-                              `📋 *Bill Type:* ${type}\n` +
-                              `💰 *Total Amount:* ₹${amount}\n` +
-                              `⚠️ *Balance Due:* ₹${due}\n` +
-                              `📅 *Due Date:* ${dueDate}\n\n` +
-                              `🔗 *View & Download Invoice:* \n${url}\n\n` +
+                              `Dear ${b.tenant},\n\n` +
+                              `Your invoice for *${b.month}* has been issued.\n\n` +
+                              `📄 *Invoice No:* ${b.billNumber}\n` +
+                              `🏠 *Room / Bed:* ${b.room}\n` +
+                              `📋 *Bill Type:* ${b.type}\n` +
+                              `💰 *Total Amount:* ₹${b.amount}\n` +
+                              `⚠️ *Balance Due:* ₹${b.due}\n` +
+                              `📅 *Due Date:* ${b.dueDate}\n\n` +
+                              `🔗 *View & Download Invoice:* \n${b.url}\n\n` +
                               `Thank you,\n*SRM Residence*`;
 
                     var waUrl;
-                    if (phone.length >= 10) {
-                        var cleanPhone = phone.length === 10 ? '91' + phone : phone;
+                    if (b.phone && b.phone.length >= 10) {
+                        var cleanPhone = b.phone.length === 10 ? '91' + b.phone : b.phone;
                         waUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`;
                     } else {
                         waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
@@ -2299,35 +2439,52 @@
                     window.open(waUrl, '_blank');
                 });
 
-                // Direct Native System Share / Copy Link from Single Share Button
-                $(document).on('click', '.btn-action-share-native', function() {
-                    var $el = $(this);
-                    var billNo = $el.data('bill') || 'Invoice';
-                    var tenant = $el.data('tenant') || 'Tenant';
-                    var month = $el.data('month') || '';
-                    var amount = $el.data('amount') || '0.00';
-                    var due = $el.data('due') || '0.00';
-                    var url = $el.data('url') || window.location.href;
-
-                    var shareText = `SRM Residence Invoice #${billNo} for ${tenant} (${month}). Total: ₹${amount}, Due: ₹${due}.\n${url}`;
+                // 2. Native Share / Copy Link in Hub
+                $(document).on('click', '#btnHubNativeShare', function() {
+                    if (!activeHubBill) return;
+                    var b = activeHubBill;
+                    var shareText = `SRM Residence Invoice #${b.billNumber} for ${b.tenant} (${b.month}). Total: ₹${b.amount}, Due: ₹${b.due}.\n${b.url}`;
 
                     if (navigator.share) {
                         navigator.share({
-                            title: 'SRM Residence Invoice - ' + billNo,
+                            title: 'SRM Residence Invoice - ' + b.billNumber,
                             text: shareText,
-                            url: url
+                            url: b.url
                         }).catch(function(err) {
                             if (err.name !== 'AbortError') {
-                                copyUrlToClipboard(url);
+                                copyUrlToClipboard(b.url);
                             }
                         });
                     } else {
-                        copyUrlToClipboard(url);
+                        copyUrlToClipboard(b.url);
                     }
                 });
 
-                // DataTable Row Quick Share Handlers
+                // 3. Print A4 in Hub
+                $(document).on('click', '#btnHubPrintA4', function() {
+                    if (!activeHubBill) return;
+                    window.open(activeHubBill.url, '_blank');
+                });
+
+                // 4. Send Email in Hub
+                $(document).on('click', '#btnHubEmail', function() {
+                    if (!activeHubBill) return;
+                    var b = activeHubBill;
+                    $('#shareInvoiceHubModal').modal('hide');
+                    triggerSendInvoiceEmail(b.id, b.billNumber, b.email);
+                });
+
+                // 5. Copy URL in Hub
+                $(document).on('click', '#btnHubCopyUrl', function() {
+                    if (!activeHubBill) return;
+                    copyUrlToClipboard(activeHubBill.url);
+                });
+
+                // Backward-compatibility DataTable Row Quick Share Handlers
                 $(document).on('click', '.btn-table-share-invoice', function() {
+                    var billId = $(this).data('id');
+                    $('.btn-open-share-hub[data-id="' + billId + '"]').trigger('click');
+                });
                     var billId = $(this).data('id');
                     // Trigger preview modal where PDF & Image share buttons are available
                     $('.btn-view-invoice[data-id="' + billId + '"]').trigger('click');
