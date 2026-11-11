@@ -249,6 +249,25 @@
         </div>
     </div>
 
+    <!-- Modern Bulk Action Bar for Journal -->
+    <div id="bulkActionBarJournal" class="d-none align-items-center justify-content-between p-2 px-3 mb-2 rounded-3" style="background: linear-gradient(135deg, #0a5858 0%, #0d7373 100%); color: #fff; box-shadow: 0 4px 12px rgba(10, 88, 88, 0.25);">
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-white text-dark fw-bold px-2 py-1 font-12" id="bulkSelectedCountJournal">0 Selected</span>
+            <span class="font-12 text-white-50 d-none d-sm-inline">Actions for selected transactions:</span>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-warning btn-sm fw-semibold btn-bulk-edit-journal px-3 py-1 font-12">
+                <i class="fas fa-edit me-1"></i> Bulk Edit
+            </button>
+            <button type="button" class="btn btn-danger btn-sm fw-semibold btn-bulk-delete-journal px-3 py-1 font-12">
+                <i class="fas fa-trash-alt me-1"></i> Bulk Delete
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-light btn-bulk-deselect-journal px-2 py-1 font-11" title="Deselect All">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+
     <!-- Journal DataTables Card -->
     <div class="card shadow-sm border-0 rounded-3">
         <div class="card-body p-0">
@@ -256,6 +275,9 @@
                 <table id="journal-datatable" class="table table-hover table-accounts w-100 align-middle">
                     <thead>
                         <tr>
+                            <th style="width: 40px;" class="text-center">
+                                <input type="checkbox" class="form-check-input bulk-select-all" id="bulkSelectAllJournal">
+                            </th>
                             <th style="width: 110px;">Date</th>
                             <th style="width: 140px;">Voucher #</th>
                             <th style="width: 120px;">Flow</th>
@@ -468,6 +490,82 @@
             </div>
         </div>
     </div>
+
+    <!-- BULK EDIT JOURNAL MODAL -->
+    <div class="modal fade" id="bulkEditJournalModal" tabindex="-1" aria-labelledby="bulkEditJournalModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header button-color text-white">
+                    <div>
+                        <h5 class="modal-title text-white" id="bulkEditJournalModalLabel">
+                            <i class="fas fa-edit me-1"></i> Bulk Edit Journal Vouchers
+                        </h5>
+                        <small class="text-white-50">Updating <span id="bulkEditCountBadgeJournal" class="badge bg-warning text-dark fw-bold"></span></small>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="bulkEditJournalForm">
+                    <div class="modal-body p-4">
+                        <div class="alert alert-info py-2 px-3 font-12 mb-3">
+                            <i class="fas fa-info-circle me-1"></i> <strong>Note:</strong> Bulk edit applies to manual journal vouchers. Only filled fields will be updated across all selected records.
+                        </div>
+                        <div id="bulkEditJournalErrors" class="alert alert-danger d-none py-2 px-3 font-12"></div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold font-13">Entry Nature / Flow</label>
+                                <select name="entry_type" class="form-select">
+                                    <option value="">-- Keep Existing --</option>
+                                    <option value="income">Direct Income (Inflow / Cr)</option>
+                                    <option value="expense">Direct Expense (Outflow / Dr)</option>
+                                    <option value="capital">Capital Introduced (Owner Inflow / Cr)</option>
+                                    <option value="drawing">Owner Drawing (Personal Outflow / Dr)</option>
+                                    <option value="transfer">Internal Transfer / Contra</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold font-13">Voucher Date</label>
+                                <input type="date" name="entry_date" class="form-control" placeholder="Keep Existing">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold font-13">Account Category</label>
+                                <input type="text" name="category" list="bulkCategoryOptions" class="form-control" placeholder="Select or type category...">
+                                <datalist id="bulkCategoryOptions">
+                                    @foreach($defaultCategories as $cat)
+                                        <option value="{{ $cat }}">
+                                    @endforeach
+                                </datalist>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold font-13">Payment Mode</label>
+                                <select name="payment_method" class="form-select">
+                                    <option value="">-- Keep Existing --</option>
+                                    <option value="Cash">Cash</option>
+                                    <option value="UPI">UPI / GPay / PhonePe</option>
+                                    <option value="Bank Transfer">Bank Transfer (NEFT/IMPS)</option>
+                                    <option value="Cheque">Cheque</option>
+                                </select>
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold font-13">Bank / Account Name</label>
+                                <input type="text" name="account_name" class="form-control" placeholder="e.g. SRM Cash Register, HDFC Current A/C">
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold font-13">General Notes / Remarks</label>
+                                <textarea name="notes" class="form-control" rows="2" placeholder="Leave empty to keep existing notes"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn button-color text-white" id="btnApplyBulkEditJournal">
+                            <i class="fas fa-check-double me-1"></i> Apply Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @push('scripts')
@@ -496,6 +594,7 @@
                     }
                 },
                 columns: [
+                    { data: 'checkbox', name: 'checkbox', orderable: false, searchable: false, className: 'text-center' },
                     { data: 'trans_date', name: 'trans_date' },
                     { data: 'voucher_display', name: 'voucher_no' },
                     { data: 'flow_badge', name: 'flow_type' },
@@ -506,7 +605,7 @@
                     { data: 'outflow_amount', name: 'amount', className: 'text-end' },
                     { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-center' }
                 ],
-                order: [[0, 'desc']],
+                order: [[1, 'desc']],
                 pageLength: 25,
                 language: {
                     processing: '<div class="spinner-border text-primary spinner-border-sm" role="status"></div> Loading ledger...',
@@ -761,6 +860,190 @@
                                 Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to delete voucher.' });
                             }
                         });
+                    }
+                });
+            });
+
+            // =========================================================================
+            // BULK SELECTION, BULK EDIT & BULK DELETE FOR JOURNAL
+            // =========================================================================
+            function updateBulkBarJournal() {
+                var checkedBoxes = $('#journal-datatable tbody .bulk-select-row:checked');
+                var count = checkedBoxes.length;
+                var totalBoxes = $('#journal-datatable tbody .bulk-select-row').length;
+
+                if (count > 0) {
+                    $('#bulkSelectedCountJournal').text(count + ' Selected');
+                    $('#bulkActionBarJournal').removeClass('d-none').addClass('d-flex');
+                } else {
+                    $('#bulkActionBarJournal').removeClass('d-flex').addClass('d-none');
+                }
+
+                if (totalBoxes > 0 && count === totalBoxes) {
+                    $('#bulkSelectAllJournal').prop('checked', true).prop('indeterminate', false);
+                } else if (count > 0) {
+                    $('#bulkSelectAllJournal').prop('checked', false).prop('indeterminate', true);
+                } else {
+                    $('#bulkSelectAllJournal').prop('checked', false).prop('indeterminate', false);
+                }
+            }
+
+            $(document).on('change', '#bulkSelectAllJournal', function () {
+                var isChecked = $(this).is(':checked');
+                $('#journal-datatable tbody .bulk-select-row').prop('checked', isChecked);
+                updateBulkBarJournal();
+            });
+
+            $(document).on('change', '#journal-datatable tbody .bulk-select-row', function () {
+                updateBulkBarJournal();
+            });
+
+            journalTable.on('draw', function () {
+                updateBulkBarJournal();
+            });
+
+            $(document).on('click', '.btn-bulk-deselect-journal', function () {
+                $('#journal-datatable tbody .bulk-select-row').prop('checked', false);
+                $('#bulkSelectAllJournal').prop('checked', false).prop('indeterminate', false);
+                updateBulkBarJournal();
+            });
+
+            // Bulk Delete Journal Entries
+            $(document).on('click', '.btn-bulk-delete-journal', function () {
+                var items = [];
+                $('#journal-datatable tbody .bulk-select-row:checked').each(function () {
+                    items.push({
+                        id: $(this).val(),
+                        source_type: $(this).data('source')
+                    });
+                });
+
+                if (items.length === 0) {
+                    Swal.fire({ icon: 'warning', title: 'Selection Empty', text: 'No transactions selected.' });
+                    return;
+                }
+
+                Swal.fire({
+                    title: "Delete " + items.length + " Transaction(s)?",
+                    text: "Are you sure you want to delete these " + items.length + " selected records from the ledger? This action cannot be undone.",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#f34e4e",
+                    cancelButtonColor: "#6c757d",
+                    confirmButtonText: "Yes, delete " + items.length + " records"
+                }).then(function (result) {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            type: "POST",
+                            url: "{{ route('accounts.journal.bulk_delete') }}",
+                            data: {
+                                items: items,
+                                _token: "{{ csrf_token() }}"
+                            },
+                            success: function (res) {
+                                if (res.success) {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Deleted!',
+                                        text: res.message,
+                                        timer: 1800,
+                                        showConfirmButton: false
+                                    });
+                                    $('#bulkSelectAllJournal').prop('checked', false);
+                                    journalTable.draw();
+                                    reloadStats();
+                                } else {
+                                    Swal.fire({ icon: 'error', title: 'Failed', text: res.message || 'Bulk delete failed.' });
+                                }
+                            },
+                            error: function (xhr) {
+                                var msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Error performing bulk delete.';
+                                Swal.fire({ icon: 'error', title: 'Error', text: msg });
+                            }
+                        });
+                    }
+                });
+            });
+
+            // Bulk Edit Journal Entries
+            $(document).on('click', '.btn-bulk-edit-journal', function () {
+                var journalIds = [];
+                $('#journal-datatable tbody .bulk-select-row:checked').each(function () {
+                    if ($(this).data('source') === 'journal') {
+                        journalIds.push($(this).val());
+                    }
+                });
+
+                var totalSelected = $('#journal-datatable tbody .bulk-select-row:checked').length;
+                if (totalSelected === 0) {
+                    Swal.fire({ icon: 'warning', title: 'Selection Empty', text: 'No transactions selected.' });
+                    return;
+                }
+
+                if (journalIds.length === 0) {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Notice',
+                        text: 'Bulk edit is available for manual journal vouchers. The selected entries are from other modules (Expenses / Salary / Bill Payments); please edit them in their respective modules.'
+                    });
+                    return;
+                }
+
+                $('#bulkEditCountBadgeJournal').text(journalIds.length + ' journal voucher(s)');
+                $('#bulkEditJournalForm')[0].reset();
+                $('#bulkEditJournalErrors').addClass('d-none').html('');
+                $('#bulkEditJournalModal').modal('show');
+            });
+
+            $('#bulkEditJournalForm').on('submit', function (e) {
+                e.preventDefault();
+                var journalIds = [];
+                $('#journal-datatable tbody .bulk-select-row:checked').each(function () {
+                    if ($(this).data('source') === 'journal') {
+                        journalIds.push($(this).val());
+                    }
+                });
+
+                if (journalIds.length === 0) {
+                    Swal.fire({ icon: 'warning', title: 'Selection Empty', text: 'No journal vouchers selected.' });
+                    return;
+                }
+
+                var formData = $(this).serializeArray();
+                formData.push({ name: '_token', value: "{{ csrf_token() }}" });
+                journalIds.forEach(function (id) {
+                    formData.push({ name: 'ids[]', value: id });
+                });
+
+                var $btn = $('#btnApplyBulkEditJournal');
+                $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Updating...');
+
+                $.ajax({
+                    type: "POST",
+                    url: "{{ route('accounts.journal.bulk_update') }}",
+                    data: formData,
+                    success: function (res) {
+                        $btn.prop('disabled', false).html('<i class="fas fa-check-double me-1"></i> Apply Changes');
+                        if (res.success) {
+                            $('#bulkEditJournalModal').modal('hide');
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Updated!',
+                                text: res.message,
+                                timer: 1800,
+                                showConfirmButton: false
+                            });
+                            $('#bulkSelectAllJournal').prop('checked', false);
+                            journalTable.draw();
+                            reloadStats();
+                        } else {
+                            $('#bulkEditJournalErrors').removeClass('d-none').html(res.message || 'Bulk update failed.');
+                        }
+                    },
+                    error: function (xhr) {
+                        $btn.prop('disabled', false).html('<i class="fas fa-check-double me-1"></i> Apply Changes');
+                        var msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Failed to update selected journal vouchers.';
+                        $('#bulkEditJournalErrors').removeClass('d-none').html(msg);
                     }
                 });
             });

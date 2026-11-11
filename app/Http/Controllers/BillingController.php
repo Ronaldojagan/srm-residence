@@ -133,6 +133,9 @@ class BillingController extends Controller
 
         return DataTables::of($query)
             ->addIndexColumn()
+            ->addColumn('checkbox', function ($row) {
+                return '<input type="checkbox" class="form-check-input bulk-select-row" value="' . $row->id . '">';
+            })
             ->addColumn('bill_number_badge', function ($row) {
                 return '<div class="d-flex align-items-center">
                     <span class="badge bg-light text-dark border px-2 py-1 fw-bold font-12">
@@ -261,7 +264,7 @@ class BillingController extends Controller
 
                 return '<div class="btn-group btn-group-sm" role="group">' . $payBtn . $viewBtn . $shareBtn . $printBtn . $mailBtn . $editBtn . $delBtn . '</div>';
             })
-            ->rawColumns(['bill_number_badge', 'tenant_room', 'bill_type_badge', 'amount_display', 'payment_progress', 'due_date_formatted', 'status_badge', 'action'])
+            ->rawColumns(['checkbox', 'bill_number_badge', 'tenant_room', 'bill_type_badge', 'amount_display', 'payment_progress', 'due_date_formatted', 'status_badge', 'action'])
             ->make(true);
     }
 
@@ -281,6 +284,9 @@ class BillingController extends Controller
 
         return DataTables::of($query)
             ->addIndexColumn()
+            ->addColumn('checkbox', function ($row) {
+                return '<input type="checkbox" class="form-check-input bulk-select-row" value="' . $row->id . '">';
+            })
             ->addColumn('payment_number_badge', function ($row) {
                 return '<span class="badge bg-light text-dark border px-2 py-1 fw-bold font-12">
                     <i class="fas fa-receipt text-success me-1"></i> ' . e($row->payment_number) . '
@@ -350,7 +356,7 @@ class BillingController extends Controller
 
                 return '<div class="btn-group btn-group-sm" role="group">' . $shareBtn . $printBtn . $delBtn . '</div>';
             })
-            ->rawColumns(['payment_number_badge', 'bill_reference', 'tenant_info', 'amount_display', 'payment_date_formatted', 'payment_method_badge', 'action'])
+            ->rawColumns(['checkbox', 'payment_number_badge', 'bill_reference', 'tenant_info', 'amount_display', 'payment_date_formatted', 'payment_method_badge', 'action'])
             ->make(true);
     }
 
@@ -894,6 +900,95 @@ class BillingController extends Controller
     {
         $fileName = 'srm_residence_payments_' . date('Ymd_His') . '.xlsx';
         return Excel::download(new PaymentsExport($request), $fileName);
+    }
+
+    /**
+     * Bulk Delete Bills
+     */
+    public function bulkDeleteBills(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer|exists:bills,id',
+        ]);
+
+        $count = count($validated['ids']);
+        \Illuminate\Support\Facades\DB::transaction(function () use ($validated) {
+            BillPayment::whereIn('bill_id', $validated['ids'])->delete();
+            Bill::whereIn('id', $validated['ids'])->delete();
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => "Successfully deleted {$count} invoice(s) and related payments!",
+            'stats' => $this->getStatsData(),
+        ]);
+    }
+
+    /**
+     * Bulk Update Bills
+     */
+    public function bulkUpdateBills(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer|exists:bills,id',
+            'bill_type' => 'nullable|string|max:100',
+            'billing_month' => 'nullable|string|max:50',
+            'due_date' => 'nullable|date',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        $updateData = [];
+        if (!empty($validated['bill_type'])) $updateData['bill_type'] = $validated['bill_type'];
+        if (!empty($validated['billing_month'])) $updateData['billing_month'] = $validated['billing_month'];
+        if (!empty($validated['due_date'])) $updateData['due_date'] = $validated['due_date'];
+        if (isset($validated['notes']) && $validated['notes'] !== '') $updateData['notes'] = $validated['notes'];
+
+        if (empty($updateData)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No fields provided to update.'
+            ], 422);
+        }
+
+        $count = count($validated['ids']);
+        Bill::whereIn('id', $validated['ids'])->update($updateData);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Successfully updated {$count} invoice(s)!",
+            'stats' => $this->getStatsData(),
+        ]);
+    }
+
+    /**
+     * Bulk Delete Payment Receipts
+     */
+    public function bulkDeletePayments(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer|exists:bill_payments,id',
+        ]);
+
+        $count = count($validated['ids']);
+        $payments = BillPayment::whereIn('id', $validated['ids'])->get();
+        $billIds = $payments->pluck('bill_id')->unique()->filter();
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($validated, $billIds) {
+            BillPayment::whereIn('id', $validated['ids'])->delete();
+            foreach ($billIds as $bId) {
+                $b = Bill::find($bId);
+                if ($b) $b->recalculatePaymentStatus();
+            }
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => "Successfully deleted {$count} payment receipt(s) and refreshed invoice balances!",
+            'stats' => $this->getStatsData(),
+        ]);
     }
 }
 

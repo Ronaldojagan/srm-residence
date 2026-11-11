@@ -42,6 +42,9 @@ class ExpenseController extends Controller
 
             return DataTables::of($query)
                 ->addIndexColumn()
+                ->addColumn('checkbox', function ($row) {
+                    return '<input type="checkbox" class="form-check-input bulk-select-row" value="' . $row->id . '">';
+                })
                 ->addColumn('room_badge', function ($row) {
                     if ($row->room) {
                         return '<span class="badge bg-primary text-white fw-bold px-2 py-1">
@@ -80,7 +83,7 @@ class ExpenseController extends Controller
                     $btn .= '</div>';
                     return $btn;
                 })
-                ->rawColumns(['room_badge', 'title_desc', 'category_badge', 'amount_display', 'paid_to_display', 'action'])
+                ->rawColumns(['checkbox', 'room_badge', 'title_desc', 'category_badge', 'amount_display', 'paid_to_display', 'action'])
                 ->make(true);
         }
 
@@ -128,6 +131,9 @@ class ExpenseController extends Controller
 
             return DataTables::of($query)
                 ->addIndexColumn()
+                ->addColumn('checkbox', function ($row) {
+                    return '<input type="checkbox" class="form-check-input bulk-select-row" value="' . $row->id . '">';
+                })
                 ->addColumn('title_desc', function ($row) {
                     $notes = $row->notes ? '<small class="text-muted d-block text-wrap font-11 mt-1" style="max-width:320px;">' . e(Str::limit($row->notes, 65)) . '</small>' : '';
                     $monthBadge = $row->expense_month ? '<span class="badge bg-light text-muted border font-10 me-1"><i class="far fa-calendar-alt me-1"></i>' . e($row->expense_month) . '</span>' : '';
@@ -182,7 +188,7 @@ class ExpenseController extends Controller
                     $btn .= '</div>';
                     return $btn;
                 })
-                ->rawColumns(['title_desc', 'items_summary', 'amount_display', 'paid_to_display', 'action'])
+                ->rawColumns(['checkbox', 'title_desc', 'items_summary', 'amount_display', 'paid_to_display', 'action'])
                 ->make(true);
         }
 
@@ -542,5 +548,64 @@ class ExpenseController extends Controller
     {
         $fileName = 'srm_residence_personal_expenses_' . date('Ymd_His') . '.xlsx';
         return Excel::download(new PersonalExpensesExport($request), $fileName);
+    }
+
+    /**
+     * Bulk Delete Expenses
+     */
+    public function bulkDelete(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer|exists:expenses,id',
+        ]);
+
+        $count = count($validated['ids']);
+        Expense::whereIn('id', $validated['ids'])->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => "Successfully deleted {$count} expense record(s)!"
+        ]);
+    }
+
+    /**
+     * Bulk Update Expenses
+     */
+    public function bulkUpdate(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer|exists:expenses,id',
+            'category' => 'nullable|string|max:100',
+            'expense_month' => 'nullable|string|max:50',
+            'expense_date' => 'nullable|date',
+            'payment_method' => 'nullable|string|max:50',
+            'paid_to' => 'nullable|string|max:150',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        $updateData = [];
+        if (!empty($validated['category'])) $updateData['category'] = $validated['category'];
+        if (!empty($validated['expense_month'])) $updateData['expense_month'] = $validated['expense_month'];
+        if (!empty($validated['expense_date'])) $updateData['expense_date'] = $validated['expense_date'];
+        if (!empty($validated['payment_method'])) $updateData['payment_method'] = $validated['payment_method'];
+        if (!empty($validated['paid_to'])) $updateData['paid_to'] = $validated['paid_to'];
+        if (isset($validated['notes']) && $validated['notes'] !== '') $updateData['notes'] = $validated['notes'];
+
+        if (empty($updateData)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No fields were provided to update.'
+            ], 422);
+        }
+
+        $count = count($validated['ids']);
+        Expense::whereIn('id', $validated['ids'])->update($updateData);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Successfully updated {$count} expense record(s)!"
+        ]);
     }
 }

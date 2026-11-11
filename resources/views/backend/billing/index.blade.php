@@ -262,11 +262,33 @@
                                 </div>
                             </div>
 
+                            <!-- Modern Bulk Action Bar for Bills -->
+                            <div id="bulkActionBarBills" class="d-none align-items-center justify-content-between p-2 px-3 mb-2 rounded-3" style="background: linear-gradient(135deg, #0a5858 0%, #0d7373 100%); color: #fff; box-shadow: 0 4px 12px rgba(10, 88, 88, 0.25);">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-white text-dark fw-bold px-2 py-1 font-12" id="bulkSelectedCountBills">0 Selected</span>
+                                    <span class="font-12 text-white-50 d-none d-sm-inline">Actions for selected invoices:</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <button type="button" class="btn btn-warning btn-sm fw-semibold btn-bulk-edit-bills px-3 py-1 font-12">
+                                        <i class="fas fa-edit me-1"></i> Bulk Edit
+                                    </button>
+                                    <button type="button" class="btn btn-danger btn-sm fw-semibold btn-bulk-delete-bills px-3 py-1 font-12">
+                                        <i class="fas fa-trash-alt me-1"></i> Bulk Delete
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-light btn-bulk-deselect-bills px-2 py-1 font-11" title="Deselect All">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+
                             <!-- Bills DataTable -->
                             <div class="table-responsive table-border">
                                 <table class="table table-striped data-table job-table w-100" id="billsTable">
                                     <thead class="table-theme text-white text-nowrap">
                                         <tr>
+                                            <th style="width: 40px;" class="text-center">
+                                                <input type="checkbox" class="form-check-input bulk-select-all" id="bulkSelectAllBills">
+                                            </th>
                                             <th style="width: 4%;">#</th>
                                             <th style="min-width: 140px;" class="text-nowrap">Invoice No</th>
                                             <th style="min-width: 180px;">Tenant & Room</th>
@@ -318,11 +340,30 @@
                                 </div>
                             </div>
 
+                            <!-- Modern Bulk Action Bar for Payments -->
+                            <div id="bulkActionBarPayments" class="d-none align-items-center justify-content-between p-2 px-3 mb-2 rounded-3" style="background: linear-gradient(135deg, #0a5858 0%, #0d7373 100%); color: #fff; box-shadow: 0 4px 12px rgba(10, 88, 88, 0.25);">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-white text-dark fw-bold px-2 py-1 font-12" id="bulkSelectedCountPayments">0 Selected</span>
+                                    <span class="font-12 text-white-50 d-none d-sm-inline">Actions for selected receipts:</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <button type="button" class="btn btn-danger btn-sm fw-semibold btn-bulk-delete-payments px-3 py-1 font-12">
+                                        <i class="fas fa-trash-alt me-1"></i> Bulk Delete
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-light btn-bulk-deselect-payments px-2 py-1 font-11" title="Deselect All">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+
                             <!-- Payments DataTable -->
                             <div class="table-responsive table-border">
                                 <table class="table table-striped data-table job-table w-100" id="paymentsTable">
                                     <thead class="table-theme text-white text-nowrap">
                                         <tr>
+                                            <th style="width: 40px;" class="text-center">
+                                                <input type="checkbox" class="form-check-input bulk-select-all" id="bulkSelectAllPayments">
+                                            </th>
                                             <th style="width: 4%;">#</th>
                                             <th style="min-width: 150px;" class="text-nowrap">Receipt No</th>
                                             <th style="min-width: 150px;" class="text-nowrap">Invoice Reference</th>
@@ -1025,6 +1066,65 @@
         </div>
     </div>
 
+    <!-- BULK EDIT BILLS MODAL -->
+    <div class="modal fade" id="bulkEditBillModal" tabindex="-1" aria-labelledby="bulkEditBillModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header button-color text-white">
+                    <div>
+                        <h5 class="modal-title text-white" id="bulkEditBillModalLabel">
+                            <i class="fas fa-edit me-1"></i> Bulk Edit Invoices
+                        </h5>
+                        <small class="text-white-50">Updating <span id="bulkEditCountBadgeBills" class="badge bg-warning text-dark fw-bold"></span></small>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="bulkEditBillForm">
+                    <div class="modal-body p-4">
+                        <div class="alert alert-info py-2 px-3 font-12 mb-3">
+                            <i class="fas fa-info-circle me-1"></i> <strong>Note:</strong> Only filled fields will be updated across all selected invoices. Leave fields empty to keep their current values.
+                        </div>
+                        <div id="bulkEditBillErrors" class="alert alert-danger d-none py-2 px-3 font-12"></div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold font-13">Invoice / Bill Type</label>
+                                <select name="bill_type" class="form-select">
+                                    <option value="">-- Keep Existing --</option>
+                                    <option value="Monthly Rent">Monthly Rent</option>
+                                    <option value="Electricity">Electricity</option>
+                                    <option value="Maintenance">Maintenance</option>
+                                    <option value="Security Deposit">Security Deposit</option>
+                                    <option value="Mess / Food">Mess / Food</option>
+                                    <option value="Water">Water</option>
+                                    <option value="Penalty / Fine">Penalty / Fine</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold font-13">Billing Month</label>
+                                <input type="text" name="billing_month" class="form-control" placeholder="e.g. November 2026">
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold font-13">Payment Due Date</label>
+                                <input type="date" name="due_date" class="form-control" placeholder="Keep Existing">
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold font-13">General Notes / Remarks</label>
+                                <textarea name="notes" class="form-control" rows="2" placeholder="Leave empty to keep existing notes"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn button-color text-white" id="btnApplyBulkEditBills">
+                            <i class="fas fa-check-double me-1"></i> Apply Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     @push('footer_content')
         <script src="https://cdn.datatables.net/1.11.4/js/jquery.dataTables.min.js"></script>
         <script src="https://cdn.datatables.net/1.11.4/js/dataTables.bootstrap5.min.js"></script>
@@ -1120,6 +1220,7 @@
                         }
                     },
                     columns: [
+                        { data: 'checkbox', name: 'checkbox', orderable: false, searchable: false, className: 'text-center' },
                         { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
                         { data: 'bill_number_badge', name: 'bill_number' },
                         { data: 'tenant_room', name: 'tenant_id' },
@@ -1130,7 +1231,7 @@
                         { data: 'status_badge', name: 'status' },
                         { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-center' }
                     ],
-                    order: [[1, 'desc']],
+                    order: [[2, 'desc']],
                     language: {
                         search: "",
                         searchPlaceholder: "Search invoices...",
@@ -1185,6 +1286,7 @@
                         }
                     },
                     columns: [
+                        { data: 'checkbox', name: 'checkbox', orderable: false, searchable: false, className: 'text-center' },
                         { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
                         { data: 'payment_number_badge', name: 'payment_number' },
                         { data: 'bill_reference', name: 'bill_id' },
@@ -1194,7 +1296,7 @@
                         { data: 'payment_method_badge', name: 'payment_method' },
                         { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-center' }
                     ],
-                    order: [[1, 'desc']],
+                    order: [[2, 'desc']],
                     language: {
                         search: "",
                         searchPlaceholder: "Search payment records...",
@@ -2291,6 +2393,259 @@
                                         }
                                         Toast.fire({ icon: 'success', title: res.message });
                                     }
+                                }
+                            });
+                        }
+                    });
+                });
+
+                // =========================================================================
+                // BULK SELECTION, BULK EDIT & BULK DELETE FOR INVOICES (BILLS)
+                // =========================================================================
+                function updateBulkBarBills() {
+                    var checkedBoxes = $('#billsTable tbody .bulk-select-row:checked');
+                    var count = checkedBoxes.length;
+                    var totalBoxes = $('#billsTable tbody .bulk-select-row').length;
+
+                    if (count > 0) {
+                        $('#bulkSelectedCountBills').text(count + ' Selected');
+                        $('#bulkActionBarBills').removeClass('d-none').addClass('d-flex');
+                    } else {
+                        $('#bulkActionBarBills').removeClass('d-flex').addClass('d-none');
+                    }
+
+                    if (totalBoxes > 0 && count === totalBoxes) {
+                        $('#bulkSelectAllBills').prop('checked', true).prop('indeterminate', false);
+                    } else if (count > 0) {
+                        $('#bulkSelectAllBills').prop('checked', false).prop('indeterminate', true);
+                    } else {
+                        $('#bulkSelectAllBills').prop('checked', false).prop('indeterminate', false);
+                    }
+                }
+
+                $(document).on('change', '#bulkSelectAllBills', function() {
+                    var isChecked = $(this).is(':checked');
+                    $('#billsTable tbody .bulk-select-row').prop('checked', isChecked);
+                    updateBulkBarBills();
+                });
+
+                $(document).on('change', '#billsTable tbody .bulk-select-row', function() {
+                    updateBulkBarBills();
+                });
+
+                billsTable.on('draw', function() {
+                    updateBulkBarBills();
+                });
+
+                $(document).on('click', '.btn-bulk-deselect-bills', function() {
+                    $('#billsTable tbody .bulk-select-row').prop('checked', false);
+                    $('#bulkSelectAllBills').prop('checked', false).prop('indeterminate', false);
+                    updateBulkBarBills();
+                });
+
+                // Bulk Delete Bills
+                $(document).on('click', '.btn-bulk-delete-bills', function() {
+                    var ids = [];
+                    $('#billsTable tbody .bulk-select-row:checked').each(function() {
+                        ids.push($(this).val());
+                    });
+
+                    if (ids.length === 0) {
+                        Toast.fire({ icon: 'warning', title: 'No invoices selected.' });
+                        return;
+                    }
+
+                    Swal.fire({
+                        title: "Delete " + ids.length + " Invoice(s)?",
+                        text: "Are you sure you want to delete these " + ids.length + " selected invoice(s) and any recorded payments? This action cannot be undone.",
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#f34e4e",
+                        cancelButtonColor: "#6c757d",
+                        confirmButtonText: "Yes, delete " + ids.length + " invoices"
+                    }).then(function(result) {
+                        if (result.isConfirmed) {
+                            $.ajax({
+                                type: "POST",
+                                url: "{{ route('billing.bills.bulk_delete') }}",
+                                data: {
+                                    ids: ids,
+                                    _token: "{{ csrf_token() }}"
+                                },
+                                headers: {
+                                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                                },
+                                success: function(res) {
+                                    if (res.success) {
+                                        Toast.fire({ icon: 'success', title: res.message });
+                                        $('#bulkSelectAllBills').prop('checked', false);
+                                        billsTable.ajax.reload(null, false);
+                                        paymentsTable.ajax.reload(null, false);
+                                        if (res.stats) updateStatsCards(res.stats);
+                                    } else {
+                                        Toast.fire({ icon: 'error', title: res.message || 'Bulk delete failed.' });
+                                    }
+                                },
+                                error: function(xhr) {
+                                    var msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Error performing bulk delete.';
+                                    Toast.fire({ icon: 'error', title: msg });
+                                }
+                            });
+                        }
+                    });
+                });
+
+                // Bulk Edit Bills
+                $(document).on('click', '.btn-bulk-edit-bills', function() {
+                    var count = $('#billsTable tbody .bulk-select-row:checked').length;
+                    if (count === 0) {
+                        Toast.fire({ icon: 'warning', title: 'No invoices selected.' });
+                        return;
+                    }
+                    $('#bulkEditCountBadgeBills').text(count + ' selected');
+                    $('#bulkEditBillForm')[0].reset();
+                    $('#bulkEditBillErrors').addClass('d-none').html('');
+                    $('#bulkEditBillModal').modal('show');
+                });
+
+                $('#bulkEditBillForm').on('submit', function(e) {
+                    e.preventDefault();
+                    var ids = [];
+                    $('#billsTable tbody .bulk-select-row:checked').each(function() {
+                        ids.push($(this).val());
+                    });
+
+                    if (ids.length === 0) {
+                        Toast.fire({ icon: 'warning', title: 'No invoices selected.' });
+                        return;
+                    }
+
+                    var formData = $(this).serializeArray();
+                    formData.push({ name: '_token', value: "{{ csrf_token() }}" });
+                    ids.forEach(function(id) {
+                        formData.push({ name: 'ids[]', value: id });
+                    });
+
+                    var $btn = $('#btnApplyBulkEditBills');
+                    $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Updating...');
+
+                    $.ajax({
+                        type: "POST",
+                        url: "{{ route('billing.bills.bulk_update') }}",
+                        data: formData,
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        },
+                        success: function(res) {
+                            $btn.prop('disabled', false).html('<i class="fas fa-check-double me-1"></i> Apply Changes');
+                            if (res.success) {
+                                $('#bulkEditBillModal').modal('hide');
+                                Toast.fire({ icon: 'success', title: res.message });
+                                $('#bulkSelectAllBills').prop('checked', false);
+                                billsTable.ajax.reload(null, false);
+                                if (res.stats) updateStatsCards(res.stats);
+                            } else {
+                                $('#bulkEditBillErrors').removeClass('d-none').html(res.message || 'Bulk update failed.');
+                            }
+                        },
+                        error: function(xhr) {
+                            $btn.prop('disabled', false).html('<i class="fas fa-check-double me-1"></i> Apply Changes');
+                            var msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Failed to update selected invoices.';
+                            $('#bulkEditBillErrors').removeClass('d-none').html(msg);
+                        }
+                    });
+                });
+
+                // =========================================================================
+                // BULK SELECTION & BULK DELETE FOR PAYMENT RECEIPTS
+                // =========================================================================
+                function updateBulkBarPayments() {
+                    var checkedBoxes = $('#paymentsTable tbody .bulk-select-row:checked');
+                    var count = checkedBoxes.length;
+                    var totalBoxes = $('#paymentsTable tbody .bulk-select-row').length;
+
+                    if (count > 0) {
+                        $('#bulkSelectedCountPayments').text(count + ' Selected');
+                        $('#bulkActionBarPayments').removeClass('d-none').addClass('d-flex');
+                    } else {
+                        $('#bulkActionBarPayments').removeClass('d-flex').addClass('d-none');
+                    }
+
+                    if (totalBoxes > 0 && count === totalBoxes) {
+                        $('#bulkSelectAllPayments').prop('checked', true).prop('indeterminate', false);
+                    } else if (count > 0) {
+                        $('#bulkSelectAllPayments').prop('checked', false).prop('indeterminate', true);
+                    } else {
+                        $('#bulkSelectAllPayments').prop('checked', false).prop('indeterminate', false);
+                    }
+                }
+
+                $(document).on('change', '#bulkSelectAllPayments', function() {
+                    var isChecked = $(this).is(':checked');
+                    $('#paymentsTable tbody .bulk-select-row').prop('checked', isChecked);
+                    updateBulkBarPayments();
+                });
+
+                $(document).on('change', '#paymentsTable tbody .bulk-select-row', function() {
+                    updateBulkBarPayments();
+                });
+
+                paymentsTable.on('draw', function() {
+                    updateBulkBarPayments();
+                });
+
+                $(document).on('click', '.btn-bulk-deselect-payments', function() {
+                    $('#paymentsTable tbody .bulk-select-row').prop('checked', false);
+                    $('#bulkSelectAllPayments').prop('checked', false).prop('indeterminate', false);
+                    updateBulkBarPayments();
+                });
+
+                // Bulk Delete Payments
+                $(document).on('click', '.btn-bulk-delete-payments', function() {
+                    var ids = [];
+                    $('#paymentsTable tbody .bulk-select-row:checked').each(function() {
+                        ids.push($(this).val());
+                    });
+
+                    if (ids.length === 0) {
+                        Toast.fire({ icon: 'warning', title: 'No payment receipts selected.' });
+                        return;
+                    }
+
+                    Swal.fire({
+                        title: "Delete " + ids.length + " Payment Receipt(s)?",
+                        text: "Are you sure you want to delete these " + ids.length + " selected payment receipt(s)? The related invoices will have their paid amounts and balances recalculated.",
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#f34e4e",
+                        cancelButtonColor: "#6c757d",
+                        confirmButtonText: "Yes, delete " + ids.length + " receipts"
+                    }).then(function(result) {
+                        if (result.isConfirmed) {
+                            $.ajax({
+                                type: "POST",
+                                url: "{{ route('billing.payments.bulk_delete') }}",
+                                data: {
+                                    ids: ids,
+                                    _token: "{{ csrf_token() }}"
+                                },
+                                headers: {
+                                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                                },
+                                success: function(res) {
+                                    if (res.success) {
+                                        Toast.fire({ icon: 'success', title: res.message });
+                                        $('#bulkSelectAllPayments').prop('checked', false);
+                                        paymentsTable.ajax.reload(null, false);
+                                        billsTable.ajax.reload(null, false);
+                                        if (res.stats) updateStatsCards(res.stats);
+                                    } else {
+                                        Toast.fire({ icon: 'error', title: res.message || 'Bulk delete failed.' });
+                                    }
+                                },
+                                error: function(xhr) {
+                                    var msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Error performing bulk delete.';
+                                    Toast.fire({ icon: 'error', title: msg });
                                 }
                             });
                         }

@@ -42,6 +42,9 @@ class SalaryController extends Controller
 
             return DataTables::of($query)
                 ->addIndexColumn()
+                ->addColumn('checkbox', function ($row) {
+                    return '<input type="checkbox" class="form-check-input bulk-select-row" value="' . $row->id . '">';
+                })
                 ->addColumn('month_badge', function ($row) {
                     $monthText = $row->formatted_salary_month;
                     return '<span class="badge bg-primary-subtle text-primary border border-primary px-2 py-1 font-12 fw-semibold">
@@ -124,7 +127,7 @@ class SalaryController extends Controller
 
                     return '<div class="btn-group btn-group-sm" role="group">' . $voucherBtn . $editBtn . $delBtn . '</div>';
                 })
-                ->rawColumns(['month_badge', 'recipient_and_title', 'breakdown', 'net_salary_display', 'credit_details', 'status_badge', 'payslip_link', 'action'])
+                ->rawColumns(['checkbox', 'month_badge', 'recipient_and_title', 'breakdown', 'net_salary_display', 'credit_details', 'status_badge', 'payslip_link', 'action'])
                 ->make(true);
         }
 
@@ -369,6 +372,67 @@ class SalaryController extends Controller
                 'created_at' => $salary->created_at ? $salary->created_at->format('d M, Y h:i A') : '-',
                 'slip_url' => $salary->payslip_document ? asset('storage/' . $salary->payslip_document) : null,
             ]
+        ]);
+    }
+
+    /**
+     * Bulk Delete Salary Records
+     */
+    public function bulkDelete(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer|exists:salaries,id',
+        ]);
+
+        $count = count($validated['ids']);
+        Salary::whereIn('id', $validated['ids'])->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => "Successfully deleted {$count} salary record(s)!"
+        ]);
+    }
+
+    /**
+     * Bulk Update Salary Records
+     */
+    public function bulkUpdate(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer|exists:salaries,id',
+            'status' => 'nullable|string|in:credited,pending,partial',
+            'salary_month' => 'nullable|string|max:7',
+            'credit_date' => 'nullable|date',
+            'payment_method' => 'nullable|string|max:50',
+            'credited_to_bank' => 'nullable|string|max:150',
+            'recipient_name' => 'nullable|string|max:150',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        $updateData = [];
+        if (!empty($validated['status'])) $updateData['status'] = $validated['status'];
+        if (!empty($validated['salary_month'])) $updateData['salary_month'] = $validated['salary_month'];
+        if (!empty($validated['credit_date'])) $updateData['credit_date'] = $validated['credit_date'];
+        if (!empty($validated['payment_method'])) $updateData['payment_method'] = $validated['payment_method'];
+        if (!empty($validated['credited_to_bank'])) $updateData['credited_to_bank'] = $validated['credited_to_bank'];
+        if (!empty($validated['recipient_name'])) $updateData['recipient_name'] = $validated['recipient_name'];
+        if (isset($validated['notes']) && $validated['notes'] !== '') $updateData['notes'] = $validated['notes'];
+
+        if (empty($updateData)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No fields provided to update.'
+            ], 422);
+        }
+
+        $count = count($validated['ids']);
+        Salary::whereIn('id', $validated['ids'])->update($updateData);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Successfully updated {$count} salary record(s)!"
         ]);
     }
 }

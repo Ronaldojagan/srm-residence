@@ -107,6 +107,8 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'user-access:' . Use
 
     // Expenses
     Route::controller(ExpenseController::class)->prefix('expenses')->name('expenses.')->group(function () {
+        Route::post('/bulk-delete', 'bulkDelete')->name('bulk_delete');
+        Route::post('/bulk-update', 'bulkUpdate')->name('bulk_update');
         Route::get('/rooms', 'roomExpenses')->name('rooms');
         Route::get('/rooms/export', 'exportRoomExpenses')->name('rooms.export');
         Route::get('/personal', 'personalExpenses')->name('personal');
@@ -120,6 +122,8 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'user-access:' . Use
 
     // Loans & EMI Management
     Route::controller(LoanController::class)->prefix('loans')->name('loans.')->group(function () {
+        Route::post('/bulk-delete', 'bulkDelete')->name('bulk_delete');
+        Route::post('/bulk-update', 'bulkUpdate')->name('bulk_update');
         Route::get('/', 'index')->name('index');
         Route::get('/stats', 'getStatsAjax')->name('stats');
         Route::post('/', 'store')->name('store');
@@ -135,6 +139,8 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'user-access:' . Use
 
     // Salary Management (Owner / Personal Salary)
     Route::controller(SalaryController::class)->prefix('salary')->name('salary.')->group(function () {
+        Route::post('/bulk-delete', 'bulkDelete')->name('bulk_delete');
+        Route::post('/bulk-update', 'bulkUpdate')->name('bulk_update');
         Route::get('/', 'index')->name('index');
         Route::get('/stats', 'getStatsAjax')->name('stats');
         Route::post('/', 'store')->name('store');
@@ -150,6 +156,8 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'user-access:' . Use
         Route::get('/', 'index')->name('index');
         
         // Journal
+        Route::post('/journal/bulk-delete', 'bulkDeleteJournalEntries')->name('journal.bulk_delete');
+        Route::post('/journal/bulk-update', 'bulkUpdateJournalEntries')->name('journal.bulk_update');
         Route::get('/journal', 'journal')->name('journal');
         Route::get('/journal/data', 'journalData')->name('journal.data');
         Route::get('/journal/stats', 'journalStats')->name('journal.stats');
@@ -172,6 +180,9 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'user-access:' . Use
 
     // Bills & Payments
     Route::controller(BillingController::class)->prefix('billing')->name('billing.')->group(function () {
+        Route::post('/bills/bulk-delete', 'bulkDeleteBills')->name('bills.bulk_delete');
+        Route::post('/bills/bulk-update', 'bulkUpdateBills')->name('bills.bulk_update');
+        Route::post('/payments/bulk-delete', 'bulkDeletePayments')->name('payments.bulk_delete');
         Route::get('/', 'index')->name('index');
         Route::get('/stats', 'getStats')->name('stats');
         Route::get('/bills-data', 'billsData')->name('bills.data');

@@ -193,11 +193,33 @@
                 </div>
             </div>
 
+            <!-- Modern Bulk Action Bar for Salary -->
+            <div id="bulkActionBarSalary" class="d-none align-items-center justify-content-between p-2 px-3 mb-2 rounded-3" style="background: linear-gradient(135deg, #0a5858 0%, #0d7373 100%); color: #fff; box-shadow: 0 4px 12px rgba(10, 88, 88, 0.25);">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-white text-dark fw-bold px-2 py-1 font-12" id="bulkSelectedCountSalary">0 Selected</span>
+                    <span class="font-12 text-white-50 d-none d-sm-inline">Actions for selected salary credits:</span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <button type="button" class="btn btn-warning btn-sm fw-semibold btn-bulk-edit-salary px-3 py-1 font-12">
+                        <i class="fas fa-edit me-1"></i> Bulk Edit
+                    </button>
+                    <button type="button" class="btn btn-danger btn-sm fw-semibold btn-bulk-delete-salary px-3 py-1 font-12">
+                        <i class="fas fa-trash-alt me-1"></i> Bulk Delete
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-light btn-bulk-deselect-salary px-2 py-1 font-11" title="Deselect All">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+
             <!-- Salary Table -->
             <div class="table-responsive">
                 <table id="salaryTable" class="table table-hover align-middle mb-0 w-100">
                     <thead class="table-light">
                         <tr>
+                            <th style="width: 40px;" class="text-center">
+                                <input type="checkbox" class="form-check-input bulk-select-all" id="bulkSelectAllSalary">
+                            </th>
                             <th width="4%">#</th>
                             <th width="14%">Salary Month</th>
                             <th width="22%">Family Earner & Title</th>
@@ -573,6 +595,80 @@
         </div>
     </div>
 
+    <!-- BULK EDIT SALARY MODAL -->
+    <div class="modal fade" id="bulkEditSalaryModal" tabindex="-1" aria-labelledby="bulkEditSalaryModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header button-color text-white">
+                    <div>
+                        <h5 class="modal-title text-white" id="bulkEditSalaryModalLabel">
+                            <i class="fas fa-edit me-1"></i> Bulk Edit Salary Credits
+                        </h5>
+                        <small class="text-white-50">Updating <span id="bulkEditCountBadgeSalary" class="badge bg-warning text-dark fw-bold"></span></small>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="bulkEditSalaryForm">
+                    <div class="modal-body p-4">
+                        <div class="alert alert-info py-2 px-3 font-12 mb-3">
+                            <i class="fas fa-info-circle me-1"></i> <strong>Note:</strong> Only filled fields will be updated across all selected salary credits. Leave fields empty to keep their current values.
+                        </div>
+                        <div id="bulkEditSalaryErrors" class="alert alert-danger d-none py-2 px-3 font-12"></div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold font-13">Credit Status</label>
+                                <select name="status" class="form-select">
+                                    <option value="">-- Keep Existing --</option>
+                                    <option value="credited">Credited</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="partial">Partial</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold font-13">Salary Month</label>
+                                <input type="month" name="salary_month" class="form-control" placeholder="Keep Existing">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold font-13">Credit Date</label>
+                                <input type="date" name="credit_date" class="form-control" placeholder="Keep Existing">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold font-13">Payment Mode</label>
+                                <select name="payment_method" class="form-select">
+                                    <option value="">-- Keep Existing --</option>
+                                    <option value="Bank Transfer">Bank Transfer</option>
+                                    <option value="UPI">UPI</option>
+                                    <option value="Cash">Cash</option>
+                                    <option value="Cheque">Cheque</option>
+                                    <option value="Direct Deposit">Direct Deposit</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold font-13">Family Earner / Recipient</label>
+                                <input type="text" name="recipient_name" class="form-control" placeholder="Leave empty to keep existing">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold font-13">Credited Bank A/C</label>
+                                <input type="text" name="credited_to_bank" class="form-control" placeholder="e.g. HDFC Bank, SBI...">
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold font-13">General Notes / Remarks</label>
+                                <textarea name="notes" class="form-control" rows="2" placeholder="Leave empty to keep existing notes"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn button-color text-white" id="btnApplyBulkEditSalary">
+                            <i class="fas fa-check-double me-1"></i> Apply Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     @push('footer_content')
         <script src="{{ url('assets/libs/sweetalert2/sweetalert2.min.js') }}"></script>
         <script src="https://cdn.datatables.net/1.11.4/js/jquery.dataTables.min.js"></script>
@@ -595,7 +691,7 @@
                     processing: true,
                     serverSide: true,
                     responsive: true,
-                    order: [[0, 'desc']],
+                    order: [[1, 'desc']],
                     ajax: {
                         url: "{{ route('salary.index') }}",
                         data: function(d) {
@@ -607,6 +703,7 @@
                         }
                     },
                     columns: [
+                        { data: 'checkbox', name: 'checkbox', orderable: false, searchable: false, className: 'text-center' },
                         { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
                         { data: 'month_badge', name: 'salary_month' },
                         { data: 'recipient_and_title', name: 'recipient_name' },
@@ -872,6 +969,162 @@
                         },
                         error: function() {
                             Toast.fire({ icon: 'error', title: 'Failed to load salary voucher.' });
+                        }
+                    });
+                });
+
+                // =========================================================================
+                // 4. BULK SELECTION, BULK EDIT & BULK DELETE FOR SALARY
+                // =========================================================================
+                function updateBulkBarSalary() {
+                    var checkedBoxes = $('#salaryTable tbody .bulk-select-row:checked');
+                    var count = checkedBoxes.length;
+                    var totalBoxes = $('#salaryTable tbody .bulk-select-row').length;
+
+                    if (count > 0) {
+                        $('#bulkSelectedCountSalary').text(count + ' Selected');
+                        $('#bulkActionBarSalary').removeClass('d-none').addClass('d-flex');
+                    } else {
+                        $('#bulkActionBarSalary').removeClass('d-flex').addClass('d-none');
+                    }
+
+                    if (totalBoxes > 0 && count === totalBoxes) {
+                        $('#bulkSelectAllSalary').prop('checked', true).prop('indeterminate', false);
+                    } else if (count > 0) {
+                        $('#bulkSelectAllSalary').prop('checked', false).prop('indeterminate', true);
+                    } else {
+                        $('#bulkSelectAllSalary').prop('checked', false).prop('indeterminate', false);
+                    }
+                }
+
+                $(document).on('change', '#bulkSelectAllSalary', function() {
+                    var isChecked = $(this).is(':checked');
+                    $('#salaryTable tbody .bulk-select-row').prop('checked', isChecked);
+                    updateBulkBarSalary();
+                });
+
+                $(document).on('change', '#salaryTable tbody .bulk-select-row', function() {
+                    updateBulkBarSalary();
+                });
+
+                salaryTable.on('draw', function() {
+                    updateBulkBarSalary();
+                });
+
+                $(document).on('click', '.btn-bulk-deselect-salary', function() {
+                    $('#salaryTable tbody .bulk-select-row').prop('checked', false);
+                    $('#bulkSelectAllSalary').prop('checked', false).prop('indeterminate', false);
+                    updateBulkBarSalary();
+                });
+
+                // Bulk Delete Salary
+                $(document).on('click', '.btn-bulk-delete-salary', function() {
+                    var ids = [];
+                    $('#salaryTable tbody .bulk-select-row:checked').each(function() {
+                        ids.push($(this).val());
+                    });
+
+                    if (ids.length === 0) {
+                        Toast.fire({ icon: 'warning', title: 'No salary records selected.' });
+                        return;
+                    }
+
+                    Swal.fire({
+                        title: "Delete " + ids.length + " Salary Record(s)?",
+                        text: "Are you sure you want to delete these " + ids.length + " selected salary credits? This action cannot be undone.",
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#f34e4e",
+                        cancelButtonColor: "#6c757d",
+                        confirmButtonText: "Yes, delete " + ids.length + " records"
+                    }).then(function(result) {
+                        if (result.isConfirmed) {
+                            $.ajax({
+                                type: "POST",
+                                url: "{{ route('salary.bulk_delete') }}",
+                                data: {
+                                    ids: ids,
+                                    _token: "{{ csrf_token() }}"
+                                },
+                                headers: {
+                                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                                },
+                                success: function(res) {
+                                    if (res.success) {
+                                        Toast.fire({ icon: 'success', title: res.message });
+                                        $('#bulkSelectAllSalary').prop('checked', false);
+                                        salaryTable.draw();
+                                        reloadStats();
+                                    } else {
+                                        Toast.fire({ icon: 'error', title: res.message || 'Bulk delete failed.' });
+                                    }
+                                },
+                                error: function(xhr) {
+                                    var msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Error performing bulk delete.';
+                                    Toast.fire({ icon: 'error', title: msg });
+                                }
+                            });
+                        }
+                    });
+                });
+
+                // Bulk Edit Salary
+                $(document).on('click', '.btn-bulk-edit-salary', function() {
+                    var count = $('#salaryTable tbody .bulk-select-row:checked').length;
+                    if (count === 0) {
+                        Toast.fire({ icon: 'warning', title: 'No salary records selected.' });
+                        return;
+                    }
+                    $('#bulkEditCountBadgeSalary').text(count + ' selected');
+                    $('#bulkEditSalaryForm')[0].reset();
+                    $('#bulkEditSalaryErrors').addClass('d-none').html('');
+                    $('#bulkEditSalaryModal').modal('show');
+                });
+
+                $('#bulkEditSalaryForm').on('submit', function(e) {
+                    e.preventDefault();
+                    var ids = [];
+                    $('#salaryTable tbody .bulk-select-row:checked').each(function() {
+                        ids.push($(this).val());
+                    });
+
+                    if (ids.length === 0) {
+                        Toast.fire({ icon: 'warning', title: 'No salary records selected.' });
+                        return;
+                    }
+
+                    var formData = $(this).serializeArray();
+                    formData.push({ name: '_token', value: "{{ csrf_token() }}" });
+                    ids.forEach(function(id) {
+                        formData.push({ name: 'ids[]', value: id });
+                    });
+
+                    var $btn = $('#btnApplyBulkEditSalary');
+                    $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Updating...');
+
+                    $.ajax({
+                        type: "POST",
+                        url: "{{ route('salary.bulk_update') }}",
+                        data: formData,
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        },
+                        success: function(res) {
+                            $btn.prop('disabled', false).html('<i class="fas fa-check-double me-1"></i> Apply Changes');
+                            if (res.success) {
+                                $('#bulkEditSalaryModal').modal('hide');
+                                Toast.fire({ icon: 'success', title: res.message });
+                                $('#bulkSelectAllSalary').prop('checked', false);
+                                salaryTable.draw();
+                                reloadStats();
+                            } else {
+                                $('#bulkEditSalaryErrors').removeClass('d-none').html(res.message || 'Bulk update failed.');
+                            }
+                        },
+                        error: function(xhr) {
+                            $btn.prop('disabled', false).html('<i class="fas fa-check-double me-1"></i> Apply Changes');
+                            var msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Failed to update selected salary records.';
+                            $('#bulkEditSalaryErrors').removeClass('d-none').html(msg);
                         }
                     });
                 });

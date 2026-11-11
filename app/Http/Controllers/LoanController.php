@@ -42,6 +42,9 @@ class LoanController extends Controller
 
             return DataTables::of($query)
                 ->addIndexColumn()
+                ->addColumn('checkbox', function ($row) {
+                    return '<input type="checkbox" class="form-check-input bulk-select-row" value="' . $row->id . '">';
+                })
                 ->addColumn('loan_title_badge', function ($row) {
                     $acc = $row->account_number ? '<small class="text-muted d-block font-11"><i class="fas fa-hashtag me-1"></i>A/C: ' . e($row->account_number) . '</small>' : '';
                     $bankDebit = $row->bank_account_debited ? '<small class="text-secondary d-block font-11"><i class="fas fa-university me-1"></i>Debited: ' . e($row->bank_account_debited) . '</small>' : '';
@@ -169,7 +172,7 @@ class LoanController extends Controller
 
                     return '<div class="btn-group btn-group-sm" role="group">' . $payBtn . $scheduleBtn . $editBtn . $delBtn . '</div>';
                 })
-                ->rawColumns(['loan_title_badge', 'lender_and_type', 'principal_and_emi', 'repayment_progress', 'next_due_date', 'status_badge', 'action'])
+                ->rawColumns(['checkbox', 'loan_title_badge', 'lender_and_type', 'principal_and_emi', 'repayment_progress', 'next_due_date', 'status_badge', 'action'])
                 ->make(true);
         }
 
@@ -651,6 +654,68 @@ class LoanController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'EMI installment #' . $inst . ' deleted successfully!'
+        ]);
+    }
+
+    /**
+     * Bulk Delete Loans
+     */
+    public function bulkDelete(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer|exists:loans,id',
+        ]);
+
+        $count = count($validated['ids']);
+        \Illuminate\Support\Facades\DB::transaction(function () use ($validated) {
+            LoanEmi::whereIn('loan_id', $validated['ids'])->delete();
+            Loan::whereIn('id', $validated['ids'])->delete();
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => "Successfully deleted {$count} loan account(s) and associated EMIs!"
+        ]);
+    }
+
+    /**
+     * Bulk Update Loans
+     */
+    public function bulkUpdate(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer|exists:loans,id',
+            'status' => 'nullable|string|in:active,closed,overdue',
+            'lender_name' => 'nullable|string|max:150',
+            'loan_type' => 'nullable|string|in:business,personal,property,appliance,vehicle,hand_loan,other',
+            'repayment_frequency' => 'nullable|string|in:monthly,weekly',
+            'bank_account_debited' => 'nullable|string|max:150',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        $updateData = [];
+        if (!empty($validated['status'])) $updateData['status'] = $validated['status'];
+        if (!empty($validated['lender_name'])) $updateData['lender_name'] = $validated['lender_name'];
+        if (!empty($validated['loan_type'])) $updateData['loan_type'] = $validated['loan_type'];
+        if (!empty($validated['repayment_frequency'])) $updateData['repayment_frequency'] = $validated['repayment_frequency'];
+        if (!empty($validated['bank_account_debited'])) $updateData['bank_account_debited'] = $validated['bank_account_debited'];
+        if (isset($validated['notes']) && $validated['notes'] !== '') $updateData['notes'] = $validated['notes'];
+
+        if (empty($updateData)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No fields provided to update.'
+            ], 422);
+        }
+
+        $count = count($validated['ids']);
+        Loan::whereIn('id', $validated['ids'])->update($updateData);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Successfully updated {$count} loan account(s)!"
         ]);
     }
 }

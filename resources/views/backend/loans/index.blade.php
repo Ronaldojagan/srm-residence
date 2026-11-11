@@ -213,11 +213,33 @@
                         </div>
                     </div>
 
+                    <!-- Modern Bulk Action Bar for Loans -->
+                    <div id="bulkActionBarLoans" class="d-none align-items-center justify-content-between p-2 px-3 mb-2 rounded-3" style="background: linear-gradient(135deg, #0a5858 0%, #0d7373 100%); color: #fff; box-shadow: 0 4px 12px rgba(10, 88, 88, 0.25);">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-white text-dark fw-bold px-2 py-1 font-12" id="bulkSelectedCountLoans">0 Selected</span>
+                            <span class="font-12 text-white-50 d-none d-sm-inline">Actions for selected loan accounts:</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <button type="button" class="btn btn-warning btn-sm fw-semibold btn-bulk-edit-loans px-3 py-1 font-12">
+                                <i class="fas fa-edit me-1"></i> Bulk Edit
+                            </button>
+                            <button type="button" class="btn btn-danger btn-sm fw-semibold btn-bulk-delete-loans px-3 py-1 font-12">
+                                <i class="fas fa-trash-alt me-1"></i> Bulk Delete
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-light btn-bulk-deselect-loans px-2 py-1 font-11" title="Deselect All">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+
                     <!-- Loans Table -->
                     <div class="table-responsive">
                         <table id="loansTable" class="table table-hover align-middle mb-0 w-100">
                             <thead class="table-light">
                                 <tr>
+                                    <th style="width: 40px;" class="text-center">
+                                        <input type="checkbox" class="form-check-input bulk-select-all" id="bulkSelectAllLoans">
+                                    </th>
                                     <th width="4%">#</th>
                                     <th width="19%">Loan / Title</th>
                                     <th width="16%">Lender & Cycle</th>
@@ -790,6 +812,82 @@
         </div>
     </div>
 
+    <!-- BULK EDIT LOANS MODAL -->
+    <div class="modal fade" id="bulkEditLoanModal" tabindex="-1" aria-labelledby="bulkEditLoanModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header button-color text-white">
+                    <div>
+                        <h5 class="modal-title text-white" id="bulkEditLoanModalLabel">
+                            <i class="fas fa-edit me-1"></i> Bulk Edit Loans
+                        </h5>
+                        <small class="text-white-50">Updating <span id="bulkEditCountBadgeLoans" class="badge bg-warning text-dark fw-bold"></span></small>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="bulkEditLoanForm">
+                    <div class="modal-body p-4">
+                        <div class="alert alert-info py-2 px-3 font-12 mb-3">
+                            <i class="fas fa-info-circle me-1"></i> <strong>Note:</strong> Only filled fields will be updated across all selected loan accounts. Leave fields empty to keep their current values.
+                        </div>
+                        <div id="bulkEditLoanErrors" class="alert alert-danger d-none py-2 px-3 font-12"></div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold font-13">Loan Status</label>
+                                <select name="status" class="form-select">
+                                    <option value="">-- Keep Existing --</option>
+                                    <option value="active">Active (Ongoing)</option>
+                                    <option value="closed">Closed / Fully Settled</option>
+                                    <option value="overdue">Overdue</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold font-13">Repayment Cycle</label>
+                                <select name="repayment_frequency" class="form-select">
+                                    <option value="">-- Keep Existing --</option>
+                                    <option value="monthly">Monthly Repayment</option>
+                                    <option value="weekly">Weekly Repayment</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold font-13">Loan Category</label>
+                                <select name="loan_type" class="form-select">
+                                    <option value="">-- Keep Existing --</option>
+                                    <option value="business">Business Loan</option>
+                                    <option value="personal">Personal Loan</option>
+                                    <option value="property">Property / Mortgage</option>
+                                    <option value="appliance">Appliance / Electronics</option>
+                                    <option value="vehicle">Vehicle Loan</option>
+                                    <option value="hand_loan">Hand Loan / Private</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold font-13">Lender / Bank Name</label>
+                                <input type="text" name="lender_name" class="form-control" placeholder="Leave empty to keep existing">
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold font-13">Debited Bank Account</label>
+                                <input type="text" name="bank_account_debited" class="form-control" placeholder="e.g. HDFC Current A/C - 502000...">
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold font-13">General Notes / Remarks</label>
+                                <textarea name="notes" class="form-control" rows="2" placeholder="Leave empty to keep existing notes"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn button-color text-white" id="btnApplyBulkEditLoans">
+                            <i class="fas fa-check-double me-1"></i> Apply Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     @push('footer_content')
         <script src="{{ url('assets/libs/sweetalert2/sweetalert2.min.js') }}"></script>
         <script src="https://cdn.datatables.net/1.11.4/js/jquery.dataTables.min.js"></script>
@@ -812,7 +910,7 @@
                     processing: true,
                     serverSide: true,
                     responsive: true,
-                    order: [[0, 'desc']],
+                    order: [[1, 'desc']],
                     ajax: {
                         url: "{{ route('loans.index') }}",
                         data: function(d) {
@@ -824,6 +922,7 @@
                         }
                     },
                     columns: [
+                        { data: 'checkbox', name: 'checkbox', orderable: false, searchable: false, className: 'text-center' },
                         { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
                         { data: 'loan_title_badge', name: 'loan_title' },
                         { data: 'lender_and_type', name: 'lender_name' },
@@ -1416,6 +1515,163 @@
                     $('#viewScheduleModal').modal('hide');
                     $('#emi_loan_id').val(loanId).trigger('change');
                     $('#recordEmiModal').modal('show');
+                });
+
+                // =========================================================================
+                // 4. BULK SELECTION, BULK EDIT & BULK DELETE FOR LOANS
+                // =========================================================================
+                function updateBulkBarLoans() {
+                    var checkedBoxes = $('#loansTable tbody .bulk-select-row:checked');
+                    var count = checkedBoxes.length;
+                    var totalBoxes = $('#loansTable tbody .bulk-select-row').length;
+
+                    if (count > 0) {
+                        $('#bulkSelectedCountLoans').text(count + ' Selected');
+                        $('#bulkActionBarLoans').removeClass('d-none').addClass('d-flex');
+                    } else {
+                        $('#bulkActionBarLoans').removeClass('d-flex').addClass('d-none');
+                    }
+
+                    if (totalBoxes > 0 && count === totalBoxes) {
+                        $('#bulkSelectAllLoans').prop('checked', true).prop('indeterminate', false);
+                    } else if (count > 0) {
+                        $('#bulkSelectAllLoans').prop('checked', false).prop('indeterminate', true);
+                    } else {
+                        $('#bulkSelectAllLoans').prop('checked', false).prop('indeterminate', false);
+                    }
+                }
+
+                $(document).on('change', '#bulkSelectAllLoans', function() {
+                    var isChecked = $(this).is(':checked');
+                    $('#loansTable tbody .bulk-select-row').prop('checked', isChecked);
+                    updateBulkBarLoans();
+                });
+
+                $(document).on('change', '#loansTable tbody .bulk-select-row', function() {
+                    updateBulkBarLoans();
+                });
+
+                loansTable.on('draw', function() {
+                    updateBulkBarLoans();
+                });
+
+                $(document).on('click', '.btn-bulk-deselect-loans', function() {
+                    $('#loansTable tbody .bulk-select-row').prop('checked', false);
+                    $('#bulkSelectAllLoans').prop('checked', false).prop('indeterminate', false);
+                    updateBulkBarLoans();
+                });
+
+                // Bulk Delete Loans
+                $(document).on('click', '.btn-bulk-delete-loans', function() {
+                    var ids = [];
+                    $('#loansTable tbody .bulk-select-row:checked').each(function() {
+                        ids.push($(this).val());
+                    });
+
+                    if (ids.length === 0) {
+                        Toast.fire({ icon: 'warning', title: 'No loan accounts selected.' });
+                        return;
+                    }
+
+                    Swal.fire({
+                        title: "Delete " + ids.length + " Loan Account(s)?",
+                        text: "Are you sure you want to delete these " + ids.length + " selected loan(s) along with their installment history? This action cannot be undone.",
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#f34e4e",
+                        cancelButtonColor: "#6c757d",
+                        confirmButtonText: "Yes, delete " + ids.length + " loans"
+                    }).then(function(result) {
+                        if (result.isConfirmed) {
+                            $.ajax({
+                                type: "POST",
+                                url: "{{ route('loans.bulk_delete') }}",
+                                data: {
+                                    ids: ids,
+                                    _token: "{{ csrf_token() }}"
+                                },
+                                headers: {
+                                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                                },
+                                success: function(res) {
+                                    if (res.success) {
+                                        Toast.fire({ icon: 'success', title: res.message });
+                                        $('#bulkSelectAllLoans').prop('checked', false);
+                                        loansTable.draw();
+                                        emisTable.draw();
+                                        refreshStats();
+                                    } else {
+                                        Toast.fire({ icon: 'error', title: res.message || 'Bulk delete failed.' });
+                                    }
+                                },
+                                error: function(xhr) {
+                                    var msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Error performing bulk delete.';
+                                    Toast.fire({ icon: 'error', title: msg });
+                                }
+                            });
+                        }
+                    });
+                });
+
+                // Bulk Edit Loans
+                $(document).on('click', '.btn-bulk-edit-loans', function() {
+                    var count = $('#loansTable tbody .bulk-select-row:checked').length;
+                    if (count === 0) {
+                        Toast.fire({ icon: 'warning', title: 'No loan accounts selected.' });
+                        return;
+                    }
+                    $('#bulkEditCountBadgeLoans').text(count + ' selected');
+                    $('#bulkEditLoanForm')[0].reset();
+                    $('#bulkEditLoanErrors').addClass('d-none').html('');
+                    $('#bulkEditLoanModal').modal('show');
+                });
+
+                $('#bulkEditLoanForm').on('submit', function(e) {
+                    e.preventDefault();
+                    var ids = [];
+                    $('#loansTable tbody .bulk-select-row:checked').each(function() {
+                        ids.push($(this).val());
+                    });
+
+                    if (ids.length === 0) {
+                        Toast.fire({ icon: 'warning', title: 'No loan accounts selected.' });
+                        return;
+                    }
+
+                    var formData = $(this).serializeArray();
+                    formData.push({ name: '_token', value: "{{ csrf_token() }}" });
+                    ids.forEach(function(id) {
+                        formData.push({ name: 'ids[]', value: id });
+                    });
+
+                    var $btn = $('#btnApplyBulkEditLoans');
+                    $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Updating...');
+
+                    $.ajax({
+                        type: "POST",
+                        url: "{{ route('loans.bulk_update') }}",
+                        data: formData,
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        },
+                        success: function(res) {
+                            $btn.prop('disabled', false).html('<i class="fas fa-check-double me-1"></i> Apply Changes');
+                            if (res.success) {
+                                $('#bulkEditLoanModal').modal('hide');
+                                Toast.fire({ icon: 'success', title: res.message });
+                                $('#bulkSelectAllLoans').prop('checked', false);
+                                loansTable.draw();
+                                refreshStats();
+                            } else {
+                                $('#bulkEditLoanErrors').removeClass('d-none').html(res.message || 'Bulk update failed.');
+                            }
+                        },
+                        error: function(xhr) {
+                            $btn.prop('disabled', false).html('<i class="fas fa-check-double me-1"></i> Apply Changes');
+                            var msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Failed to update selected loans.';
+                            $('#bulkEditLoanErrors').removeClass('d-none').html(msg);
+                        }
+                    });
                 });
             });
         </script>

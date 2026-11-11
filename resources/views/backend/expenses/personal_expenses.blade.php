@@ -117,10 +117,32 @@
                         </div>
                     </div>
 
+                    <!-- Modern Bulk Action Bar -->
+                    <div id="bulkActionBar" class="d-none align-items-center justify-content-between p-2 px-3 mb-2 rounded-3" style="background: linear-gradient(135deg, #0a5858 0%, #0d7373 100%); color: #fff; box-shadow: 0 4px 12px rgba(10, 88, 88, 0.25);">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-white text-dark fw-bold px-2 py-1 font-12" id="bulkSelectedCount">0 Selected</span>
+                            <span class="font-12 text-white-50 d-none d-sm-inline">Actions for selected expenses:</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <button type="button" class="btn btn-warning btn-sm fw-semibold btn-bulk-edit px-3 py-1 font-12">
+                                <i class="fas fa-edit me-1"></i> Bulk Edit
+                            </button>
+                            <button type="button" class="btn btn-danger btn-sm fw-semibold btn-bulk-delete px-3 py-1 font-12">
+                                <i class="fas fa-trash-alt me-1"></i> Bulk Delete
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-light btn-bulk-deselect px-2 py-1 font-11" title="Deselect All">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="table-responsive table-border">
                         <table class="table table-striped data-table job-table w-100" id="personalExpensesTable">
                             <thead class="table-theme text-white text-nowrap">
                                 <tr>
+                                    <th style="width: 40px;" class="text-center">
+                                        <input type="checkbox" class="form-check-input bulk-select-all" id="bulkSelectAll">
+                                    </th>
                                     <th style="width: 4%;">#</th>
                                     <th style="min-width: 250px;">Title, Month & Notes</th>
                                     <th style="min-width: 200px;">Line Items Breakdown</th>
@@ -420,6 +442,78 @@
         </div>
     </div>
 
+    <!-- BULK EDIT PERSONAL EXPENSES MODAL -->
+    <div class="modal fade" id="bulkEditPersonalExpenseModal" tabindex="-1" aria-labelledby="bulkEditPersonalExpenseModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header button-color text-white">
+                    <div>
+                        <h5 class="modal-title text-white" id="bulkEditPersonalExpenseModalLabel">
+                            <i class="fas fa-edit me-1"></i> Bulk Edit Personal Expenses
+                        </h5>
+                        <small class="text-white-50">Updating <span id="bulkEditCountBadge" class="badge bg-warning text-dark fw-bold"></span></small>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="bulkEditPersonalExpenseForm">
+                    <div class="modal-body p-4">
+                        <div class="alert alert-info py-2 px-3 font-12 mb-3">
+                            <i class="fas fa-info-circle me-1"></i> <strong>Note:</strong> Only filled fields will be updated across all selected records. Leave fields empty to keep their current values.
+                        </div>
+                        <div id="bulkEditErrors" class="alert alert-danger d-none py-2 px-3 font-12"></div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold font-13">Expense Month</label>
+                                <select name="expense_month" class="form-select">
+                                    <option value="">-- Keep Existing --</option>
+                                    @foreach($availableMonths as $mKey => $mLabel)
+                                        <option value="{{ $mLabel }}">{{ $mLabel }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold font-13">Expense Date</label>
+                                <input type="date" name="expense_date" class="form-control" placeholder="Keep Existing">
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold font-13">Paid To / Merchant</label>
+                                <input type="text" name="paid_to" class="form-control" placeholder="Leave empty to keep existing">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold font-13">Payment Method</label>
+                                <select name="payment_method" class="form-select">
+                                    <option value="">-- Keep Existing --</option>
+                                    <option value="Cash">Cash</option>
+                                    <option value="UPI / GPay / PhonePe">UPI / GPay / PhonePe</option>
+                                    <option value="Bank Transfer / NEFT / IMPS">Bank Transfer / NEFT / IMPS</option>
+                                    <option value="Net Banking">Net Banking</option>
+                                    <option value="Credit Card">Credit Card</option>
+                                    <option value="Debit Card">Debit Card</option>
+                                    <option value="Cheque">Cheque</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold font-13">Category</label>
+                                <input type="text" name="category" class="form-control" placeholder="e.g. Groceries, Utilities, Travel">
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold font-13">General Notes / Remarks</label>
+                                <textarea name="notes" class="form-control" rows="2" placeholder="Leave empty to keep existing notes"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn button-color text-white" id="btnApplyBulkEdit">
+                            <i class="fas fa-check-double me-1"></i> Apply Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     @push('footer_content')
         <script src="https://cdn.datatables.net/1.11.4/js/jquery.dataTables.min.js"></script>
         <script src="https://cdn.datatables.net/1.11.4/js/dataTables.bootstrap5.min.js"></script>
@@ -474,6 +568,7 @@
                         }
                     },
                     columns: [
+                        { data: 'checkbox', name: 'checkbox', orderable: false, searchable: false, className: 'text-center' },
                         { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
                         { data: 'title_desc', name: 'title' },
                         { data: 'items_summary', name: 'items', orderable: false, searchable: false },
@@ -482,7 +577,7 @@
                         { data: 'paid_to_display', name: 'paid_to' },
                         { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-center' }
                     ],
-                    order: [[4, 'desc']],
+                    order: [[5, 'desc']],
                     language: {
                         search: "",
                         searchPlaceholder: "Search personal expenses...",
@@ -986,6 +1081,162 @@
                                     }
                                 }
                             });
+                        }
+                    });
+                });
+
+                // =========================================================================
+                // 6. BULK SELECTION, BULK EDIT & BULK DELETE
+                // =========================================================================
+                function updateBulkBar() {
+                    var checkedBoxes = $('#personalExpensesTable tbody .bulk-select-row:checked');
+                    var count = checkedBoxes.length;
+                    var totalBoxes = $('#personalExpensesTable tbody .bulk-select-row').length;
+
+                    if (count > 0) {
+                        $('#bulkSelectedCount').text(count + ' Selected');
+                        $('#bulkActionBar').removeClass('d-none').addClass('d-flex');
+                    } else {
+                        $('#bulkActionBar').removeClass('d-flex').addClass('d-none');
+                    }
+
+                    if (totalBoxes > 0 && count === totalBoxes) {
+                        $('#bulkSelectAll').prop('checked', true).prop('indeterminate', false);
+                    } else if (count > 0) {
+                        $('#bulkSelectAll').prop('checked', false).prop('indeterminate', true);
+                    } else {
+                        $('#bulkSelectAll').prop('checked', false).prop('indeterminate', false);
+                    }
+                }
+
+                $(document).on('change', '#bulkSelectAll', function() {
+                    var isChecked = $(this).is(':checked');
+                    $('#personalExpensesTable tbody .bulk-select-row').prop('checked', isChecked);
+                    updateBulkBar();
+                });
+
+                $(document).on('change', '#personalExpensesTable tbody .bulk-select-row', function() {
+                    updateBulkBar();
+                });
+
+                table.on('draw', function() {
+                    updateBulkBar();
+                });
+
+                $(document).on('click', '.btn-bulk-deselect', function() {
+                    $('#personalExpensesTable tbody .bulk-select-row').prop('checked', false);
+                    $('#bulkSelectAll').prop('checked', false).prop('indeterminate', false);
+                    updateBulkBar();
+                });
+
+                // Bulk Delete
+                $(document).on('click', '.btn-bulk-delete', function() {
+                    var ids = [];
+                    $('#personalExpensesTable tbody .bulk-select-row:checked').each(function() {
+                        ids.push($(this).val());
+                    });
+
+                    if (ids.length === 0) {
+                        Toast.fire({ icon: 'warning', title: 'No expenses selected.' });
+                        return;
+                    }
+
+                    Swal.fire({
+                        title: "Delete " + ids.length + " Expenses?",
+                        text: "Are you sure you want to delete these " + ids.length + " selected records? This action cannot be undone.",
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#f34e4e",
+                        cancelButtonColor: "#6c757d",
+                        confirmButtonText: "Yes, delete " + ids.length + " records"
+                    }).then(function(result) {
+                        if (result.isConfirmed) {
+                            $.ajax({
+                                type: "POST",
+                                url: "{{ route('expenses.bulk_delete') }}",
+                                data: {
+                                    ids: ids,
+                                    _token: "{{ csrf_token() }}"
+                                },
+                                headers: {
+                                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                                },
+                                success: function(res) {
+                                    if (res.success) {
+                                        Toast.fire({ icon: 'success', title: res.message });
+                                        $('#bulkSelectAll').prop('checked', false);
+                                        table.ajax.reload(null, false);
+                                        reloadMonthlyStats();
+                                    } else {
+                                        Toast.fire({ icon: 'error', title: res.message || 'Bulk delete failed.' });
+                                    }
+                                },
+                                error: function(xhr) {
+                                    var msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Error performing bulk delete.';
+                                    Toast.fire({ icon: 'error', title: msg });
+                                }
+                            });
+                        }
+                    });
+                });
+
+                // Bulk Edit
+                $(document).on('click', '.btn-bulk-edit', function() {
+                    var count = $('#personalExpensesTable tbody .bulk-select-row:checked').length;
+                    if (count === 0) {
+                        Toast.fire({ icon: 'warning', title: 'No expenses selected.' });
+                        return;
+                    }
+                    $('#bulkEditCountBadge').text(count + ' selected');
+                    $('#bulkEditPersonalExpenseForm')[0].reset();
+                    $('#bulkEditErrors').addClass('d-none').html('');
+                    $('#bulkEditPersonalExpenseModal').modal('show');
+                });
+
+                $('#bulkEditPersonalExpenseForm').on('submit', function(e) {
+                    e.preventDefault();
+                    var ids = [];
+                    $('#personalExpensesTable tbody .bulk-select-row:checked').each(function() {
+                        ids.push($(this).val());
+                    });
+
+                    if (ids.length === 0) {
+                        Toast.fire({ icon: 'warning', title: 'No expenses selected.' });
+                        return;
+                    }
+
+                    var formData = $(this).serializeArray();
+                    formData.push({ name: '_token', value: "{{ csrf_token() }}" });
+                    ids.forEach(function(id) {
+                        formData.push({ name: 'ids[]', value: id });
+                    });
+
+                    var $btn = $('#btnApplyBulkEdit');
+                    $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Updating...');
+
+                    $.ajax({
+                        type: "POST",
+                        url: "{{ route('expenses.bulk_update') }}",
+                        data: formData,
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        },
+                        success: function(res) {
+                            $btn.prop('disabled', false).html('<i class="fas fa-check-double me-1"></i> Apply Changes');
+                            if (res.success) {
+                                $('#bulkEditPersonalExpenseModal').modal('hide');
+                                Toast.fire({ icon: 'success', title: res.message });
+                                $('#bulkSelectAll').prop('checked', false);
+                                table.ajax.reload(null, false);
+                                reloadMonthlyStats();
+                            } else {
+                                $('#bulkEditErrors').removeClass('d-none').html(res.message || 'Bulk update failed.');
+                            }
+                        },
+                        error: function(xhr) {
+                            $btn.prop('disabled', false).html('<i class="fas fa-check-double me-1"></i> Apply Changes');
+                            var msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Failed to update selected expenses.';
+                            $('#bulkEditErrors').removeClass('d-none').html(msg);
                         }
                     });
                 });

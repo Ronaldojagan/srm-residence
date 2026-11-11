@@ -101,6 +101,9 @@ class AccountController extends Controller
         }
 
         return DataTables::of($query)
+            ->addColumn('checkbox', function ($row) {
+                return '<input type="checkbox" class="form-check-input bulk-select-row" data-source="' . $row->source_type . '" value="' . $row->id . '">';
+            })
             ->editColumn('trans_date', function ($row) {
                 $dt = Carbon::parse($row->trans_date);
                 return '<div class="fw-semibold text-dark font-13">' . $dt->format('d M, Y') . '</div>
@@ -205,7 +208,7 @@ class AccountController extends Controller
                             </button>';
                 }
             })
-            ->rawColumns(['trans_date', 'voucher_display', 'flow_badge', 'category_display', 'party_display', 'payment_method_badge', 'inflow_amount', 'outflow_amount', 'action'])
+            ->rawColumns(['checkbox', 'trans_date', 'voucher_display', 'flow_badge', 'category_display', 'party_display', 'payment_method_badge', 'inflow_amount', 'outflow_amount', 'action'])
             ->make(true);
     }
 
@@ -432,6 +435,80 @@ class AccountController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Journal voucher ' . $num . ' deleted successfully!'
+        ]);
+    }
+
+    /**
+     * Bulk Delete Transactions from Journal
+     */
+    public function bulkDeleteJournalEntries(Request $request)
+    {
+        $items = $request->input('items', []);
+        if (empty($items) || !is_array($items)) {
+            return response()->json(['success' => false, 'message' => 'No items selected.'], 422);
+        }
+
+        $deletedCount = 0;
+        foreach ($items as $item) {
+            $id = (int) ($item['id'] ?? 0);
+            $source = $item['source_type'] ?? '';
+            if (!$id) continue;
+
+            if ($source === 'journal') {
+                JournalEntry::where('id', $id)->delete();
+                $deletedCount++;
+            } elseif ($source === 'expense') {
+                Expense::where('id', $id)->delete();
+                $deletedCount++;
+            } elseif ($source === 'salary') {
+                Salary::where('id', $id)->delete();
+                $deletedCount++;
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "Successfully deleted {$deletedCount} transaction record(s)!"
+        ]);
+    }
+
+    /**
+     * Bulk Update Journal Entries
+     */
+    public function bulkUpdateJournalEntries(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer|exists:journal_entries,id',
+            'category' => 'nullable|string|max:100',
+            'entry_type' => 'nullable|string|in:income,expense,capital,drawing,transfer',
+            'entry_date' => 'nullable|date',
+            'payment_method' => 'nullable|string|max:50',
+            'account_name' => 'nullable|string|max:100',
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        $updateData = [];
+        if (!empty($validated['category'])) $updateData['category'] = $validated['category'];
+        if (!empty($validated['entry_type'])) $updateData['entry_type'] = $validated['entry_type'];
+        if (!empty($validated['entry_date'])) $updateData['entry_date'] = $validated['entry_date'];
+        if (!empty($validated['payment_method'])) $updateData['payment_method'] = $validated['payment_method'];
+        if (!empty($validated['account_name'])) $updateData['account_name'] = $validated['account_name'];
+        if (isset($validated['notes']) && $validated['notes'] !== '') $updateData['notes'] = $validated['notes'];
+
+        if (empty($updateData)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No fields provided to update.'
+            ], 422);
+        }
+
+        $count = count($validated['ids']);
+        JournalEntry::whereIn('id', $validated['ids'])->update($updateData);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Successfully updated {$count} journal voucher(s)!"
         ]);
     }
 
