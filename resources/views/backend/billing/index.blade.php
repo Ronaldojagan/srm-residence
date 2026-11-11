@@ -48,6 +48,14 @@
                 border-bottom: 2px solid var(--res-primary);
                 background: transparent;
             }
+            .table-responsive .dropdown-menu {
+                z-index: 1065 !important;
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15) !important;
+                border-radius: 8px;
+            }
+            .table-responsive .dropdown-item:hover {
+                background-color: #f1f5f9;
+            }
             /* Printable Invoice & Receipt Styling */
             @media print {
                 body * {
@@ -2230,6 +2238,92 @@
                         phone: rcp.phone
                     };
                     shareElementAsFile(document.getElementById('printableReceiptArea'), 'image', shareData, 'Receipt_' + rcp.receiptNumber, $(this));
+                });
+
+                // Helper to copy URL to clipboard
+                function copyUrlToClipboard(url) {
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(url).then(function() {
+                            Toast.fire({ icon: 'success', title: 'Invoice link copied to clipboard!' });
+                        }).catch(function() {
+                            fallbackCopy(url);
+                        });
+                    } else {
+                        fallbackCopy(url);
+                    }
+                }
+
+                function fallbackCopy(text) {
+                    var tempInput = document.createElement('input');
+                    tempInput.value = text;
+                    document.body.appendChild(tempInput);
+                    tempInput.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(tempInput);
+                    Toast.fire({ icon: 'success', title: 'Invoice link copied to clipboard!' });
+                }
+
+                // Direct WhatsApp Share from Single Share Button
+                $(document).on('click', '.btn-action-share-whatsapp', function() {
+                    var $el = $(this);
+                    var billNo = $el.data('bill') || 'Invoice';
+                    var tenant = $el.data('tenant') || 'Tenant';
+                    var phone = ($el.data('phone') || '').toString().replace(/[^0-9]/g, '');
+                    var room = $el.data('room') || '-';
+                    var month = $el.data('month') || '';
+                    var type = $el.data('type') || 'Rent';
+                    var amount = $el.data('amount') || '0.00';
+                    var due = $el.data('due') || '0.00';
+                    var dueDate = $el.data('duedate') || '-';
+                    var url = $el.data('url') || window.location.href;
+
+                    var msg = `*SRM RESIDENCE - INVOICE*\n` +
+                              `Dear ${tenant},\n\n` +
+                              `Your invoice for *${month}* has been issued.\n\n` +
+                              `📄 *Invoice No:* ${billNo}\n` +
+                              `🏠 *Room / Bed:* ${room}\n` +
+                              `📋 *Bill Type:* ${type}\n` +
+                              `💰 *Total Amount:* ₹${amount}\n` +
+                              `⚠️ *Balance Due:* ₹${due}\n` +
+                              `📅 *Due Date:* ${dueDate}\n\n` +
+                              `🔗 *View & Download Invoice:* \n${url}\n\n` +
+                              `Thank you,\n*SRM Residence*`;
+
+                    var waUrl;
+                    if (phone.length >= 10) {
+                        var cleanPhone = phone.length === 10 ? '91' + phone : phone;
+                        waUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(msg)}`;
+                    } else {
+                        waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
+                    }
+                    window.open(waUrl, '_blank');
+                });
+
+                // Direct Native System Share / Copy Link from Single Share Button
+                $(document).on('click', '.btn-action-share-native', function() {
+                    var $el = $(this);
+                    var billNo = $el.data('bill') || 'Invoice';
+                    var tenant = $el.data('tenant') || 'Tenant';
+                    var month = $el.data('month') || '';
+                    var amount = $el.data('amount') || '0.00';
+                    var due = $el.data('due') || '0.00';
+                    var url = $el.data('url') || window.location.href;
+
+                    var shareText = `SRM Residence Invoice #${billNo} for ${tenant} (${month}). Total: ₹${amount}, Due: ₹${due}.\n${url}`;
+
+                    if (navigator.share) {
+                        navigator.share({
+                            title: 'SRM Residence Invoice - ' + billNo,
+                            text: shareText,
+                            url: url
+                        }).catch(function(err) {
+                            if (err.name !== 'AbortError') {
+                                copyUrlToClipboard(url);
+                            }
+                        });
+                    } else {
+                        copyUrlToClipboard(url);
+                    }
                 });
 
                 // DataTable Row Quick Share Handlers
