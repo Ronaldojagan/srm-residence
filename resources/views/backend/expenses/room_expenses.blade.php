@@ -47,31 +47,31 @@
     <!-- Quick Stats Cards -->
     <div class="row mt-3 g-3">
         <div class="col-md-3">
-            <div class="expense-stat-card border-start border-4 border-danger">
+            <div class="expense-stat-card border-start border-4 border-primary">
                 <div class="text-muted small text-uppercase fw-bold">Total Room Expenses</div>
-                <h3 class="fw-bold my-1 text-danger" id="statTotalExpenses">₹{{ number_format($stats['totalExpenses'], 2) }}</h3>
+                <h3 class="fw-bold my-1 text-primary" id="statTotalExpenses">₹{{ number_format($stats['totalExpenses'], 2) }}</h3>
                 <small class="text-muted">All-time maintenance spend</small>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="expense-stat-card border-start border-4 border-warning">
-                <div class="text-muted small text-uppercase fw-bold">This Month's Spend</div>
-                <h3 class="fw-bold my-1 text-warning" id="statThisMonthExpenses">₹{{ number_format($stats['thisMonthExpenses'], 2) }}</h3>
-                <small class="text-muted">Current billing cycle</small>
+            <div class="expense-stat-card border-start border-4 border-success">
+                <div class="text-muted small text-uppercase fw-bold"><i class="fas fa-check-circle text-success me-1"></i> Total Expenses Paid</div>
+                <h3 class="fw-bold my-1 text-success" id="statTotalPaid">₹{{ number_format($stats['totalPaid'] ?? 0, 2) }}</h3>
+                <small class="text-muted">Cleared room payments</small>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="expense-stat-card border-start border-4 border-primary">
-                <div class="text-muted small text-uppercase fw-bold">Avg. Cost / Room</div>
-                <h3 class="fw-bold my-1 text-primary" id="statAvgPerRoom">₹{{ number_format($stats['avgPerRoom'], 2) }}</h3>
-                <small class="text-muted">Across all units</small>
+            <div class="expense-stat-card border-start border-4 border-danger">
+                <div class="text-muted small text-uppercase fw-bold"><i class="fas fa-exclamation-circle text-danger me-1"></i> Balance Need to Pay</div>
+                <h3 class="fw-bold my-1 text-danger" id="statTotalBalance">₹{{ number_format($stats['totalBalance'] ?? 0, 2) }}</h3>
+                <small class="text-muted">Pending room balances</small>
             </div>
         </div>
         <div class="col-md-3">
             <div class="expense-stat-card border-start border-4 border-info">
-                <div class="text-muted small text-uppercase fw-bold">Expense Entries</div>
-                <h3 class="fw-bold my-1 text-info" id="statTotalRecords">{{ $stats['totalRecords'] }}</h3>
-                <small class="text-muted">Recorded invoices</small>
+                <div class="text-muted small text-uppercase fw-bold">This Month's Spend</div>
+                <h3 class="fw-bold my-1 text-info" id="statThisMonthExpenses">₹{{ number_format($stats['thisMonthExpenses'], 2) }}</h3>
+                <small class="text-muted"><span id="statTotalRecords">{{ $stats['totalRecords'] }}</span> recorded entries</small>
             </div>
         </div>
     </div>
@@ -157,7 +157,7 @@
                                     <th style="min-width: 140px;">Room & Floor</th>
                                     <th style="min-width: 200px;">Title & Description</th>
                                     <th style="min-width: 150px;">Category</th>
-                                    <th style="min-width: 130px;" class="text-nowrap">Amount</th>
+                                    <th style="min-width: 170px;" class="text-nowrap">Amount & Payment Status</th>
                                     <th style="min-width: 110px;" class="text-nowrap">Date</th>
                                     <th style="min-width: 160px;">Paid To / Vendor</th>
                                     <th style="min-width: 100px;" class="text-center text-nowrap">Action</th>
@@ -436,8 +436,9 @@
                 function updateStatCards(stats) {
                     if (stats) {
                         $('#statTotalExpenses').text('₹' + Number(stats.totalExpenses).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                        $('#statTotalPaid').text('₹' + Number(stats.totalPaid || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                        $('#statTotalBalance').text('₹' + Number(stats.totalBalance || 0).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
                         $('#statThisMonthExpenses').text('₹' + Number(stats.thisMonthExpenses).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
-                        $('#statAvgPerRoom').text('₹' + Number(stats.avgPerRoom).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
                         $('#statTotalRecords').text(stats.totalRecords);
                     }
                 }
@@ -873,6 +874,33 @@
                             $btn.prop('disabled', false).html('<i class="fas fa-check-double me-1"></i> Apply Changes');
                             var msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Failed to update selected expenses.';
                             $('#bulkEditErrors').removeClass('d-none').html(msg);
+                        }
+                    });
+                });
+                // Quick Pay / Unpay from DataTable Row
+                $(document).on('click', '.btn-mark-expense-paid, .btn-mark-expense-unpaid', function() {
+                    var expId = $(this).data('id');
+                    var isMarkPaid = $(this).hasClass('btn-mark-expense-paid');
+                    var status = isMarkPaid ? 'paid' : 'unpaid';
+
+                    $.ajax({
+                        url: "{{ url('/admin/expenses') }}/" + expId + "/mark-paid",
+                        type: "POST",
+                        data: {
+                            _token: "{{ csrf_token() }}",
+                            status: status
+                        },
+                        success: function(res) {
+                            if (res.success) {
+                                Toast.fire({ icon: 'success', title: res.message });
+                                table.ajax.reload(null, false);
+                                if (res.stats) {
+                                    updateStatCards(res.stats);
+                                }
+                            }
+                        },
+                        error: function(xhr) {
+                            Toast.fire({ icon: 'error', title: xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Error updating payment status.' });
                         }
                     });
                 });

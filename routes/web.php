@@ -107,15 +107,21 @@ Route::group(['prefix' => 'admin', 'middleware' => ['auth', 'user-access:' . Use
 
     // Expenses
     Route::controller(ExpenseController::class)->prefix('expenses')->name('expenses.')->group(function () {
+        Route::get('/', function () {
+            return redirect()->route('expenses.personal');
+        })->name('index');
         Route::post('/bulk-delete', 'bulkDelete')->name('bulk_delete');
         Route::post('/bulk-update', 'bulkUpdate')->name('bulk_update');
         Route::get('/rooms', 'roomExpenses')->name('rooms');
         Route::get('/rooms/export', 'exportRoomExpenses')->name('rooms.export');
+        Route::get('/rooms/stats', 'getRoomStatsAjax')->name('rooms.stats');
         Route::get('/personal', 'personalExpenses')->name('personal');
         Route::get('/personal/export', 'exportPersonalExpenses')->name('personal.export');
         Route::get('/personal/stats', 'getPersonalStatsAjax')->name('personal.stats');
         Route::post('/', 'store')->name('store');
         Route::get('/{expense}/data', 'getData')->name('data');
+        Route::post('/{expense}/toggle-item-paid', 'toggleItemPaid')->name('toggle_item_paid');
+        Route::post('/{expense}/mark-paid', 'markExpensePaid')->name('mark_paid');
         Route::post('/{expense}/update', 'update')->name('update');
         Route::delete('/{expense}', 'destroy')->name('destroy');
     });

@@ -65,9 +65,33 @@ class ExpenseController extends Controller
                     return '<span class="badge bg-info-subtle text-info border border-info px-2 py-1">' . e($row->category) . '</span>';
                 })
                 ->addColumn('amount_display', function ($row) {
-                    return '<div>
-                        <span class="fw-bold text-danger fs-6">₹' . number_format($row->amount, 2) . '</span>
-                        <small class="text-muted d-block"><i class="far fa-credit-card me-1"></i>' . e($row->payment_method) . '</small>
+                    $total = (float)$row->amount;
+                    $paid = (float)$row->paid_amount;
+                    $due = max(0, round($total - $paid, 2));
+                    $percent = $total > 0 ? min(100, round(($paid / $total) * 100)) : 0;
+                    $barColor = $percent >= 100 ? 'bg-success' : ($percent > 0 ? 'bg-warning' : 'bg-secondary');
+
+                    $statusBadge = '';
+                    if ($row->payment_status === 'paid' || ($total > 0 && $due <= 0)) {
+                        $statusBadge = '<span class="badge bg-success text-white font-10 px-2 py-0"><i class="fas fa-check-circle me-1"></i>Paid</span>';
+                    } elseif ($paid > 0) {
+                        $statusBadge = '<span class="badge bg-warning text-dark font-10 px-2 py-0"><i class="fas fa-adjust me-1"></i>Partial</span>';
+                    } else {
+                        $statusBadge = '<span class="badge bg-danger text-white font-10 px-2 py-0"><i class="fas fa-clock me-1"></i>Pending</span>';
+                    }
+
+                    return '<div style="min-width: 140px;">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="fw-bold text-danger font-13">₹' . number_format($total, 2) . '</span>
+                            ' . $statusBadge . '
+                        </div>
+                        <div class="d-flex justify-content-between font-11 fw-semibold mb-1">
+                            <span class="text-success">Paid: ₹' . number_format($paid, 2) . '</span>
+                            <span class="text-danger">Due: ₹' . number_format($due, 2) . '</span>
+                        </div>
+                        <div class="progress" style="height: 5px;">
+                            <div class="progress-bar ' . $barColor . '" role="progressbar" style="width: ' . $percent . '%;" aria-valuenow="' . $percent . '" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
                     </div>';
                 })
                 ->addColumn('expense_date_formatted', function ($row) {
@@ -77,7 +101,15 @@ class ExpenseController extends Controller
                     return '<span class="fw-semibold text-secondary">' . e($row->paid_to ?? '-') . '</span>';
                 })
                 ->addColumn('action', function ($row) {
+                    $payBtn = '';
+                    if ($row->payment_status !== 'paid' && $row->due_amount > 0) {
+                        $payBtn = '<button type="button" class="btn btn-outline-success btn-mark-expense-paid" data-id="' . $row->id . '" data-title="' . e($row->title) . '" title="Mark as Paid"><i class="fas fa-check-circle me-1"></i> Pay</button>';
+                    } else {
+                        $payBtn = '<button type="button" class="btn btn-outline-secondary btn-mark-expense-unpaid" data-id="' . $row->id . '" data-title="' . e($row->title) . '" title="Mark as Unpaid"><i class="fas fa-undo"></i></button>';
+                    }
+
                     $btn = '<div class="btn-group btn-group-sm" role="group">';
+                    $btn .= $payBtn;
                     $btn .= '<button type="button" class="btn btn-outline-primary btn-edit-expense" data-id="' . $row->id . '" title="Edit Expense"><i class="fas fa-edit"></i></button>';
                     $btn .= '<button type="button" class="btn btn-outline-danger btn-delete-expense" data-id="' . $row->id . '" data-title="' . e($row->title) . '" title="Delete Expense"><i class="fas fa-trash-alt"></i></button>';
                     $btn .= '</div>';
@@ -149,27 +181,75 @@ class ExpenseController extends Controller
                 ->addColumn('items_summary', function ($row) {
                     if (!empty($row->items) && is_array($row->items) && count($row->items) > 0) {
                         $count = count($row->items);
+                        $paidCount = 0;
+                        foreach ($row->items as $it) {
+                            if (!empty($it['is_paid'])) {
+                                $paidCount++;
+                            }
+                        }
+                        $pendingCount = $count - $paidCount;
+
                         $previewItems = [];
                         foreach (array_slice($row->items, 0, 2) as $it) {
                             $qtyLabel = !empty($it['quantity']) && (float)$it['quantity'] != 1 ? ' (' . $it['quantity'] . 'x)' : '';
-                            $previewItems[] = e($it['title']) . $qtyLabel;
+                            $itemPaidIcon = !empty($it['is_paid']) ? ' <i class="fas fa-check text-success font-10"></i>' : '';
+                            $previewItems[] = e($it['title']) . $qtyLabel . $itemPaidIcon;
                         }
                         $previewText = implode(', ', $previewItems);
                         if ($count > 2) {
                             $previewText .= ' +' . ($count - 2) . ' more';
                         }
 
+                        $statusBadge = '';
+                        if ($pendingCount === 0) {
+                            $statusBadge = '<span class="badge bg-success-subtle text-success border border-success font-10 px-1 py-0"><i class="fas fa-check-circle me-1"></i>All Paid</span>';
+                        } elseif ($paidCount > 0) {
+                            $statusBadge = '<span class="badge bg-warning-subtle text-dark border border-warning font-10 px-1 py-0">' . $paidCount . '/' . $count . ' Paid</span>';
+                        } else {
+                            $statusBadge = '<span class="badge bg-danger-subtle text-danger border border-danger font-10 px-1 py-0">' . $count . ' Pending</span>';
+                        }
+
                         return '<div>
-                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-11 cursor-pointer btn-view-items" data-id="' . $row->id . '">
-                                <i class="fas fa-list-ul me-1"></i> ' . $count . ' Line Items
-                            </span>
-                            <small class="text-muted d-block font-11 mt-1 text-truncate" style="max-width: 200px;" title="' . e($previewText) . '">' . $previewText . '</small>
+                            <div class="d-flex align-items-center gap-1 mb-1">
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle font-11 cursor-pointer btn-view-items" data-id="' . $row->id . '">
+                                    <i class="fas fa-list-ul me-1"></i> ' . $count . ' Items
+                                </span>
+                                ' . $statusBadge . '
+                            </div>
+                            <small class="text-muted d-block font-11 text-truncate" style="max-width: 220px;" title="' . strip_tags($previewText) . '">' . $previewText . '</small>
                         </div>';
                     }
                     return '<span class="text-muted font-11">Single Entry</span>';
                 })
                 ->addColumn('amount_display', function ($row) {
-                    return '<span class="fw-bold text-danger fs-6">₹' . number_format($row->amount, 2) . '</span>';
+                    $total = (float)$row->amount;
+                    $paid = (float)$row->paid_amount;
+                    $due = max(0, round($total - $paid, 2));
+                    $percent = $total > 0 ? min(100, round(($paid / $total) * 100)) : 0;
+                    $barColor = $percent >= 100 ? 'bg-success' : ($percent > 0 ? 'bg-warning' : 'bg-secondary');
+
+                    $statusBadge = '';
+                    if ($row->payment_status === 'paid' || ($total > 0 && $due <= 0)) {
+                        $statusBadge = '<span class="badge bg-success text-white font-10 px-2 py-0"><i class="fas fa-check-circle me-1"></i>Paid</span>';
+                    } elseif ($paid > 0) {
+                        $statusBadge = '<span class="badge bg-warning text-dark font-10 px-2 py-0"><i class="fas fa-adjust me-1"></i>Partial</span>';
+                    } else {
+                        $statusBadge = '<span class="badge bg-danger text-white font-10 px-2 py-0"><i class="fas fa-clock me-1"></i>Pending</span>';
+                    }
+
+                    return '<div style="min-width: 140px;">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="fw-bold text-danger font-13">₹' . number_format($total, 2) . '</span>
+                            ' . $statusBadge . '
+                        </div>
+                        <div class="d-flex justify-content-between font-11 fw-semibold mb-1">
+                            <span class="text-success">Paid: ₹' . number_format($paid, 2) . '</span>
+                            <span class="text-danger">Due: ₹' . number_format($due, 2) . '</span>
+                        </div>
+                        <div class="progress" style="height: 5px;">
+                            <div class="progress-bar ' . $barColor . '" role="progressbar" style="width: ' . $percent . '%;" aria-valuenow="' . $percent . '" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>';
                 })
                 ->addColumn('expense_date_formatted', function ($row) {
                     return $row->expense_date ? $row->expense_date->format('d M Y') : '-';
@@ -179,9 +259,17 @@ class ExpenseController extends Controller
                 })
                 ->addColumn('action', function ($row) {
                     $hasItems = !empty($row->items) && is_array($row->items) && count($row->items) > 0;
-                    $itemsBtn = $hasItems ? '<button type="button" class="btn btn-outline-info btn-view-items" data-id="' . $row->id . '" title="View Line Items Breakdown"><i class="fas fa-list-ul"></i></button>' : '';
+                    $itemsBtn = $hasItems ? '<button type="button" class="btn btn-outline-info btn-view-items" data-id="' . $row->id . '" title="View & Pay Line Items Breakdown"><i class="fas fa-list-ul me-1"></i> Items</button>' : '';
+
+                    $payBtn = '';
+                    if ($row->payment_status !== 'paid' && $row->due_amount > 0) {
+                        $payBtn = '<button type="button" class="btn btn-outline-success btn-mark-expense-paid" data-id="' . $row->id . '" data-title="' . e($row->title) . '" title="Mark All as Paid"><i class="fas fa-check-circle me-1"></i> Pay</button>';
+                    } else {
+                        $payBtn = '<button type="button" class="btn btn-outline-secondary btn-mark-expense-unpaid" data-id="' . $row->id . '" data-title="' . e($row->title) . '" title="Mark as Unpaid"><i class="fas fa-undo"></i></button>';
+                    }
 
                     $btn = '<div class="btn-group btn-group-sm" role="group">';
+                    $btn .= $payBtn;
                     $btn .= $itemsBtn;
                     $btn .= '<button type="button" class="btn btn-outline-primary btn-edit-expense" data-id="' . $row->id . '" title="Edit Expense"><i class="fas fa-edit"></i></button>';
                     $btn .= '<button type="button" class="btn btn-outline-danger btn-delete-expense" data-id="' . $row->id . '" data-title="' . e($row->title) . '" title="Delete Expense"><i class="fas fa-trash-alt"></i></button>';
@@ -263,6 +351,8 @@ class ExpenseController extends Controller
                         $rate = $qty > 0 ? round($amt / $qty, 2) : $amt;
                     }
 
+                    $isPaid = !empty($item['is_paid']) && ($item['is_paid'] == '1' || $item['is_paid'] === true || $item['is_paid'] === 'true');
+
                     if ($amt > 0 || $rate > 0) {
                         $cleanItems[] = [
                             'title' => trim($item['title']),
@@ -270,6 +360,8 @@ class ExpenseController extends Controller
                             'per_rate' => $rate !== null ? (float)$rate : round($amt / ($qty ?: 1), 2),
                             'amount' => (float)$amt,
                             'notes' => trim($item['notes'] ?? ''),
+                            'is_paid' => $isPaid,
+                            'paid_at' => $isPaid ? ($item['paid_at'] ?? now()->toDateTimeString()) : null,
                         ];
                     }
                 }
@@ -297,8 +389,9 @@ class ExpenseController extends Controller
         $validated['created_by'] = auth()->id();
 
         $expense = Expense::create($validated);
+        $expense->syncPaymentStatus(true);
 
-        $stats = $expense->expense_type === 'room' ? $this->getRoomExpenseStats() : $this->getPersonalExpenseStats();
+        $stats = $expense->expense_type === 'room' ? $this->getRoomExpenseStats() : $this->getPersonalExpenseStats($expense->expense_month);
 
         if ($request->ajax()) {
             return response()->json([
@@ -377,6 +470,8 @@ class ExpenseController extends Controller
                         $rate = $qty > 0 ? round($amt / $qty, 2) : $amt;
                     }
 
+                    $isPaid = !empty($item['is_paid']) && ($item['is_paid'] == '1' || $item['is_paid'] === true || $item['is_paid'] === 'true');
+
                     if ($amt > 0 || $rate > 0) {
                         $cleanItems[] = [
                             'title' => trim($item['title']),
@@ -384,6 +479,8 @@ class ExpenseController extends Controller
                             'per_rate' => $rate !== null ? (float)$rate : round($amt / ($qty ?: 1), 2),
                             'amount' => (float)$amt,
                             'notes' => trim($item['notes'] ?? ''),
+                            'is_paid' => $isPaid,
+                            'paid_at' => $isPaid ? ($item['paid_at'] ?? now()->toDateTimeString()) : null,
                         ];
                     }
                 }
@@ -408,8 +505,9 @@ class ExpenseController extends Controller
         }
 
         $expense->update($validated);
+        $expense->syncPaymentStatus(true);
 
-        $stats = $expense->expense_type === 'room' ? $this->getRoomExpenseStats() : $this->getPersonalExpenseStats();
+        $stats = $expense->expense_type === 'room' ? $this->getRoomExpenseStats() : $this->getPersonalExpenseStats($expense->expense_month);
 
         if ($request->ajax()) {
             return response()->json([
@@ -424,12 +522,108 @@ class ExpenseController extends Controller
         return redirect($redirect)->with('success', 'Expense updated successfully!');
     }
 
+    /**
+     * Toggle or update paid status for an individual line item or all line items in an expense
+     */
+    public function toggleItemPaid(Request $request, Expense $expense)
+    {
+        $index = $request->input('item_index');
+        $action = $request->input('action', 'toggle'); // 'toggle', 'all_paid', 'all_unpaid'
+
+        $items = $expense->items;
+
+        if ($action === 'all_paid') {
+            if (is_array($items) && count($items) > 0) {
+                foreach ($items as &$it) {
+                    $it['is_paid'] = true;
+                    $it['paid_at'] = now()->toDateTimeString();
+                }
+                unset($it);
+                $expense->items = $items;
+            }
+            $expense->paid_amount = $expense->amount;
+            $expense->payment_status = 'paid';
+            $expense->status = true;
+            $expense->save();
+            $message = "All line items in '{$expense->title}' marked as Paid!";
+        } elseif ($action === 'all_unpaid') {
+            if (is_array($items) && count($items) > 0) {
+                foreach ($items as &$it) {
+                    $it['is_paid'] = false;
+                    $it['paid_at'] = null;
+                }
+                unset($it);
+                $expense->items = $items;
+            }
+            $expense->paid_amount = 0.00;
+            $expense->payment_status = 'unpaid';
+            $expense->status = false;
+            $expense->save();
+            $message = "All line items in '{$expense->title}' marked as Unpaid / Pending.";
+        } elseif ($index !== null && is_array($items) && isset($items[$index])) {
+            $currentlyPaid = !empty($items[$index]['is_paid']);
+            $newStatus = !$currentlyPaid;
+            $items[$index]['is_paid'] = $newStatus;
+            $items[$index]['paid_at'] = $newStatus ? now()->toDateTimeString() : null;
+            $expense->items = $items;
+            $expense->syncPaymentStatus(true);
+            $itemName = $items[$index]['title'] ?? 'Line item';
+            $itemAmt = number_format((float)($items[$index]['amount'] ?? 0), 2);
+            $message = $newStatus ? "'{$itemName}' marked as Paid (₹{$itemAmt})!" : "'{$itemName}' marked as Unpaid / Pending.";
+        } else {
+            return response()->json(['success' => false, 'message' => 'Invalid line item index or action.'], 422);
+        }
+
+        $stats = $expense->expense_type === 'room' ? $this->getRoomExpenseStats() : $this->getPersonalExpenseStats($expense->expense_month);
+
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+            'expense' => $expense->fresh(),
+            'stats' => $stats
+        ]);
+    }
+
+    /**
+     * Mark an entire expense as Paid or Unpaid
+     */
+    public function markExpensePaid(Request $request, Expense $expense)
+    {
+        $status = $request->input('status', 'paid');
+        $isPaid = $status === 'paid';
+
+        $items = $expense->items;
+        if (is_array($items) && count($items) > 0) {
+            foreach ($items as &$it) {
+                $it['is_paid'] = $isPaid;
+                $it['paid_at'] = $isPaid ? now()->toDateTimeString() : null;
+            }
+            unset($it);
+            $expense->items = $items;
+        }
+
+        $expense->paid_amount = $isPaid ? (float)$expense->amount : 0.00;
+        $expense->payment_status = $isPaid ? 'paid' : 'unpaid';
+        $expense->status = $isPaid;
+        $expense->save();
+
+        $stats = $expense->expense_type === 'room' ? $this->getRoomExpenseStats() : $this->getPersonalExpenseStats($expense->expense_month);
+
+        return response()->json([
+            'success' => true,
+            'message' => $isPaid ? "Expense '{$expense->title}' marked as fully Paid!" : "Expense '{$expense->title}' marked as Unpaid / Pending.",
+            'expense' => $expense->fresh(),
+            'stats' => $stats
+        ]);
+    }
+
     public function destroy(Expense $expense)
     {
         $type = $expense->expense_type;
+        $month = $expense->expense_month;
         $expense->delete();
 
-        $stats = $type === 'room' ? $this->getRoomExpenseStats() : $this->getPersonalExpenseStats();
+        $stats = $type === 'room' ? $this->getRoomExpenseStats() : $this->getPersonalExpenseStats($month);
 
         return response()->json([
             'success' => true,
@@ -450,21 +644,44 @@ class ExpenseController extends Controller
         ]);
     }
 
+    public function getRoomStatsAjax(Request $request)
+    {
+        $stats = $this->getRoomExpenseStats();
+
+        return response()->json([
+            'success' => true,
+            'stats' => $stats,
+        ]);
+    }
+
     private function getRoomExpenseStats()
     {
         $now = Carbon::now();
-        $total = Expense::where('expense_type', 'room')->sum('amount');
-        $thisMonth = Expense::where('expense_type', 'room')
+        $total = (float) Expense::where('expense_type', 'room')->sum('amount');
+        $totalPaid = (float) Expense::where('expense_type', 'room')->sum('paid_amount');
+        $totalBalance = max(0, round($total - $totalPaid, 2));
+
+        $thisMonth = (float) Expense::where('expense_type', 'room')
             ->whereMonth('expense_date', $now->month)
             ->whereYear('expense_date', $now->year)
             ->sum('amount');
+        $thisMonthPaid = (float) Expense::where('expense_type', 'room')
+            ->whereMonth('expense_date', $now->month)
+            ->whereYear('expense_date', $now->year)
+            ->sum('paid_amount');
+        $thisMonthBalance = max(0, round($thisMonth - $thisMonthPaid, 2));
+
         $roomCount = Room::count();
         $avgPerRoom = $roomCount > 0 ? round($total / $roomCount) : 0;
         $totalRecords = Expense::where('expense_type', 'room')->count();
 
         return [
             'totalExpenses' => $total,
+            'totalPaid' => $totalPaid,
+            'totalBalance' => $totalBalance,
             'thisMonthExpenses' => $thisMonth,
+            'thisMonthPaid' => $thisMonthPaid,
+            'thisMonthBalance' => $thisMonthBalance,
             'avgPerRoom' => $avgPerRoom,
             'totalRecords' => $totalRecords,
         ];
@@ -472,7 +689,9 @@ class ExpenseController extends Controller
 
     private function getPersonalExpenseStats($month = null)
     {
-        $allTotal = Expense::where('expense_type', 'personal')->sum('amount');
+        $allTotal = (float) Expense::where('expense_type', 'personal')->sum('amount');
+        $allPaid = (float) Expense::where('expense_type', 'personal')->sum('paid_amount');
+        $allBalance = max(0, round($allTotal - $allPaid, 2));
         $allRecords = Expense::where('expense_type', 'personal')->count();
 
         $monthQuery = Expense::where('expense_type', 'personal');
@@ -501,8 +720,12 @@ class ExpenseController extends Controller
                        ->whereYear('expense_date', $now->year);
         }
 
-        $monthExpenses = (clone $monthQuery)->sum('amount');
+        $monthExpenses = (float) (clone $monthQuery)->sum('amount');
+        $monthPaid = (float) (clone $monthQuery)->sum('paid_amount');
+        $monthBalance = max(0, round($monthExpenses - $monthPaid, 2));
         $monthRecords = (clone $monthQuery)->count();
+        $paidRecords = (clone $monthQuery)->where('payment_status', 'paid')->count();
+        $pendingRecords = (clone $monthQuery)->where('payment_status', '!=', 'paid')->count();
         $highestExpense = (clone $monthQuery)->max('amount') ?? 0;
 
         $topCategory = (clone $monthQuery)
@@ -514,20 +737,44 @@ class ExpenseController extends Controller
         // Count line items in this month
         $monthWithItems = (clone $monthQuery)->whereNotNull('items')->get();
         $lineItemsCount = 0;
+        $paidLineItems = 0;
+        $pendingLineItems = 0;
         foreach ($monthWithItems as $mExp) {
             if (is_array($mExp->items)) {
-                $lineItemsCount += count($mExp->items);
+                foreach ($mExp->items as $it) {
+                    $lineItemsCount++;
+                    if (!empty($it['is_paid'])) {
+                        $paidLineItems++;
+                    } else {
+                        $pendingLineItems++;
+                    }
+                }
             }
         }
 
+        $effectiveTotal = ($month === 'all') ? $allTotal : $monthExpenses;
+        $effectivePaid = ($month === 'all') ? $allPaid : $monthPaid;
+        $effectiveBalance = max(0, round($effectiveTotal - $effectivePaid, 2));
+
         return [
-            'totalExpenses' => $allTotal,
-            'thisMonthExpenses' => $monthExpenses,
+            'totalExpenses' => $effectiveTotal,
+            'totalPaid' => $effectivePaid,
+            'totalBalance' => $effectiveBalance,
+            'allTotal' => $allTotal,
+            'allPaid' => $allPaid,
+            'allBalance' => $allBalance,
             'monthLabel' => $monthLabel,
-            'monthRecords' => $monthRecords,
+            'thisMonthExpenses' => $monthExpenses,
+            'thisMonthPaid' => $monthPaid,
+            'thisMonthBalance' => $monthBalance,
+            'monthRecords' => ($month === 'all') ? $allRecords : $monthRecords,
+            'paidRecords' => $paidRecords,
+            'pendingRecords' => $pendingRecords,
             'highestExpense' => $highestExpense,
             'topCategory' => $topCategory ? $topCategory->category . ' (₹' . number_format($topCategory->total) . ')' : 'None',
             'lineItemsCount' => $lineItemsCount,
+            'paidLineItems' => $paidLineItems,
+            'pendingLineItems' => $pendingLineItems,
             'totalRecords' => $allRecords,
         ];
     }

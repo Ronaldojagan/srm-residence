@@ -56,33 +56,37 @@
     <!-- Quick Stats Cards (Updated dynamically per selected month) -->
     <div class="row mt-3 g-3">
         <div class="col-md-3">
-            <div class="expense-stat-card border-start border-4 border-warning">
+            <div class="expense-stat-card border-start border-4 border-primary">
                 <div class="text-muted small text-uppercase fw-bold">
-                    <span id="statMonthLabel">{{ $stats['monthLabel'] ?? 'This Month' }}</span> Personal Spend
+                    <span id="statMonthLabel">{{ $stats['monthLabel'] ?? 'This Month' }}</span> Expenses
                 </div>
-                <h3 class="fw-bold my-1 text-warning" id="statThisMonthExpenses">₹{{ number_format($stats['thisMonthExpenses'], 2) }}</h3>
+                <h3 class="fw-bold my-1 text-primary" id="statThisMonthExpenses">₹{{ number_format($stats['totalExpenses'] ?? $stats['thisMonthExpenses'], 2) }}</h3>
                 <small class="text-muted"><span id="statMonthRecords">{{ $stats['monthRecords'] ?? 0 }}</span> expenses in period</small>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="expense-stat-card border-start border-4 border-primary">
-                <div class="text-muted small text-uppercase fw-bold">Monthly Entries</div>
-                <h3 class="fw-bold my-1 text-primary" id="statMonthRecordsDisplay">{{ $stats['monthRecords'] ?? 0 }}</h3>
-                <small class="text-muted">Expenses logged in selected month</small>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="expense-stat-card border-start border-4 border-info">
-                <div class="text-muted small text-uppercase fw-bold">Line Items Logged</div>
-                <h3 class="fw-bold my-1 text-info" id="statLineItemsCount">{{ $stats['lineItemsCount'] ?? 0 }}</h3>
-                <small class="text-muted">Itemized breakdown rows</small>
+            <div class="expense-stat-card border-start border-4 border-success">
+                <div class="text-muted small text-uppercase fw-bold">
+                    <i class="fas fa-check-circle text-success me-1"></i> Total Expenses Paid
+                </div>
+                <h3 class="fw-bold my-1 text-success" id="statTotalPaid">₹{{ number_format($stats['totalPaid'] ?? 0, 2) }}</h3>
+                <small class="text-muted"><span id="statPaidItemsCount">{{ $stats['paidLineItems'] ?? 0 }}</span> paid items cleared</small>
             </div>
         </div>
         <div class="col-md-3">
             <div class="expense-stat-card border-start border-4 border-danger">
-                <div class="text-muted small text-uppercase fw-bold">All-Time Personal Spend</div>
-                <h3 class="fw-bold my-1 text-danger" id="statTotalExpenses">₹{{ number_format($stats['totalExpenses'], 2) }}</h3>
-                <small class="text-muted"><span id="statTotalRecords">{{ $stats['totalRecords'] }}</span> total expenses</small>
+                <div class="text-muted small text-uppercase fw-bold">
+                    <i class="fas fa-exclamation-circle text-danger me-1"></i> Balance Need to Pay
+                </div>
+                <h3 class="fw-bold my-1 text-danger" id="statTotalBalance">₹{{ number_format($stats['totalBalance'] ?? 0, 2) }}</h3>
+                <small class="text-muted"><span id="statPendingItemsCount">{{ $stats['pendingLineItems'] ?? 0 }}</span> pending items</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="expense-stat-card border-start border-4 border-info">
+                <div class="text-muted small text-uppercase fw-bold">All-Time Total / Due</div>
+                <h3 class="fw-bold my-1 text-info" id="statAllTotal">₹{{ number_format($stats['allTotal'] ?? 0, 2) }}</h3>
+                <small class="text-muted">Balance Due: <strong class="text-danger" id="statAllBalance">₹{{ number_format($stats['allBalance'] ?? 0, 2) }}</strong></small>
             </div>
         </div>
     </div>
@@ -144,12 +148,12 @@
                                         <input type="checkbox" class="form-check-input bulk-select-all" id="bulkSelectAll">
                                     </th>
                                     <th style="width: 4%;">#</th>
-                                    <th style="min-width: 250px;">Title, Month & Notes</th>
+                                    <th style="min-width: 240px;">Title, Month & Notes</th>
                                     <th style="min-width: 200px;">Line Items Breakdown</th>
-                                    <th style="min-width: 140px;" class="text-nowrap">Total Amount</th>
+                                    <th style="min-width: 170px;" class="text-nowrap">Amount & Payment Status</th>
                                     <th style="min-width: 110px;" class="text-nowrap">Date</th>
-                                    <th style="min-width: 160px;">Paid To / Vendor</th>
-                                    <th style="width: 100px;" class="text-center text-nowrap">Action</th>
+                                    <th style="min-width: 150px;">Paid To / Vendor</th>
+                                    <th style="min-width: 130px;" class="text-center text-nowrap">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -223,13 +227,14 @@
                                             <table class="table table-sm table-bordered align-middle mb-0" id="addItemsTable">
                                                 <thead class="table-light font-12 text-nowrap">
                                                     <tr>
-                                                        <th style="width: 60px; text-align: center;">S.No</th>
-                                                        <th style="min-width: 220px;">Item Title <span class="text-danger">*</span></th>
-                                                        <th style="width: 120px; text-align: center;">Quantity</th>
-                                                        <th style="width: 150px; text-align: right;">Per Rate (₹)</th>
-                                                        <th style="width: 160px; text-align: right;">Amount (₹) <span class="text-danger">*</span></th>
-                                                        <th style="min-width: 200px;">Short Notes / Details</th>
-                                                        <th style="width: 50px; text-align: center;"></th>
+                                                        <th style="width: 50px; text-align: center;">S.No</th>
+                                                        <th style="min-width: 200px;">Item Title <span class="text-danger">*</span></th>
+                                                        <th style="width: 100px; text-align: center;">Quantity</th>
+                                                        <th style="width: 130px; text-align: right;">Per Rate (₹)</th>
+                                                        <th style="width: 140px; text-align: right;">Amount (₹) <span class="text-danger">*</span></th>
+                                                        <th style="width: 110px; text-align: center;">Status (Paid?)</th>
+                                                        <th style="min-width: 180px;">Short Notes / Details</th>
+                                                        <th style="width: 45px; text-align: center;"></th>
                                                     </tr>
                                                 </thead>
                                                 <tbody id="addItemsBody">
@@ -239,7 +244,7 @@
                                                     <tr class="table-light">
                                                         <td colspan="4" class="text-end fw-bold font-12">Line Items Subtotal:</td>
                                                         <td class="text-end fw-bold text-danger font-13" id="addItemsSumDisplay">₹0.00</td>
-                                                        <td colspan="2" class="text-muted font-11">Automatically syncs with Total Amount</td>
+                                                        <td colspan="3" class="text-muted font-11">Automatically syncs with Total Amount</td>
                                                     </tr>
                                                 </tfoot>
                                             </table>
@@ -327,13 +332,14 @@
                                             <table class="table table-sm table-bordered align-middle mb-0" id="editItemsTable">
                                                 <thead class="table-light font-12 text-nowrap">
                                                     <tr>
-                                                        <th style="width: 60px; text-align: center;">S.No</th>
-                                                        <th style="min-width: 220px;">Item Title <span class="text-danger">*</span></th>
-                                                        <th style="width: 120px; text-align: center;">Quantity</th>
-                                                        <th style="width: 150px; text-align: right;">Per Rate (₹)</th>
-                                                        <th style="width: 160px; text-align: right;">Amount (₹) <span class="text-danger">*</span></th>
-                                                        <th style="min-width: 200px;">Short Notes / Details</th>
-                                                        <th style="width: 50px; text-align: center;"></th>
+                                                        <th style="width: 50px; text-align: center;">S.No</th>
+                                                        <th style="min-width: 200px;">Item Title <span class="text-danger">*</span></th>
+                                                        <th style="width: 100px; text-align: center;">Quantity</th>
+                                                        <th style="width: 130px; text-align: right;">Per Rate (₹)</th>
+                                                        <th style="width: 140px; text-align: right;">Amount (₹) <span class="text-danger">*</span></th>
+                                                        <th style="width: 110px; text-align: center;">Status (Paid?)</th>
+                                                        <th style="min-width: 180px;">Short Notes / Details</th>
+                                                        <th style="width: 45px; text-align: center;"></th>
                                                     </tr>
                                                 </thead>
                                                 <tbody id="editItemsBody">
@@ -343,7 +349,7 @@
                                                     <tr class="table-light">
                                                         <td colspan="4" class="text-end fw-bold font-12">Line Items Subtotal:</td>
                                                         <td class="text-end fw-bold text-danger font-13" id="editItemsSumDisplay">₹0.00</td>
-                                                        <td colspan="2" class="text-muted font-11">Syncs with Total Amount above</td>
+                                                        <td colspan="3" class="text-muted font-11">Syncs with Total Amount above</td>
                                                     </tr>
                                                 </tfoot>
                                             </table>
@@ -372,22 +378,22 @@
 
     <!-- VIEW LINE ITEMS BREAKDOWN MODAL -->
     <div class="modal fade" id="viewExpenseItemsModal" tabindex="-1" aria-labelledby="viewExpenseItemsModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-dialog modal-dialog-centered modal-xl">
             <div class="modal-content border-0 shadow">
-                <div class="modal-header bg-info text-white">
+                <div class="modal-header button-color text-white">
                     <h5 class="modal-title text-white" id="viewExpenseItemsModalLabel">
-                        <i class="fas fa-list-ul me-1"></i> Personal Expense Breakdown
+                        <i class="fas fa-list-ul me-1"></i> Personal Expense & Line Items Breakdown
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
                     <div class="p-3 bg-light rounded border mb-3">
                         <div class="row g-2 align-items-center">
-                            <div class="col-md-5">
+                            <div class="col-md-4">
                                 <span class="text-muted small">Expense Title:</span>
                                 <div class="fw-bold fs-6 text-dark" id="view_exp_title">-</div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <span class="text-muted small">Expense Month:</span>
                                 <div class="fw-semibold text-primary" id="view_exp_month">-</div>
                             </div>
@@ -395,37 +401,62 @@
                                 <span class="text-muted small">Expense Date:</span>
                                 <div class="fw-semibold text-dark" id="view_exp_date">-</div>
                             </div>
-                            <div class="col-md-2 text-md-end">
-                                <span class="text-muted small">Total Expense:</span>
-                                <div class="fw-bold text-danger fs-5" id="view_exp_total">₹0.00</div>
+                            <div class="col-md-4 text-md-end">
+                                <div class="d-flex flex-column align-items-md-end">
+                                    <div class="font-12">Total: <strong class="text-dark fs-6" id="view_exp_total">₹0.00</strong></div>
+                                    <div class="font-11">
+                                        <span class="text-success fw-bold me-2">Paid: <span id="view_exp_paid_amt">₹0.00</span></span>
+                                        <span class="text-danger fw-bold">Balance: <span id="view_exp_due_amt">₹0.00</span></span>
+                                    </div>
+                                    <div class="mt-1" id="view_exp_status_badge"></div>
+                                </div>
                             </div>
-                            <div class="col-md-12 mt-2">
-                                <span class="text-muted small">Paid To / Merchant:</span>
-                                <span class="fw-semibold text-secondary ms-1" id="view_exp_paid_to">-</span>
+                            <div class="col-md-12 mt-2 pt-2 border-top d-flex justify-content-between align-items-center font-12 flex-wrap gap-2">
+                                <div>
+                                    <span class="text-muted">Paid To / Merchant:</span>
+                                    <span class="fw-semibold text-secondary ms-1" id="view_exp_paid_to">-</span>
+                                </div>
+                                <div>
+                                    <span class="text-muted">Payment Progress:</span>
+                                    <span class="fw-bold text-dark ms-1" id="view_exp_progress_pct">0%</span>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <h6 class="fw-bold text-dark mb-2"><i class="fas fa-layer-group text-primary me-1"></i> Itemized Line Items</h6>
+                    <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                        <h6 class="fw-bold text-dark mb-0"><i class="fas fa-layer-group text-primary me-1"></i> Itemized Line Items</h6>
+                        <div class="btn-group btn-group-sm">
+                            <button type="button" class="btn btn-outline-success btn-modal-mark-all-paid" id="btnModalMarkAllPaid">
+                                <i class="fas fa-check-double me-1"></i> Mark All as Paid
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-modal-mark-all-unpaid" id="btnModalMarkAllUnpaid">
+                                <i class="fas fa-undo me-1"></i> Mark All as Pending
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="table-responsive">
                         <table class="table table-striped table-bordered align-middle">
                             <thead class="table-theme text-white font-12">
                                 <tr>
-                                    <th style="width: 6%; text-align: center;">S.No</th>
-                                    <th style="width: 32%;">Item Title</th>
-                                    <th style="width: 12%; text-align: center;">Quantity</th>
-                                    <th style="width: 15%; text-align: right;">Per Rate (₹)</th>
-                                    <th style="width: 15%; text-align: right;">Total Amount (₹)</th>
-                                    <th style="width: 20%;">Short Notes</th>
+                                    <th style="width: 5%; text-align: center;">S.No</th>
+                                    <th style="width: 28%;">Item Title</th>
+                                    <th style="width: 9%; text-align: center;">Qty</th>
+                                    <th style="width: 14%; text-align: right;">Per Rate (₹)</th>
+                                    <th style="width: 14%; text-align: right;">Total Amount (₹)</th>
+                                    <th style="width: 14%; text-align: center;">Status</th>
+                                    <th style="width: 16%; text-align: center;">Action (Paid Button)</th>
                                 </tr>
                             </thead>
                             <tbody id="view_exp_items_tbody">
                             </tbody>
                             <tfoot>
-                                <tr class="table-light fw-bold">
-                                    <td colspan="4" class="text-end font-13">Total Amount:</td>
-                                    <td class="text-end text-danger fs-6" id="view_exp_footer_total">₹0.00</td>
-                                    <td></td>
+                                <tr class="table-light fw-bold font-12">
+                                    <td colspan="4" class="text-end">Summary:</td>
+                                    <td class="text-end text-dark font-13" id="view_exp_footer_total">₹0.00</td>
+                                    <td class="text-center text-success" id="view_exp_footer_paid">Paid: ₹0.00</td>
+                                    <td class="text-center text-danger" id="view_exp_footer_due">Due: ₹0.00</td>
                                 </tr>
                             </tfoot>
                         </table>
@@ -530,15 +561,24 @@
 
                 function updateStatCards(stats) {
                     if (stats) {
-                        $('#statTotalExpenses').text('₹' + Number(stats.totalExpenses).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
-                        $('#statThisMonthExpenses').text('₹' + Number(stats.thisMonthExpenses).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                        var total = stats.totalExpenses !== undefined ? stats.totalExpenses : (stats.thisMonthExpenses || 0);
+                        var paid = stats.totalPaid !== undefined ? stats.totalPaid : (stats.thisMonthPaid || 0);
+                        var bal = stats.totalBalance !== undefined ? stats.totalBalance : (stats.thisMonthBalance || 0);
+                        var allTot = stats.allTotal !== undefined ? stats.allTotal : total;
+                        var allBal = stats.allBalance !== undefined ? stats.allBalance : bal;
+
+                        $('#statThisMonthExpenses').text('₹' + Number(total).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                        $('#statTotalPaid').text('₹' + Number(paid).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                        $('#statTotalBalance').text('₹' + Number(bal).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                        $('#statAllTotal').text('₹' + Number(allTot).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+                        $('#statAllBalance').text('₹' + Number(allBal).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
+
                         if (stats.monthLabel) {
                             $('#statMonthLabel').text(stats.monthLabel);
                         }
-                        $('#statMonthRecordsDisplay').text(stats.monthRecords !== undefined ? stats.monthRecords : 0);
                         $('#statMonthRecords').text(stats.monthRecords !== undefined ? stats.monthRecords : 0);
-                        $('#statLineItemsCount').text(stats.lineItemsCount !== undefined ? stats.lineItemsCount : 0);
-                        $('#statTotalRecords').text(stats.totalRecords !== undefined ? stats.totalRecords : 0);
+                        $('#statPaidItemsCount').text(stats.paidLineItems !== undefined ? stats.paidLineItems : 0);
+                        $('#statPendingItemsCount').text(stats.pendingLineItems !== undefined ? stats.pendingLineItems : 0);
                     }
                 }
 
@@ -628,12 +668,14 @@
                 var addLineCounter = 0;
                 var editLineCounter = 0;
 
-                function createLineItemRow(containerId, index, title, quantity, perRate, amount, notes) {
+                function createLineItemRow(containerId, index, title, quantity, perRate, amount, notes, isPaid) {
                     title = title || '';
                     quantity = (quantity !== undefined && quantity !== null && quantity !== '') ? quantity : 1;
                     perRate = (perRate !== undefined && perRate !== null && perRate !== '') ? perRate : '';
                     amount = (amount !== undefined && amount !== null && amount !== '') ? amount : '';
                     notes = notes || '';
+                    isPaid = !!isPaid;
+                    var switchId = 'item_paid_' + containerId + '_' + index;
 
                     return '<tr class="line-item-row" data-index="' + index + '">' +
                         '<td class="text-center align-middle">' +
@@ -657,6 +699,12 @@
                                 '<input type="number" step="0.01" min="0" name="items[' + index + '][amount]" class="form-control form-control-sm text-end line-item-amt fw-bold text-danger" placeholder="0.00" value="' + amount + '" required>' +
                             '</div>' +
                         '</td>' +
+                        '<td class="text-center align-middle">' +
+                            '<div class="form-check form-switch d-inline-block mb-0">' +
+                                '<input class="form-check-input line-item-paid-toggle" type="checkbox" name="items[' + index + '][is_paid]" value="1" id="' + switchId + '" ' + (isPaid ? 'checked' : '') + '>' +
+                                '<label class="form-check-label font-11 ms-1 ' + (isPaid ? 'text-success fw-bold' : 'text-muted') + '" for="' + switchId + '">' + (isPaid ? 'Paid' : 'Pending') + '</label>' +
+                            '</div>' +
+                        '</td>' +
                         '<td>' +
                             '<input type="text" name="items[' + index + '][notes]" class="form-control form-control-sm line-item-notes" placeholder="Short notes / details" value="' + $('<div>').text(notes).html() + '">' +
                         '</td>' +
@@ -665,6 +713,15 @@
                         '</td>' +
                     '</tr>';
                 }
+
+                $(document).on('change', '.line-item-paid-toggle', function() {
+                    var $label = $(this).siblings('label');
+                    if ($(this).is(':checked')) {
+                        $label.text('Paid').removeClass('text-muted').addClass('text-success fw-bold');
+                    } else {
+                        $label.text('Pending').removeClass('text-success fw-bold').addClass('text-muted');
+                    }
+                });
 
                 function renumberSerialNumbers(tbodyId) {
                     $('#' + tbodyId + ' tr').each(function(idx) {
@@ -892,7 +949,8 @@
                                             item.quantity !== undefined ? item.quantity : 1,
                                             item.per_rate !== undefined ? item.per_rate : '',
                                             item.amount,
-                                            item.notes
+                                            item.notes,
+                                            item.is_paid
                                         );
                                         $('#editItemsBody').append(rowHtml);
                                         editLineCounter++;
@@ -983,8 +1041,81 @@
                 });
 
                 // =========================================================================
-                // 4. VIEW LINE ITEMS BREAKDOWN MODAL
+                // 4. VIEW & MANAGE LINE ITEMS BREAKDOWN MODAL & PAYMENT STATUS
                 // =========================================================================
+                window.currentViewingExpense = null;
+
+                function renderExpenseItemsModal(exp) {
+                    window.currentViewingExpense = exp;
+                    $('#view_exp_title').text(exp.title);
+                    $('#view_exp_month').text(exp.expense_month || '-');
+                    $('#view_exp_date').text(exp.expense_date ? exp.expense_date.substring(0, 10) : '-');
+                    $('#view_exp_paid_to').text(exp.paid_to || '-');
+
+                    var totalAmt = parseFloat(exp.amount) || 0;
+                    var paidAmt = parseFloat(exp.paid_amount) || 0;
+                    var dueAmt = Math.max(0, totalAmt - paidAmt);
+                    var pct = totalAmt > 0 ? Math.min(100, Math.round((paidAmt / totalAmt) * 100)) : 0;
+
+                    $('#view_exp_total').text('₹' + totalAmt.toLocaleString('en-IN', { minimumFractionDigits: 2 }));
+                    $('#view_exp_paid_amt').text('₹' + paidAmt.toLocaleString('en-IN', { minimumFractionDigits: 2 }));
+                    $('#view_exp_due_amt').text('₹' + dueAmt.toLocaleString('en-IN', { minimumFractionDigits: 2 }));
+                    $('#view_exp_footer_total').text('₹' + totalAmt.toLocaleString('en-IN', { minimumFractionDigits: 2 }));
+                    $('#view_exp_footer_paid').text('Paid: ₹' + paidAmt.toLocaleString('en-IN', { minimumFractionDigits: 2 }));
+                    $('#view_exp_footer_due').text('Due: ₹' + dueAmt.toLocaleString('en-IN', { minimumFractionDigits: 2 }));
+                    $('#view_exp_progress_pct').text(pct + '% (' + (dueAmt <= 0 ? 'Fully Cleared' : '₹' + dueAmt.toFixed(2) + ' pending') + ')');
+
+                    var statusBadge = '';
+                    if (exp.payment_status === 'paid' || (totalAmt > 0 && dueAmt <= 0)) {
+                        statusBadge = '<span class="badge bg-success text-white px-2 py-1"><i class="fas fa-check-circle me-1"></i> Fully Paid</span>';
+                    } else if (paidAmt > 0) {
+                        statusBadge = '<span class="badge bg-warning text-dark px-2 py-1"><i class="fas fa-adjust me-1"></i> Partially Paid</span>';
+                    } else {
+                        statusBadge = '<span class="badge bg-danger text-white px-2 py-1"><i class="fas fa-clock me-1"></i> Pending Payment</span>';
+                    }
+                    $('#view_exp_status_badge').html(statusBadge);
+
+                    var rows = '';
+                    if (exp.items && Array.isArray(exp.items) && exp.items.length > 0) {
+                        exp.items.forEach(function(item, idx) {
+                            var qty = item.quantity !== undefined && item.quantity !== null ? item.quantity : 1;
+                            var rate = (item.per_rate !== undefined && item.per_rate !== null && item.per_rate !== '') ? parseFloat(item.per_rate).toFixed(2) : '-';
+                            var amt = item.amount !== undefined && item.amount !== null ? parseFloat(item.amount).toFixed(2) : '0.00';
+                            var isPaid = !!item.is_paid;
+
+                            var statusCol = isPaid
+                                ? '<span class="badge bg-success-subtle text-success border border-success font-11 px-2 py-1"><i class="fas fa-check-circle me-1"></i> Paid</span>'
+                                : '<span class="badge bg-danger-subtle text-danger border border-danger font-11 px-2 py-1"><i class="fas fa-clock me-1"></i> Pending</span>';
+
+                            var actionBtn = isPaid
+                                ? '<button type="button" class="btn btn-sm btn-outline-secondary btn-toggle-line-paid px-2 py-1 font-11" data-index="' + idx + '" data-id="' + exp.id + '" title="Mark as Pending / Unpaid"><i class="fas fa-undo me-1"></i> Unpaid</button>'
+                                : '<button type="button" class="btn btn-sm btn-success btn-toggle-line-paid px-2 py-1 font-11 fw-bold" data-index="' + idx + '" data-id="' + exp.id + '" title="Mark as Paid"><i class="fas fa-check me-1"></i> Pay</button>';
+
+                            var notesHtml = item.notes ? '<div class="text-muted font-11 mt-1">' + $('<div>').text(item.notes).html() + '</div>' : '';
+
+                            rows += '<tr class="' + (isPaid ? 'table-success-subtle' : '') + '">' +
+                                '<td class="text-center text-muted font-11 fw-bold">' + (idx + 1) + '</td>' +
+                                '<td><strong class="text-dark font-13">' + $('<div>').text(item.title).html() + '</strong>' + notesHtml + '</td>' +
+                                '<td class="text-center font-12">' + qty + '</td>' +
+                                '<td class="text-end font-12">' + (rate !== '-' ? '₹' + rate : '-') + '</td>' +
+                                '<td class="text-end fw-bold ' + (isPaid ? 'text-success' : 'text-danger') + ' font-13">₹' + parseFloat(amt).toLocaleString('en-IN', { minimumFractionDigits: 2 }) + '</td>' +
+                                '<td class="text-center">' + statusCol + '</td>' +
+                                '<td class="text-center">' + actionBtn + '</td>' +
+                            '</tr>';
+                        });
+                    } else {
+                        rows = '<tr><td colspan="7" class="text-center text-muted py-3">No separate line items logged for this expense. (Recorded as single amount).</td></tr>';
+                    }
+                    $('#view_exp_items_tbody').html(rows);
+
+                    if (exp.notes) {
+                        $('#view_exp_notes_text').text(exp.notes);
+                        $('#view_exp_notes_box').removeClass('d-none');
+                    } else {
+                        $('#view_exp_notes_box').addClass('d-none');
+                    }
+                }
+
                 $(document).on('click', '.btn-view-items', function() {
                     var id = $(this).data('id');
 
@@ -993,48 +1124,103 @@
                         type: "GET",
                         success: function(res) {
                             if (res.success && res.expense) {
-                                var exp = res.expense;
-                                $('#view_exp_title').text(exp.title);
-                                $('#view_exp_month').text(exp.expense_month || '-');
-                                $('#view_exp_date').text(exp.expense_date ? exp.expense_date.substring(0, 10) : '-');
-                                $('#view_exp_paid_to').text(exp.paid_to || '-');
-                                $('#view_exp_total').text('₹' + parseFloat(exp.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 }));
-                                $('#view_exp_footer_total').text('₹' + parseFloat(exp.amount).toLocaleString('en-IN', { minimumFractionDigits: 2 }));
-
-                                var rows = '';
-                                if (exp.items && Array.isArray(exp.items) && exp.items.length > 0) {
-                                    exp.items.forEach(function(item, idx) {
-                                        var qty = item.quantity !== undefined && item.quantity !== null ? item.quantity : 1;
-                                        var rate = (item.per_rate !== undefined && item.per_rate !== null && item.per_rate !== '') ? parseFloat(item.per_rate).toFixed(2) : '-';
-                                        var amt = item.amount !== undefined && item.amount !== null ? parseFloat(item.amount).toFixed(2) : '0.00';
-                                        var notesHtml = item.notes ? '<span class="text-muted font-12">' + $('<div>').text(item.notes).html() + '</span>' : '<span class="text-muted font-11">-</span>';
-
-                                        rows += '<tr>' +
-                                            '<td class="text-center text-muted font-11 fw-bold">' + (idx + 1) + '</td>' +
-                                            '<td><strong class="text-dark">' + $('<div>').text(item.title).html() + '</strong></td>' +
-                                            '<td class="text-center font-12">' + qty + '</td>' +
-                                            '<td class="text-end font-12">' + (rate !== '-' ? '₹' + rate : '-') + '</td>' +
-                                            '<td class="text-end fw-bold text-danger font-13">₹' + parseFloat(amt).toLocaleString('en-IN', { minimumFractionDigits: 2 }) + '</td>' +
-                                            '<td>' + notesHtml + '</td>' +
-                                        '</tr>';
-                                    });
-                                } else {
-                                    rows = '<tr><td colspan="6" class="text-center text-muted py-3">No separate line items logged for this expense. (Recorded as single amount).</td></tr>';
-                                }
-                                $('#view_exp_items_tbody').html(rows);
-
-                                if (exp.notes) {
-                                    $('#view_exp_notes_text').text(exp.notes);
-                                    $('#view_exp_notes_box').removeClass('d-none');
-                                } else {
-                                    $('#view_exp_notes_box').addClass('d-none');
-                                }
-
+                                renderExpenseItemsModal(res.expense);
                                 $('#viewExpenseItemsModal').modal('show');
                             }
                         },
                         error: function() {
                             Toast.fire({ icon: 'error', title: 'Failed to load expense items breakdown.' });
+                        }
+                    });
+                });
+
+                // Toggle individual line item paid/unpaid in View Modal
+                $(document).on('click', '.btn-toggle-line-paid', function() {
+                    var $btn = $(this);
+                    var expId = $btn.data('id');
+                    var index = $btn.data('index');
+
+                    $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span>');
+
+                    $.ajax({
+                        url: "{{ url('/admin/expenses') }}/" + expId + "/toggle-item-paid",
+                        type: "POST",
+                        data: {
+                            _token: "{{ csrf_token() }}",
+                            item_index: index,
+                            action: 'toggle'
+                        },
+                        success: function(res) {
+                            if (res.success && res.expense) {
+                                Toast.fire({ icon: 'success', title: res.message });
+                                renderExpenseItemsModal(res.expense);
+                                table.ajax.reload(null, false);
+                                if (res.stats) {
+                                    updateStatCards(res.stats);
+                                }
+                            }
+                        },
+                        error: function(xhr) {
+                            $btn.prop('disabled', false);
+                            Toast.fire({ icon: 'error', title: xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Error updating line item payment status.' });
+                        }
+                    });
+                });
+
+                // Mark all line items in view modal as Paid or Unpaid
+                $(document).on('click', '#btnModalMarkAllPaid, #btnModalMarkAllUnpaid', function() {
+                    if (!window.currentViewingExpense) return;
+                    var expId = window.currentViewingExpense.id;
+                    var action = $(this).attr('id') === 'btnModalMarkAllPaid' ? 'all_paid' : 'all_unpaid';
+
+                    $.ajax({
+                        url: "{{ url('/admin/expenses') }}/" + expId + "/toggle-item-paid",
+                        type: "POST",
+                        data: {
+                            _token: "{{ csrf_token() }}",
+                            action: action
+                        },
+                        success: function(res) {
+                            if (res.success && res.expense) {
+                                Toast.fire({ icon: 'success', title: res.message });
+                                renderExpenseItemsModal(res.expense);
+                                table.ajax.reload(null, false);
+                                if (res.stats) {
+                                    updateStatCards(res.stats);
+                                }
+                            }
+                        },
+                        error: function(xhr) {
+                            Toast.fire({ icon: 'error', title: xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Error updating expense status.' });
+                        }
+                    });
+                });
+
+                // Quick Pay / Unpay from DataTable Row
+                $(document).on('click', '.btn-mark-expense-paid, .btn-mark-expense-unpaid', function() {
+                    var expId = $(this).data('id');
+                    var title = $(this).data('title') || 'this expense';
+                    var isMarkPaid = $(this).hasClass('btn-mark-expense-paid');
+                    var status = isMarkPaid ? 'paid' : 'unpaid';
+
+                    $.ajax({
+                        url: "{{ url('/admin/expenses') }}/" + expId + "/mark-paid",
+                        type: "POST",
+                        data: {
+                            _token: "{{ csrf_token() }}",
+                            status: status
+                        },
+                        success: function(res) {
+                            if (res.success) {
+                                Toast.fire({ icon: 'success', title: res.message });
+                                table.ajax.reload(null, false);
+                                if (res.stats) {
+                                    updateStatCards(res.stats);
+                                }
+                            }
+                        },
+                        error: function(xhr) {
+                            Toast.fire({ icon: 'error', title: xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Error updating expense payment.' });
                         }
                     });
                 });
