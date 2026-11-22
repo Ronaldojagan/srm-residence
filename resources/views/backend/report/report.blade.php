@@ -513,7 +513,6 @@
                                 <th>#</th>
                                 <th>Room #</th>
                                 <th>Floor</th>
-                                <th>Type</th>
                                 <th>Capacity</th>
                                 <th>Monthly Rent</th>
                                 <th>EB Rate</th>
@@ -841,7 +840,6 @@
                         { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, width: '4%' },
                         { data: 'room_badge', name: 'room_number' },
                         { data: 'floor_display', name: 'floor' },
-                        { data: 'room_type_display', name: 'room_type' },
                         { data: 'capacity_display', name: 'capacity' },
                         { data: 'monthly_rent_formatted', name: 'monthly_rent' },
                         { data: 'eb_rate_formatted', name: 'eb_unit_rate' },

@@ -216,7 +216,7 @@ class BillingController extends Controller
             ->addColumn('action', function ($row) {
                 $payBtn = '';
                 if ($row->status !== 'paid') {
-                    $payBtn = '<button type="button" class="btn btn-sm btn-outline-success btn-record-payment" 
+                    $payBtn = '<button type="button" class="btn btn-sm btn-outline-success rounded-2 px-2 py-1 btn-record-payment" 
                                 data-id="' . $row->id . '" 
                                 data-bill="' . e($row->bill_number) . '"
                                 data-tenant="' . e($row->tenant->name ?? 'Tenant') . '" 
@@ -226,7 +226,7 @@ class BillingController extends Controller
                             </button>';
                 }
 
-                $viewBtn = '<button type="button" class="btn btn-sm btn-outline-primary btn-view-invoice" data-id="' . $row->id . '" title="View Invoice Preview">
+                $viewBtn = '<button type="button" class="btn btn-sm btn-outline-info rounded-2 px-2 py-1 btn-view-invoice" data-id="' . $row->id . '" title="View Invoice Preview">
                                 <i class="fas fa-eye"></i>
                             </button>';
 
@@ -242,7 +242,7 @@ class BillingController extends Controller
                 $due = number_format((float)$row->amount - (float)$row->paid_amount, 2);
                 $dueDate = $row->due_date ? $row->due_date->format('d M, Y') : '-';
 
-                $shareBtn = '<button type="button" class="btn btn-sm btn-outline-info btn-open-share-hub" 
+                $shareBtn = '<button type="button" class="btn btn-sm btn-outline-primary rounded-2 px-2 py-1 btn-open-share-hub" 
                                 data-id="' . $row->id . '"
                                 data-bill="' . $billNo . '"
                                 data-tenant="' . $tenantName . '"
@@ -259,14 +259,14 @@ class BillingController extends Controller
                                 <i class="fas fa-share-alt"></i>
                             </button>';
 
-                $editBtn = '<button type="button" class="btn btn-sm btn-outline-secondary btn-edit-bill" data-id="' . $row->id . '" title="Edit Invoice">
+                $editBtn = '<button type="button" class="btn btn-sm btn-outline-secondary rounded-2 px-2 py-1 btn-edit-bill" data-id="' . $row->id . '" title="Edit Invoice">
                                 <i class="fas fa-edit"></i>
                             </button>';
-                $delBtn = '<button type="button" class="btn btn-sm btn-outline-danger btn-delete-bill" data-id="' . $row->id . '" data-bill="' . $billNo . '" title="Delete Invoice">
+                $delBtn = '<button type="button" class="btn btn-sm btn-outline-danger rounded-2 px-2 py-1 btn-delete-bill" data-id="' . $row->id . '" data-bill="' . $billNo . '" title="Delete Invoice">
                                 <i class="fas fa-trash-alt"></i>
                             </button>';
 
-                return '<div class="btn-group btn-group-sm" role="group">' . $payBtn . $viewBtn . $shareBtn . $editBtn . $delBtn . '</div>';
+                return '<div class="d-inline-flex align-items-center justify-content-center gap-1">' . $payBtn . $viewBtn . $shareBtn . $editBtn . $delBtn . '</div>';
             })
             ->rawColumns(['checkbox', 'bill_number_badge', 'tenant_room', 'bill_type_badge', 'amount_display', 'payment_progress', 'due_date_formatted', 'status_badge', 'action'])
             ->make(true);
@@ -336,7 +336,7 @@ class BillingController extends Controller
                 </div>';
             })
             ->addColumn('action', function ($row) {
-                $shareBtn = '<button type="button" class="btn btn-sm btn-outline-success btn-table-share-receipt"
+                $shareBtn = '<button type="button" class="btn btn-sm btn-outline-success rounded-2 px-2 py-1 btn-table-share-receipt"
                                 data-id="' . $row->id . '"
                                 data-receipt="' . e($row->payment_number) . '"
                                 data-tenant="' . e($row->tenant->name ?? 'Resident') . '"
@@ -351,14 +351,14 @@ class BillingController extends Controller
                                 title="Share Receipt via WhatsApp or Apps">
                                 <i class="fab fa-whatsapp me-1"></i> Share
                             </button>';
-                $printBtn = '<button type="button" class="btn btn-sm btn-outline-primary btn-view-receipt" data-id="' . $row->id . '" title="View & Print Receipt">
+                $printBtn = '<button type="button" class="btn btn-sm btn-outline-primary rounded-2 px-2 py-1 btn-view-receipt" data-id="' . $row->id . '" title="View & Print Receipt">
                                 <i class="fas fa-print me-1"></i> Receipt
                             </button>';
-                $delBtn = '<button type="button" class="btn btn-sm btn-outline-danger btn-delete-payment" data-id="' . $row->id . '" data-receipt="' . e($row->payment_number) . '" title="Delete Payment">
+                $delBtn = '<button type="button" class="btn btn-sm btn-outline-danger rounded-2 px-2 py-1 btn-delete-payment" data-id="' . $row->id . '" data-receipt="' . e($row->payment_number) . '" title="Delete Payment">
                                 <i class="fas fa-trash-alt"></i>
                             </button>';
 
-                return '<div class="btn-group btn-group-sm" role="group">' . $shareBtn . $printBtn . $delBtn . '</div>';
+                return '<div class="d-inline-flex align-items-center justify-content-center gap-1">' . $shareBtn . $printBtn . $delBtn . '</div>';
             })
             ->rawColumns(['checkbox', 'payment_number_badge', 'bill_reference', 'tenant_info', 'amount_display', 'payment_date_formatted', 'payment_method_badge', 'action'])
             ->make(true);
@@ -717,7 +717,6 @@ class BillingController extends Controller
                 'phone' => $tenant->phone,
                 'room_id' => $tenant->room_id,
                 'room_number' => $tenant->room ? $tenant->room->room_number : $tenant->room_number,
-                'room_type' => $tenant->room_type,
                 'monthly_rent' => (float) $tenant->monthly_rent,
                 'maintenance_charges' => (float) $tenant->maintenance_charges,
                 'other_charges' => (float) $tenant->other_charges,

@@ -16,7 +16,6 @@ class Tenant extends Model
         'email',
         'phone',
         'room_number',
-        'room_type',
         'monthly_rent',
         'eb_unit_rate',
         'eb_start_reading',
@@ -146,11 +145,7 @@ class Tenant extends Model
 
     public function getRoomTypesDisplayAttribute(): string
     {
-        $rooms = $this->assigned_rooms;
-        if ($rooms->isNotEmpty()) {
-            return $rooms->pluck('room_type')->unique()->filter()->implode(', ');
-        }
-        return $this->room_type ?? 'Standard';
+        return '';
     }
 
     public function bills()

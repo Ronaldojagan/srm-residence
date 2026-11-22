@@ -178,7 +178,6 @@
                     <div class="d-flex align-items-center justify-content-between mt-1">
                         <div>
                             <h4 class="fw-bold text-primary mb-0">Room {{ $tenant->room_numbers_display }}</h4>
-                            <small class="text-muted">{{ $tenant->room_types_display }}</small>
                         </div>
                         <div class="avatar-sm bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center p-2">
                             <i class="mdi mdi-door-closed fs-4"></i>
@@ -324,8 +323,7 @@
                                         <span class="badge bg-info-subtle text-info font-11">{{ $r->floor }}</span>
                                     </div>
                                     <div class="row g-1 small text-muted">
-                                        <div class="col-6">Type: <span class="fw-semibold text-dark">{{ $r->room_type }}</span></div>
-                                        <div class="col-6">Capacity: <span class="fw-semibold text-dark">{{ $r->capacity }} Bed(s)</span></div>
+                                        <div class="col-12"><i class="fas fa-users me-1 text-primary"></i> Capacity: <span class="fw-semibold text-dark">{{ $r->capacity }} Bed(s)</span></div>
                                         <div class="col-6">Base Rent: <span class="fw-semibold text-success">₹{{ number_format($r->monthly_rent) }}</span></div>
                                         <div class="col-6">Deposit: <span class="fw-semibold text-primary">₹{{ number_format($r->security_deposit) }}</span></div>
                                     </div>
@@ -664,13 +662,12 @@
                                                 {{ $isDisabled ? 'disabled' : '' }}
                                                 data-number="{{ $r->room_number }}" 
                                                 data-floor="{{ $r->floor }}" 
-                                                data-type="{{ $r->room_type }}" 
                                                 data-rent="{{ $r->monthly_rent }}" 
                                                 data-deposit="{{ $r->security_deposit }}"
                                                 data-eb="{{ $r->eb_unit_rate }}"
                                                 data-maintenance="{{ $r->maintenance_charges }}"
                                                 data-other="{{ $r->other_charges }}">
-                                                Room {{ $r->room_number }} ({{ $r->floor }} - {{ $r->room_type }}) [{{ $statusLabel }}]
+                                                Room {{ $r->room_number }} ({{ $r->floor }}) [{{ $statusLabel }}]
                                             </option>
                                         @endforeach
                                     @endif

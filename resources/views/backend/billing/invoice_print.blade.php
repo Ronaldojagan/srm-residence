@@ -847,7 +847,7 @@
                 <div class="info-line">
                     <strong>Room:</strong> 
                     @if($bill->room)
-                        Room {{ $bill->room->room_number }} (Floor: {{ $bill->room->floor }}, {{ $bill->room->room_type }})
+                        Room {{ $bill->room->room_number }} (Floor: {{ $bill->room->floor }})
                     @elseif($bill->tenant)
                         {{ $bill->tenant->room_numbers_display }}
                     @else

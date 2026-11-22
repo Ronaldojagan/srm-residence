@@ -58,7 +58,6 @@ class TenantsExport implements FromArray, WithHeadings, WithEvents, WithTitle
             $rooms = $t->assigned_rooms;
             $roomNos = $rooms->isNotEmpty() ? $rooms->pluck('room_number')->implode(', ') : ($t->room_number ?? 'N/A');
             $floors = $rooms->isNotEmpty() ? $rooms->pluck('floor')->filter()->unique()->implode(', ') : ($t->room->floor ?? '');
-            $types = $rooms->isNotEmpty() ? $rooms->pluck('room_type')->filter()->unique()->implode(', ') : ($t->room_type ?? '');
 
             $rent = (float) $t->monthly_rent;
             $deposit = (float) $t->security_deposit;
@@ -80,7 +79,6 @@ class TenantsExport implements FromArray, WithHeadings, WithEvents, WithTitle
                 $t->emergency_contact ?: '-',
                 $roomNos,
                 $floors,
-                $types,
                 $t->commence_date ? $t->commence_date->format('Y-m-d') : '-',
                 number_format($rent, 2, '.', ''),
                 number_format($deposit, 2, '.', ''),
@@ -96,7 +94,6 @@ class TenantsExport implements FromArray, WithHeadings, WithEvents, WithTitle
         $rows[] = [
             'TOTAL',
             count($tenants) . ' Residents',
-            '',
             '',
             '',
             '',
@@ -125,7 +122,6 @@ class TenantsExport implements FromArray, WithHeadings, WithEvents, WithTitle
             'Emergency Contact',
             'Assigned Room(s)',
             'Floor',
-            'Room Type',
             'Commence Date',
             'Monthly Rent (INR)',
             'Security Deposit (INR)',

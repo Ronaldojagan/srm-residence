@@ -37,15 +37,11 @@ class RoomsExport implements FromArray, WithHeadings, WithEvents, WithTitle
                 $query->where('occupancy_status', $this->request->occupancy_status);
             }
         }
-        if ($this->request->filled('room_type') && $this->request->room_type !== 'all') {
-            $query->where('room_type', $this->request->room_type);
-        }
         if ($this->request->filled('search')) {
             $s = trim($this->request->search);
             $query->where(function ($q) use ($s) {
                 $q->where('room_number', 'like', "%{$s}%")
                     ->orWhere('floor', 'like', "%{$s}%")
-                    ->orWhere('room_type', 'like', "%{$s}%")
                     ->orWhereHas('activeTenants', function ($tq) use ($s) {
                         $tq->where('name', 'like', "%{$s}%")->orWhere('phone', 'like', "%{$s}%");
                     });
@@ -92,7 +88,6 @@ class RoomsExport implements FromArray, WithHeadings, WithEvents, WithTitle
                 $idx + 1,
                 $r->room_number,
                 $r->floor,
-                $r->room_type,
                 $r->capacity,
                 number_format($rent, 2, '.', ''),
                 number_format($r->eb_unit_rate, 2, '.', ''),
@@ -111,7 +106,6 @@ class RoomsExport implements FromArray, WithHeadings, WithEvents, WithTitle
         $rows[] = [
             'TOTAL',
             count($rooms) . ' Rooms',
-            '',
             '',
             $totalCapacity . ' Beds',
             number_format($totalRent, 2, '.', ''),
@@ -135,7 +129,6 @@ class RoomsExport implements FromArray, WithHeadings, WithEvents, WithTitle
             'S.No',
             'Room Number',
             'Floor',
-            'Room Type',
             'Capacity',
             'Monthly Rent (INR)',
             'EB Rate (INR/unit)',

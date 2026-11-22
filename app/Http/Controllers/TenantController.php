@@ -56,8 +56,7 @@ class TenantController extends Controller
                         }
                         $badgeHtml = implode(' ', $badges);
                         $floors = $rooms->pluck('floor')->unique()->filter()->implode(', ');
-                        $types = $rooms->pluck('room_type')->unique()->filter()->implode(', ');
-                        return '<div class="d-flex flex-wrap align-items-center">' . $badgeHtml . '</div><div class="small text-muted mt-1">' . e($types ?: $row->room_type) . ($floors ? ' (' . e($floors) . ')' : '') . '</div>';
+                        return '<div class="d-flex flex-wrap align-items-center">' . $badgeHtml . '</div>' . ($floors ? '<div class="small text-muted mt-1"><i class="fas fa-layer-group me-1"></i>' . e($floors) . '</div>' : '');
                     }
                     return '<span class="badge bg-secondary text-white fw-bold px-2 py-1">Room ' . e($row->room_number ?? 'N/A') . '</span>';
                 })
@@ -86,10 +85,10 @@ class TenantController extends Controller
                 })
                 ->addColumn('action', function ($row) {
                     $viewUrl = url('/admin/tenants/' . $row->id . '/view');
-                    $btn = '<div class="btn-group btn-group-sm" role="group">';
-                    $btn .= '<a href="' . $viewUrl . '" class="btn btn-outline-info" title="View Resident Profile"><i class="fas fa-eye"></i></a>';
-                    $btn .= '<button type="button" class="btn btn-outline-primary btn-edit-tenant" data-id="' . $row->id . '" title="Edit Tenant"><i class="fas fa-edit"></i></button>';
-                    $btn .= '<button type="button" class="btn btn-outline-danger btn-delete-tenant" data-id="' . $row->id . '" data-name="' . e($row->name) . '" title="Delete Tenant"><i class="fas fa-trash-alt"></i></button>';
+                    $btn = '<div class="d-inline-flex align-items-center justify-content-center gap-1">';
+                    $btn .= '<a href="' . $viewUrl . '" class="btn btn-sm btn-outline-info rounded-2 px-2 py-1" title="View Resident Profile"><i class="fas fa-eye"></i></a>';
+                    $btn .= '<button type="button" class="btn btn-sm btn-outline-primary rounded-2 px-2 py-1 btn-edit-tenant" data-id="' . $row->id . '" title="Edit Tenant"><i class="fas fa-edit"></i></button>';
+                    $btn .= '<button type="button" class="btn btn-sm btn-outline-danger rounded-2 px-2 py-1 btn-delete-tenant" data-id="' . $row->id . '" data-name="' . e($row->name) . '" title="Delete Tenant"><i class="fas fa-trash-alt"></i></button>';
                     $btn .= '</div>';
                     return $btn;
                 })
@@ -223,11 +222,9 @@ class TenantController extends Controller
 
         $primaryRoom = $assignedRooms->first();
         $roomNumbers = $assignedRooms->sortBy(fn($r) => (int) $r->room_number)->pluck('room_number')->implode(', ');
-        $roomTypes = $assignedRooms->pluck('room_type')->unique()->filter()->implode(', ');
 
         $validated['room_id'] = $primaryRoom->id;
         $validated['room_number'] = $roomNumbers;
-        $validated['room_type'] = $roomTypes ?: 'Standard';
 
         // Inherit financial & utility rates directly from assigned rooms
         $validated['monthly_rent'] = (float) $assignedRooms->sum('monthly_rent');
@@ -394,11 +391,9 @@ class TenantController extends Controller
         $newRoomIds = $assignedRooms->pluck('id')->toArray();
         $primaryRoom = $assignedRooms->first();
         $roomNumbers = $assignedRooms->sortBy(fn($r) => (int) $r->room_number)->pluck('room_number')->implode(', ');
-        $roomTypes = $assignedRooms->pluck('room_type')->unique()->filter()->implode(', ');
 
         $validated['room_id'] = $primaryRoom->id;
         $validated['room_number'] = $roomNumbers;
-        $validated['room_type'] = $roomTypes ?: $tenant->room_type;
 
         // Inherit financial & utility rates directly from assigned rooms
         $validated['monthly_rent'] = (float) $assignedRooms->sum('monthly_rent');

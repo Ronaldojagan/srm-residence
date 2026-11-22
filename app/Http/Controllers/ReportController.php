@@ -26,7 +26,7 @@ class ReportController extends Controller
 
         // Natural numeric order for rooms
         $rooms = Room::orderByRaw('CAST(room_number AS UNSIGNED) ASC, room_number ASC')
-            ->get(['id', 'room_number', 'floor', 'room_type', 'occupancy_status', 'is_self']);
+            ->get(['id', 'room_number', 'floor', 'occupancy_status', 'is_self']);
 
         // Tenants ordered by name
         $tenants = Tenant::orderBy('name', 'asc')
@@ -591,9 +591,6 @@ class ReportController extends Controller
             ->addColumn('floor_display', function ($row) {
                 return '<span class="fw-semibold text-dark">' . e($row->floor) . '</span>';
             })
-            ->addColumn('room_type_display', function ($row) {
-                return '<span class="badge bg-light text-secondary border px-2 py-1">' . e($row->room_type) . '</span>';
-            })
             ->addColumn('capacity_display', function ($row) {
                 return $row->capacity . ' Persons';
             })
@@ -642,7 +639,7 @@ class ReportController extends Controller
                 }
                 return '<span class="text-muted">Vacant</span>';
             })
-            ->rawColumns(['room_badge', 'floor_display', 'room_type_display', 'monthly_rent_formatted', 'total_monthly_formatted', 'status_badge', 'current_tenant_display'])
+            ->rawColumns(['room_badge', 'floor_display', 'monthly_rent_formatted', 'total_monthly_formatted', 'status_badge', 'current_tenant_display'])
             ->make(true);
     }
 
@@ -1040,7 +1037,6 @@ class ReportController extends Controller
         fputcsv($handle, [
             'Room Number',
             'Floor',
-            'Room Type',
             'Capacity',
             'Monthly Rent (INR)',
             'EB Rate (INR/unit)',
@@ -1075,7 +1071,6 @@ class ReportController extends Controller
                 fputcsv($handle, [
                     $r->room_number,
                     $r->floor,
-                    $r->room_type,
                     $r->capacity,
                     number_format($r->monthly_rent, 2, '.', ''),
                     number_format($r->eb_unit_rate, 2, '.', ''),

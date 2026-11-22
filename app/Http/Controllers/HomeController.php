@@ -226,7 +226,6 @@ class HomeController extends Controller
                 'room' => $roomDisplay !== 'Unassigned' ? 'Room ' . $roomDisplay : ($t->room ? 'Room ' . $t->room->room_number : 'Unassigned'),
                 'room_number' => $roomDisplay !== 'Unassigned' ? $roomDisplay : ($t->room ? $t->room->room_number : '-'),
                 'floor' => $t->assigned_rooms->isNotEmpty() ? $t->assigned_rooms->pluck('floor')->unique()->implode(', ') : ($t->room ? $t->room->floor : '-'),
-                'type' => $t->room_types_display,
                 'rent' => (float) ($t->monthly_rent > 0 ? $t->monthly_rent : ($t->room ? $t->room->total_monthly : 5000)),
                 'base_rent' => (float) $t->monthly_rent,
                 'maintenance' => (float) $t->maintenance_charges,

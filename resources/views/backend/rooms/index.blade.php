@@ -130,7 +130,7 @@
                 <div class="card-body">
                     <!-- Filters row -->
                     <div class="row mb-3 g-2 align-items-end">
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label class="form-label small text-muted mb-1">Filter by Floor</label>
                             <select id="filterFloor" class="form-select filter-select">
                                 <option value="">All Floors</option>
@@ -139,7 +139,7 @@
                                 <option value="3rd Floor">3rd Floor</option>
                             </select>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label class="form-label small text-muted mb-1">Filter by Occupancy</label>
                             <select id="filterOccupancy" class="form-select filter-select">
                                 <option value="">All Statuses</option>
@@ -149,17 +149,7 @@
                                 <option value="maintenance">Maintenance</option>
                             </select>
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label small text-muted mb-1">Filter by Room Type</label>
-                            <select id="filterType" class="form-select filter-select">
-                                <option value="">All Room Types</option>
-                                <option value="Single Deluxe">Single Deluxe</option>
-                                <option value="Double Sharing">Double Sharing</option>
-                                <option value="Triple Sharing">Triple Sharing</option>
-                                <option value="Executive Suite">Executive Suite</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3 text-end">
+                        <div class="col-md-4 text-end">
                             <button id="btnResetFilters" class="btn btn-outline-secondary btn-sm">
                                 <i class="fas fa-undo me-1"></i> Reset Filters
                             </button>
@@ -175,7 +165,7 @@
                                 <tr>
                                     <th style="width: 4%;">#</th>
                                     <th style="min-width: 140px;">Room & Floor</th>
-                                    <th style="min-width: 160px;">Type & Capacity</th>
+                                    <th style="min-width: 140px;">Capacity</th>
                                     <th style="min-width: 150px;" class="text-nowrap">Monthly Rent</th>
                                     <th style="min-width: 140px;" class="text-nowrap">Occupancy</th>
                                     <th style="min-width: 180px;">Amenities</th>
@@ -208,12 +198,12 @@
                         <div id="addRoomErrors" class="alert alert-danger d-none"></div>
 
                         <div class="row g-3">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label class="form-label fw-bold">Room Number <span class="text-danger">*</span></label>
                                 <input type="text" name="room_number" class="form-control" placeholder="e.g. 101, 204, 305" maxlength="20" required>
                                 <small class="text-muted">Unique unit identification number.</small>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label class="form-label fw-bold">Floor <span class="text-danger">*</span></label>
                                 <select name="floor" class="form-select" required>
                                     <option value="Ground Floor">Ground Floor</option>
@@ -225,19 +215,7 @@
                                     <option value="Penthouse">Penthouse</option>
                                 </select>
                             </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Room Type <span class="text-danger">*</span></label>
-                                <select name="room_type" class="form-select" required>
-                                    <option value="Single Deluxe" selected>Single Deluxe</option>
-                                    <option value="Double Sharing">Double Sharing</option>
-                                    <option value="Triple Sharing">Triple Sharing</option>
-                                    <option value="Four Sharing">Four Sharing</option>
-                                    <option value="Executive Suite">Executive Suite</option>
-                                    <option value="Studio Apartment">Studio Apartment</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label class="form-label fw-bold">Bed Capacity <span class="text-danger">*</span></label>
                                 <input type="number" name="capacity" class="form-control" value="1" min="1" max="30" required>
                             </div>
@@ -344,11 +322,11 @@
                         <div id="editRoomErrors" class="alert alert-danger d-none"></div>
 
                         <div class="row g-3">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label class="form-label fw-bold">Room Number <span class="text-danger">*</span></label>
                                 <input type="text" id="edit_room_number" name="room_number" class="form-control" maxlength="20" required>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label class="form-label fw-bold">Floor <span class="text-danger">*</span></label>
                                 <select id="edit_floor" name="floor" class="form-select" required>
                                     <option value="Ground Floor">Ground Floor</option>
@@ -360,19 +338,7 @@
                                     <option value="Penthouse">Penthouse</option>
                                 </select>
                             </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Room Type <span class="text-danger">*</span></label>
-                                <select id="edit_room_type" name="room_type" class="form-select" required>
-                                    <option value="Single Deluxe">Single Deluxe</option>
-                                    <option value="Double Sharing">Double Sharing</option>
-                                    <option value="Triple Sharing">Triple Sharing</option>
-                                    <option value="Four Sharing">Four Sharing</option>
-                                    <option value="Executive Suite">Executive Suite</option>
-                                    <option value="Studio Apartment">Studio Apartment</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label class="form-label fw-bold">Bed Capacity <span class="text-danger">*</span></label>
                                 <input type="number" id="edit_capacity" name="capacity" class="form-control" min="1" max="30" required>
                             </div>
@@ -498,13 +464,12 @@
                         data: function(d) {
                             d.floor = $('#filterFloor').val();
                             d.occupancy_status = $('#filterOccupancy').val();
-                            d.room_type = $('#filterType').val();
                         }
                     },
                     columns: [
                         { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
                         { data: 'room_badge', name: 'room_number' },
-                        { data: 'type_capacity', name: 'room_type' },
+                        { data: 'capacity_display', name: 'capacity' },
                         { data: 'rent_display', name: 'monthly_rent' },
                         { data: 'occupancy_badge', name: 'occupancy_status' },
                         { data: 'amenities_display', name: 'amenities' },
@@ -527,14 +492,13 @@
                 });
 
                 // Filter triggers
-                $('#filterFloor, #filterOccupancy, #filterType').on('change', function() {
+                $('#filterFloor, #filterOccupancy').on('change', function() {
                     table.ajax.reload();
                 });
 
                 $('#btnResetFilters').on('click', function() {
                     $('#filterFloor').val('');
                     $('#filterOccupancy').val('');
-                    $('#filterType').val('');
                     table.search('').draw();
                 });
 
@@ -542,7 +506,6 @@
                     var params = {
                         floor: $('#filterFloor').val(),
                         occupancy_status: $('#filterOccupancy').val(),
-                        room_type: $('#filterType').val(),
                         search: table.search()
                     };
                     window.location.href = "{{ route('rooms.export') }}?" + $.param(params);
@@ -759,7 +722,6 @@
                                 $('#edit_room_id').val(room.id);
                                 $('#edit_room_number').val(room.room_number);
                                 $('#edit_floor').val(room.floor);
-                                $('#edit_room_type').val(room.room_type);
                                 $('#edit_capacity').val(room.capacity);
                                 var isSelf = (room.is_self == 1 || room.occupancy_status === 'self');
                                 if (isSelf) {

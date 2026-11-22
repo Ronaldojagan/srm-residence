@@ -234,13 +234,12 @@
                                                 {{ $isDisabled ? 'disabled' : '' }}
                                                 data-number="{{ $r->room_number }}" 
                                                 data-floor="{{ $r->floor }}" 
-                                                data-type="{{ $r->room_type }}" 
                                                 data-rent="{{ $r->monthly_rent }}" 
                                                 data-deposit="{{ $r->security_deposit }}"
                                                 data-eb="{{ $r->eb_unit_rate }}"
                                                 data-maintenance="{{ $r->maintenance_charges }}"
                                                 data-other="{{ $r->other_charges }}">
-                                                Room {{ $r->room_number }} ({{ $r->floor }} - {{ $r->room_type }}) [{{ $statusLabel }}]
+                                                Room {{ $r->room_number }} ({{ $r->floor }}) [{{ $statusLabel }}]
                                             </option>
                                         @endforeach
                                     @endif
@@ -251,7 +250,6 @@
                             <div class="col-md-4">
                                 <label class="form-label fw-semibold">Commence Date <span class="text-danger">*</span></label>
                                 <input type="date" name="commence_date" class="form-control" value="{{ date('Y-m-d') }}" required>
-                                <input type="hidden" name="room_type" id="tenant_room_type" value="Standard">
                             </div>
 
                             <!-- Assigned Room Financial Details Card (Read-only, automatically taken from room) -->
@@ -346,13 +344,12 @@
                                                 data-occupant-name="{{ $occupantNames }}"
                                                 data-number="{{ $r->room_number }}" 
                                                 data-floor="{{ $r->floor }}" 
-                                                data-type="{{ $r->room_type }}" 
                                                 data-rent="{{ $r->monthly_rent }}" 
                                                 data-deposit="{{ $r->security_deposit }}"
                                                 data-eb="{{ $r->eb_unit_rate }}"
                                                 data-maintenance="{{ $r->maintenance_charges }}"
                                                 data-other="{{ $r->other_charges }}">
-                                                Room {{ $r->room_number }} ({{ $r->floor }} - {{ $r->room_type }}) [{{ $isSelf ? 'Owner Occupied (Self)' : ($isOccupied ? 'Occupied' . ($occupantNames ? ' by ' . $occupantNames : '') : ($isMaint ? 'Under Maintenance' : 'Available')) }}]
+                                                Room {{ $r->room_number }} ({{ $r->floor }}) [{{ $isSelf ? 'Owner Occupied (Self)' : ($isOccupied ? 'Occupied' . ($occupantNames ? ' by ' . $occupantNames : '') : ($isMaint ? 'Under Maintenance' : 'Available')) }}]
                                             </option>
                                         @endforeach
                                     @endif
@@ -363,7 +360,6 @@
                             <div class="col-md-4">
                                 <label class="form-label fw-semibold">Commence Date</label>
                                 <input type="date" id="edit_commence_date" name="commence_date" class="form-control">
-                                <input type="hidden" name="room_type" id="edit_room_type" value="Standard">
                             </div>
 
                             <!-- Assigned Room Financial Details Card (Read-only, automatically taken from room) -->
@@ -552,7 +548,6 @@
 
                     if (count === 0) {
                         $('#tenant_room_number').val('');
-                        $('#tenant_room_type').val('Standard');
                         $('#addRoomDetailsInfoBox').addClass('d-none');
                         return;
                     }
@@ -562,7 +557,6 @@
                     var totalMaint = 0;
                     var totalOther = 0;
                     var roomNumbers = [];
-                    var roomTypes = [];
                     var ebRate = 10.00;
 
                     $selected.each(function() {
@@ -572,12 +566,10 @@
                         totalMaint += parseFloat($opt.data('maintenance')) || 0;
                         totalOther += parseFloat($opt.data('other')) || 0;
                         if ($opt.data('number')) roomNumbers.push($opt.data('number'));
-                        if ($opt.data('type') && !roomTypes.includes($opt.data('type'))) roomTypes.push($opt.data('type'));
                         if ($opt.data('eb')) ebRate = parseFloat($opt.data('eb'));
                     });
 
                     $('#tenant_room_number').val(roomNumbers.join(', '));
-                    $('#tenant_room_type').val(roomTypes.join(', '));
 
                     var summaryParts = ['Room(s): ' + roomNumbers.join(', ')];
                     summaryParts.push('Deposit: ₹' + totalDeposit.toLocaleString('en-IN'));
@@ -608,7 +600,6 @@
                     var totalMaint = 0;
                     var totalOther = 0;
                     var roomNumbers = [];
-                    var roomTypes = [];
                     var ebRate = 10.00;
 
                     $selected.each(function() {
@@ -618,12 +609,10 @@
                         totalMaint += parseFloat($opt.data('maintenance')) || 0;
                         totalOther += parseFloat($opt.data('other')) || 0;
                         if ($opt.data('number')) roomNumbers.push($opt.data('number'));
-                        if ($opt.data('type') && !roomTypes.includes($opt.data('type'))) roomTypes.push($opt.data('type'));
                         if ($opt.data('eb')) ebRate = parseFloat($opt.data('eb'));
                     });
 
                     $('#edit_tenant_room_number').val(roomNumbers.join(', '));
-                    $('#edit_room_type').val(roomTypes.join(', '));
 
                     var summaryParts = ['Room(s): ' + roomNumbers.join(', ')];
                     summaryParts.push('Deposit: ₹' + totalDeposit.toLocaleString('en-IN'));
@@ -782,7 +771,6 @@
                                 isProgrammaticEditChange = false;
 
                                 $('#edit_tenant_room_number').val(tenant.room_number || '');
-                                $('#edit_room_type').val(tenant.room_type);
                                 if (tenant.commence_date) {
                                     $('#edit_commence_date').val(tenant.commence_date.substring(0, 10));
                                 }

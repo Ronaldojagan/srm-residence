@@ -35,9 +35,6 @@ class RoomController extends Controller
                     $query->where('occupancy_status', $request->occupancy_status);
                 }
             }
-            if ($request->filled('room_type')) {
-                $query->where('room_type', $request->room_type);
-            }
 
             return DataTables::of($query)
                 ->orderColumn('room_number', function ($query, $order) {
@@ -57,10 +54,9 @@ class RoomController extends Controller
                         </div>
                     </div>';
                 })
-                ->addColumn('type_capacity', function ($row) {
+                ->addColumn('capacity_display', function ($row) {
                     return '<div>
-                        <span class="fw-bold text-dark d-block">' . e($row->room_type) . '</span>
-                        <small class="text-muted"><i class="fas fa-users me-1"></i> Capacity: ' . $row->capacity . ' ' . Str::plural('bed', $row->capacity) . '</small>
+                        <span class="fw-bold text-dark"><i class="fas fa-users me-1 text-primary"></i> ' . $row->capacity . ' ' . Str::plural('Bed', $row->capacity) . '</span>
                     </div>';
                 })
                 ->addColumn('rent_display', function ($row) {
@@ -111,13 +107,13 @@ class RoomController extends Controller
                     </div>';
                 })
                 ->addColumn('action', function ($row) {
-                    $btn = '<div class="btn-group btn-group-sm" role="group">';
-                    $btn .= '<button type="button" class="btn btn-outline-primary btn-edit-room" data-id="' . $row->id . '" title="Edit Room"><i class="fas fa-edit"></i></button>';
-                    $btn .= '<button type="button" class="btn btn-outline-danger btn-delete-room" data-id="' . $row->id . '" data-number="' . e($row->room_number) . '" title="Delete Room"><i class="fas fa-trash-alt"></i></button>';
+                    $btn = '<div class="d-inline-flex align-items-center justify-content-center gap-1">';
+                    $btn .= '<button type="button" class="btn btn-sm btn-outline-primary rounded-2 px-2 py-1 btn-edit-room" data-id="' . $row->id . '" title="Edit Room"><i class="fas fa-edit"></i></button>';
+                    $btn .= '<button type="button" class="btn btn-sm btn-outline-danger rounded-2 px-2 py-1 btn-delete-room" data-id="' . $row->id . '" data-number="' . e($row->room_number) . '" title="Delete Room"><i class="fas fa-trash-alt"></i></button>';
                     $btn .= '</div>';
                     return $btn;
                 })
-                ->rawColumns(['room_badge', 'type_capacity', 'rent_display', 'occupancy_badge', 'amenities_display', 'status_toggle', 'action'])
+                ->rawColumns(['room_badge', 'capacity_display', 'rent_display', 'occupancy_badge', 'amenities_display', 'status_toggle', 'action'])
                 ->make(true);
         }
 
@@ -157,7 +153,6 @@ class RoomController extends Controller
         $validated = $request->validate([
             'room_number' => ['required', 'string', 'max:20', Rule::unique('rooms', 'room_number')->whereNull('deleted_at')],
             'floor' => 'required|string|max:50',
-            'room_type' => 'required|string|max:100',
             'capacity' => 'required|integer|min:1|max:30',
             'monthly_rent' => 'required|numeric|min:0',
             'eb_unit_rate' => 'nullable|numeric|min:0|max:100',
@@ -172,7 +167,6 @@ class RoomController extends Controller
             'room_number.unique' => 'Room number already exists. Please enter a unique room number.',
             'room_number.max' => 'Room number may not be greater than 20 characters.',
             'floor.required' => 'Please select a floor.',
-            'room_type.required' => 'Please select a room type.',
             'capacity.required' => 'Bed capacity is required.',
             'capacity.min' => 'Bed capacity must be at least 1 person.',
             'capacity.max' => 'Bed capacity cannot exceed 30 persons.',
@@ -227,7 +221,6 @@ class RoomController extends Controller
         $validated = $request->validate([
             'room_number' => ['required', 'string', 'max:20', Rule::unique('rooms', 'room_number')->ignore($room->id)->whereNull('deleted_at')],
             'floor' => 'required|string|max:50',
-            'room_type' => 'required|string|max:100',
             'capacity' => 'required|integer|min:1|max:30',
             'monthly_rent' => 'required|numeric|min:0',
             'eb_unit_rate' => 'nullable|numeric|min:0|max:100',
@@ -242,7 +235,6 @@ class RoomController extends Controller
             'room_number.unique' => 'Room number already exists on another unit.',
             'room_number.max' => 'Room number may not be greater than 20 characters.',
             'floor.required' => 'Please select a floor.',
-            'room_type.required' => 'Please select a room type.',
             'capacity.required' => 'Bed capacity is required.',
             'capacity.min' => 'Bed capacity must be at least 1 person.',
             'capacity.max' => 'Bed capacity cannot exceed 30 persons.',

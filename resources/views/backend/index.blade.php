@@ -775,7 +775,7 @@
                                 <div class="res-avatar mx-auto mb-2" style="width: 60px; height: 60px; font-size: 24px; line-height: 60px;" id="tv_avatar">T</div>
                                 <h5 class="fw-bold text-dark mb-1" id="tv_card_name">Tenant Name</h5>
                                 <span class="badge bg-primary text-white px-2 py-1 mb-1" id="tv_room_badge">Room</span>
-                                <div class="small text-muted mb-3" id="tv_room_type">Room Type</div>
+                                <div class="small text-muted mb-3" id="tv_floor_display">Floor</div>
                                 
                                 <hr class="my-2">
                                 <div class="text-start small">
@@ -1034,7 +1034,7 @@
                     $('#tv_card_name').text(t.name);
                     $('#tv_avatar').text(t.name.charAt(0).toUpperCase());
                     $('#tv_room_badge').text(t.room);
-                    $('#tv_room_type').text(t.type + (t.floor && t.floor !== '-' ? ' (' + t.floor + ')' : ''));
+                    $('#tv_floor_display').text(t.floor && t.floor !== '-' ? 'Floor: ' + t.floor : '');
                     $('#tv_date').text(t.date);
 
                     var statusHtml = '';

@@ -194,7 +194,7 @@
                                 <select name="room_id" class="form-select">
                                     <option value="">General / Common Area</option>
                                     @foreach($rooms as $r)
-                                        <option value="{{ $r->id }}">Room {{ $r->room_number }} ({{ $r->floor }} - {{ $r->room_type }})</option>
+                                        <option value="{{ $r->id }}">Room {{ $r->room_number }} ({{ $r->floor }})</option>
                                     @endforeach
                                 </select>
                                 <small class="text-muted">Leave empty if common residence expense.</small>
@@ -282,7 +282,7 @@
                                 <select id="edit_room_id" name="room_id" class="form-select">
                                     <option value="">General / Common Area</option>
                                     @foreach($rooms as $r)
-                                        <option value="{{ $r->id }}">Room {{ $r->room_number }} ({{ $r->floor }} - {{ $r->room_type }})</option>
+                                        <option value="{{ $r->id }}">Room {{ $r->room_number }} ({{ $r->floor }})</option>
                                     @endforeach
                                 </select>
                             </div>
