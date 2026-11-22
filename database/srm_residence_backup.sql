@@ -1,5 +1,5 @@
 -- SRM RESIDENCE COMPLETE DATABASE DUMP
--- Generated: 2026-11-22 11:27:14
+-- Generated: 2026-11-22 12:47:38
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- --------------------------------------------------------
@@ -105,7 +105,7 @@ INSERT INTO `tenant_rooms` (`id`, `tenant_id`, `room_id`, `created_at`, `updated
 ('30024', '30020', '22', '2026-11-08 15:36:57', '2026-11-08 15:36:57');
 
 -- --------------------------------------------------------
--- Table: `bills` (76 rows)
+-- Table: `bills` (78 rows)
 -- --------------------------------------------------------
 TRUNCATE TABLE `bills`;
 INSERT INTO `bills` (`id`, `bill_number`, `tenant_id`, `room_id`, `bill_type`, `billing_month`, `bill_date`, `due_date`, `amount`, `eb_previous_reading`, `eb_current_reading`, `eb_consumed_units`, `eb_unit_rate`, `eb_amount`, `paid_amount`, `due_amount`, `status`, `notes`, `items`, `created_by`, `created_at`, `updated_at`, `deleted_at`) VALUES
@@ -171,24 +171,26 @@ INSERT INTO `bills` (`id`, `bill_number`, `tenant_id`, `room_id`, `bill_type`, `
 ('60059', 'INV-202611-0059', '30020', '22', 'Monthly Rent', 'February 2026', '2026-02-09', '2026-02-15', '6000.00', NULL, NULL, NULL, NULL, NULL, '0.00', '6000.00', 'overdue', 'Automated monthly rent invoice for February 2026', '[{\"title\":\"Room Monthly Rent\",\"type\":\"Rent\",\"amount\":6000}]', '1', '2026-11-09 23:11:27', '2026-11-11 19:51:25', '2026-11-11 19:51:25'),
 ('60060', 'INV-202611-0060', '13', '26', 'Monthly Rent', 'February 2026', '2026-02-09', '2026-02-15', '6000.00', NULL, NULL, NULL, NULL, NULL, '0.00', '6000.00', 'overdue', 'Automated monthly rent invoice for February 2026', '[{\"title\":\"Room Monthly Rent\",\"type\":\"Rent\",\"amount\":6000}]', '1', '2026-11-09 23:11:27', '2026-11-11 19:51:25', '2026-11-11 19:51:25'),
 ('60061', 'INV-202611-0061', '17', '28', 'Monthly Rent', 'November 2026', '2026-02-09', '2026-11-10', '5000.00', NULL, NULL, NULL, NULL, NULL, '0.00', '5000.00', 'overdue', 'Automated monthly rent invoice for February 2026', '[{\"title\":\"Room Monthly Rent\",\"type\":\"Rent\",\"amount\":5000}]', '1', '2026-11-09 23:11:27', '2026-11-11 19:51:25', '2026-11-11 19:51:25'),
-('90031', 'INV-202611-0062', '2', '3', 'Monthly Rent', 'November 2026', '2026-11-01', '2026-11-15', '13500.00', NULL, NULL, NULL, NULL, NULL, '13500.00', '0.00', 'paid', 'Automated monthly rent invoice for November 2026', '[{\"title\":\"Room Monthly Rent\",\"type\":\"Rent\",\"amount\":13500}]', '1', '2026-11-11 19:51:48', '2026-11-11 19:54:05', NULL),
+('90031', 'INV-202611-0062', '2', '3', 'Monthly Rent', 'November 2026', '2026-11-01', '2026-11-15', '6500.00', NULL, NULL, NULL, NULL, NULL, '6500.00', '0.00', 'paid', 'Automated monthly rent invoice for Room 1 (November 2026)', '[{\"title\":\"Room Monthly Rent (Room 1)\",\"type\":\"Rent\",\"amount\":6500}]', '1', '2026-11-11 19:51:48', '2026-11-22 12:36:37', NULL),
 ('90032', 'INV-202611-0063', '1', '2', 'Monthly Rent', 'November 2026', '2026-11-01', '2026-11-15', '10000.00', NULL, NULL, NULL, NULL, NULL, '10000.00', '0.00', 'paid', 'Automated monthly rent invoice for November 2026', '[{\"title\":\"Room Monthly Rent\",\"type\":\"Rent\",\"amount\":10000}]', '1', '2026-11-11 19:51:48', '2026-11-11 19:53:34', NULL),
 ('90033', 'INV-202611-0064', '3', '4', 'Monthly Rent', 'November 2026', '2026-11-01', '2026-11-14', '5300.00', NULL, NULL, NULL, NULL, NULL, '5300.00', '0.00', 'paid', 'Automated monthly rent invoice for November 2026', '[{\"title\":\"Room Monthly Rent\",\"type\":\"Rent\",\"amount\":5000},{\"title\":\"Other Charges\",\"type\":\"Other\",\"amount\":250}]', '1', '2026-11-11 19:51:48', '2026-11-21 19:26:46', NULL),
 ('90034', 'INV-202611-0065', '4', '5', 'Monthly Rent', 'November 2026', '2026-11-01', '2026-11-15', '6000.00', NULL, NULL, NULL, NULL, NULL, '6000.00', '0.00', 'paid', 'Automated monthly rent invoice for November 2026', '[{\"title\":\"Room Monthly Rent\",\"type\":\"Rent\",\"amount\":6000}]', '1', '2026-11-11 19:51:48', '2026-11-21 19:18:54', NULL),
-('90035', 'INV-202611-0066', '5', '6', 'Monthly Rent', 'November 2026', '2026-11-01', '2026-11-15', '17000.00', NULL, NULL, NULL, NULL, NULL, '17000.00', '0.00', 'paid', 'Automated monthly rent invoice for November 2026', '[{\"title\":\"Room Monthly Rent\",\"type\":\"Rent\",\"amount\":17000}]', '1', '2026-11-11 19:51:48', '2026-11-14 18:58:23', NULL),
+('90035', 'INV-202611-0066', '5', '6', 'Monthly Rent', 'November 2026', '2026-11-01', '2026-11-15', '8500.00', NULL, NULL, NULL, NULL, NULL, '8500.00', '0.00', 'paid', 'Automated monthly rent invoice for Room 5 (November 2026)', '[{\"title\":\"Room Monthly Rent (Room 5)\",\"type\":\"Rent\",\"amount\":8500}]', '1', '2026-11-11 19:51:48', '2026-11-22 12:36:37', NULL),
 ('90036', 'INV-202611-0067', '14', '10', 'Monthly Rent', 'November 2026', '2026-11-01', '2026-11-15', '4000.00', NULL, NULL, NULL, NULL, NULL, '4000.00', '0.00', 'paid', 'Automated monthly rent invoice for November 2026', '[{\"title\":\"Room Monthly Rent\",\"type\":\"Rent\",\"amount\":4000}]', '1', '2026-11-11 19:51:49', '2026-11-14 18:57:58', NULL),
 ('90037', 'INV-202611-0068', '7', '12', 'Monthly Rent', 'November 2026', '2026-11-01', '2026-11-15', '4500.00', NULL, NULL, NULL, NULL, NULL, '4500.00', '0.00', 'paid', 'Automated monthly rent invoice for November 2026', '[{\"title\":\"Room Monthly Rent\",\"type\":\"Rent\",\"amount\":4500}]', '1', '2026-11-11 19:51:49', '2026-11-11 19:55:42', NULL),
 ('90038', 'INV-202611-0069', '19', '13', 'Monthly Rent', 'November 2026', '2026-11-01', '2026-11-15', '5000.00', NULL, NULL, NULL, NULL, NULL, '5000.00', '0.00', 'paid', 'Automated monthly rent invoice for November 2026', '[{\"title\":\"Room Monthly Rent\",\"type\":\"Rent\",\"amount\":5000}]', '1', '2026-11-11 19:51:49', '2026-11-13 09:10:48', NULL),
 ('90039', 'INV-202611-0070', '15', '18', 'Monthly Rent', 'November 2026', '2026-11-01', '2026-11-15', '5000.00', NULL, NULL, NULL, NULL, NULL, '5000.00', '0.00', 'paid', 'Automated monthly rent invoice for November 2026', '[{\"title\":\"Room Monthly Rent\",\"type\":\"Rent\",\"amount\":5000}]', '1', '2026-11-11 19:51:49', '2026-11-11 19:52:57', NULL),
 ('90040', 'INV-202611-0071', '8', '19', 'Monthly Rent', 'November 2026', '2026-11-01', '2026-11-15', '6000.00', NULL, NULL, NULL, NULL, NULL, '6000.00', '0.00', 'paid', 'Automated monthly rent invoice for November 2026', '[{\"title\":\"Room Monthly Rent\",\"type\":\"Rent\",\"amount\":6000}]', '1', '2026-11-11 19:51:49', '2026-11-11 19:52:40', NULL),
 ('90041', 'INV-202611-0072', '9', '20', 'Monthly Rent', 'November 2026', '2026-11-01', '2026-11-15', '6000.00', NULL, NULL, NULL, NULL, NULL, '6000.00', '0.00', 'paid', 'Automated monthly rent invoice for November 2026', '[{\"title\":\"Room Monthly Rent\",\"type\":\"Rent\",\"amount\":6000}]', '1', '2026-11-11 19:51:49', '2026-11-12 08:30:05', NULL),
-('90042', 'INV-202611-0073', '10', '21', 'Monthly Rent', 'November 2026', '2026-11-01', '2026-11-15', '6000.00', NULL, NULL, NULL, NULL, NULL, '5500.00', '500.00', 'overdue', 'Automated monthly rent invoice for November 2026', '[{\"title\":\"Room Monthly Rent\",\"type\":\"Rent\",\"amount\":6000}]', '1', '2026-11-11 19:51:49', '2026-11-22 11:27:06', NULL),
+('90042', 'INV-202611-0073', '10', '21', 'Monthly Rent', 'November 2026', '2026-11-01', '2026-11-15', '6000.00', NULL, NULL, NULL, NULL, NULL, '5500.00', '500.00', 'partially_paid', 'Automated monthly rent invoice for November 2026', '[{\"title\":\"Room Monthly Rent\",\"type\":\"Rent\",\"amount\":6000}]', '1', '2026-11-11 19:51:49', '2026-11-22 12:37:07', NULL),
 ('90043', 'INV-202611-0074', '30020', '22', 'Monthly Rent', 'November 2026', '2026-11-01', '2026-11-15', '6000.00', NULL, NULL, NULL, NULL, NULL, '6000.00', '0.00', 'paid', 'Automated monthly rent invoice for November 2026', '[{\"title\":\"Room Monthly Rent\",\"type\":\"Rent\",\"amount\":6000}]', '1', '2026-11-11 19:51:49', '2026-11-13 09:11:11', NULL),
 ('90044', 'INV-202611-0075', '13', '26', 'Monthly Rent', 'November 2026', '2026-11-01', '2026-11-15', '6000.00', NULL, NULL, NULL, NULL, NULL, '6000.00', '0.00', 'paid', 'Automated monthly rent invoice for November 2026', '[{\"title\":\"Room Monthly Rent\",\"type\":\"Rent\",\"amount\":6000}]', '1', '2026-11-11 19:51:49', '2026-11-11 19:52:04', NULL),
-('90045', 'INV-202611-0076', '17', '28', 'Monthly Rent', 'November 2026', '2026-11-01', '2026-11-15', '5000.00', NULL, NULL, NULL, NULL, NULL, '5000.00', '0.00', 'paid', 'Automated monthly rent invoice for November 2026', '[{\"title\":\"Room Monthly Rent\",\"type\":\"Rent\",\"amount\":5000}]', '1', '2026-11-11 19:51:50', '2026-11-12 08:29:53', NULL);
+('90045', 'INV-202611-0076', '17', '28', 'Monthly Rent', 'November 2026', '2026-11-01', '2026-11-15', '5000.00', NULL, NULL, NULL, NULL, NULL, '5000.00', '0.00', 'paid', 'Automated monthly rent invoice for November 2026', '[{\"title\":\"Room Monthly Rent\",\"type\":\"Rent\",\"amount\":5000}]', '1', '2026-11-11 19:51:50', '2026-11-12 08:29:53', NULL),
+('90046', 'INV-202611-0077', '2', '9', 'Monthly Rent', 'November 2026', '2026-11-01', '2026-11-15', '7000.00', NULL, NULL, NULL, NULL, NULL, '7000.00', '0.00', 'paid', 'Automated monthly rent invoice for Room 6 (November 2026)', '[{\"title\":\"Room Monthly Rent (Room 6)\",\"type\":\"Rent\",\"amount\":7000}]', '1', '2026-11-22 12:36:37', '2026-11-22 12:36:37', NULL),
+('90047', 'INV-202611-0078', '5', '14', 'Monthly Rent', 'November 2026', '2026-11-01', '2026-11-15', '8500.00', NULL, NULL, NULL, NULL, NULL, '8500.00', '0.00', 'paid', 'Automated monthly rent invoice for Room 11 (November 2026)', '[{\"title\":\"Room Monthly Rent (Room 11)\",\"type\":\"Rent\",\"amount\":8500}]', '1', '2026-11-22 12:36:37', '2026-11-22 12:36:37', NULL);
 
 -- --------------------------------------------------------
--- Table: `bill_payments` (50 rows)
+-- Table: `bill_payments` (52 rows)
 -- --------------------------------------------------------
 TRUNCATE TABLE `bill_payments`;
 INSERT INTO `bill_payments` (`id`, `payment_number`, `bill_id`, `tenant_id`, `amount`, `payment_date`, `payment_method`, `transaction_id`, `receipt`, `notes`, `received_by`, `created_at`, `updated_at`, `deleted_at`) VALUES
@@ -231,7 +233,7 @@ INSERT INTO `bill_payments` (`id`, `payment_number`, `bill_id`, `tenant_id`, `am
 ('90035', 'RCP-202611-0037', '90040', '8', '6000.00', '2026-11-01', 'UPI / GPay', NULL, NULL, NULL, '1', '2026-11-11 19:52:40', '2026-11-11 19:52:40', NULL),
 ('90036', 'RCP-202611-0038', '90039', '15', '5000.00', '2026-11-09', 'Cash', NULL, NULL, NULL, '1', '2026-11-11 19:52:57', '2026-11-11 19:52:57', NULL),
 ('90037', 'RCP-202611-0039', '90032', '1', '10000.00', '2026-11-01', 'Cash', NULL, NULL, NULL, '1', '2026-11-11 19:53:34', '2026-11-11 19:53:34', NULL),
-('90038', 'RCP-202611-0040', '90031', '2', '13500.00', '2026-11-01', 'UPI / GPay', NULL, NULL, NULL, '1', '2026-11-11 19:54:05', '2026-11-11 19:54:05', NULL),
+('90038', 'RCP-202611-0040', '90031', '2', '6500.00', '2026-11-01', 'UPI / GPay', NULL, NULL, 'Payment for Room 1 rent', '1', '2026-11-11 19:54:05', '2026-11-22 12:36:37', NULL),
 ('90039', 'RCP-202611-0041', '90037', '7', '4500.00', '2026-11-11', 'Cash', NULL, NULL, NULL, '1', '2026-11-11 19:55:41', '2026-11-11 19:55:41', NULL),
 ('120033', 'RCP-202611-0042', '90045', '17', '5000.00', '2026-11-12', 'UPI / GPay', NULL, NULL, NULL, '1', '2026-11-12 08:29:53', '2026-11-12 08:29:53', NULL),
 ('120034', 'RCP-202611-0043', '90041', '9', '6000.00', '2026-11-12', 'Cash', NULL, NULL, NULL, '1', '2026-11-12 08:30:05', '2026-11-12 08:30:05', NULL),
@@ -239,9 +241,12 @@ INSERT INTO `bill_payments` (`id`, `payment_number`, `bill_id`, `tenant_id`, `am
 ('150034', 'RCP-202611-0045', '90043', '30020', '6000.00', '2026-11-13', 'Cash', NULL, NULL, NULL, '1', '2026-11-13 09:11:11', '2026-11-13 09:11:11', NULL),
 ('180033', 'RCP-202611-0046', '90036', '14', '4000.00', '2026-11-14', 'Cash', NULL, NULL, NULL, '1', '2026-11-14 18:57:58', '2026-11-14 18:57:58', NULL),
 ('180034', 'RCP-202611-0047', '90033', '3', '5250.00', '2026-11-14', 'Cash', NULL, NULL, NULL, '1', '2026-11-14 18:58:16', '2026-11-14 18:58:16', NULL),
-('180035', 'RCP-202611-0048', '90035', '5', '17000.00', '2026-11-14', 'Cash', NULL, NULL, NULL, '1', '2026-11-14 18:58:23', '2026-11-14 18:58:23', NULL),
+('180035', 'RCP-202611-0048', '90035', '5', '8500.00', '2026-11-14', 'Cash', NULL, NULL, 'Payment for Room 5 rent', '1', '2026-11-14 18:58:23', '2026-11-22 12:36:37', NULL),
 ('210033', 'RCP-202611-0049', '90034', '4', '6000.00', '2026-11-21', 'Cash', NULL, NULL, NULL, '1', '2026-11-21 19:18:54', '2026-11-21 19:18:54', NULL),
 ('210034', 'RCP-202611-0050', '90033', '3', '50.00', '2026-11-21', 'Cash', NULL, NULL, NULL, '1', '2026-11-21 19:26:46', '2026-11-21 19:26:46', NULL);
+INSERT INTO `bill_payments` (`id`, `payment_number`, `bill_id`, `tenant_id`, `amount`, `payment_date`, `payment_method`, `transaction_id`, `receipt`, `notes`, `received_by`, `created_at`, `updated_at`, `deleted_at`) VALUES
+('210035', 'RCP-202611-0051', '90046', '2', '7000.00', '2026-11-01', 'UPI / GPay', NULL, NULL, 'Payment for Room 6 rent', '1', '2026-11-22 12:36:37', '2026-11-22 12:36:37', NULL),
+('210036', 'RCP-202611-0052', '90047', '5', '8500.00', '2026-11-14', 'Cash', NULL, NULL, 'Payment for Room 11 rent', '1', '2026-11-22 12:36:37', '2026-11-22 12:36:37', NULL);
 
 -- --------------------------------------------------------
 -- Table: `expenses` (9 rows)
@@ -373,4 +378,4 @@ INSERT INTO `settings` (`id`, `key`, `value`, `description`, `created_at`, `upda
 ('58', 'currency_symbol', '₹', NULL, '2026-11-07 17:13:19', '2026-11-07 17:13:19');
 
 SET FOREIGN_KEY_CHECKS = 1;
--- Dump completed. Total rows exported: 285
+-- Dump completed. Total rows exported: 289

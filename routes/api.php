@@ -29,6 +29,66 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+Route::get('sync/export-live-db', function (\Illuminate\Http\Request $request) {
+    $secret = env('SYNC_SECRET', 'srm_residence_sync_2026_secure');
+    if ($request->get('token') !== $secret) {
+        return response()->json(['error' => 'Unauthorized'], 401);
+    }
+
+    $tables = [
+        'users', 'tenants', 'rooms', 'tenant_rooms', 'bills', 'bill_payments',
+        'expenses', 'loans', 'loan_emis', 'salaries', 'journal_entries',
+        'settings', 'applications', 'banners'
+    ];
+
+    $data = [];
+    foreach ($tables as $t) {
+        if (\Illuminate\Support\Facades\Schema::hasTable($t)) {
+            $data[$t] = \Illuminate\Support\Facades\DB::table($t)->get();
+        }
+    }
+
+    return response()->json([
+        'success' => true,
+        'exported_at' => now()->toIso8601String(),
+        'tables' => $data
+    ]);
+});
+
+Route::post('sync/import-live-db', function (\Illuminate\Http\Request $request) {
+    $secret = env('SYNC_SECRET', 'srm_residence_sync_2026_secure');
+    if ($request->get('token') !== $secret) {
+        return response()->json(['error' => 'Unauthorized'], 401);
+    }
+
+    $payload = $request->json()->all();
+    if (empty($payload['tables']) || !is_array($payload['tables'])) {
+        return response()->json(['error' => 'Invalid payload'], 400);
+    }
+
+    \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS = 0;');
+    foreach ($payload['tables'] as $table => $rows) {
+        if (\Illuminate\Support\Facades\Schema::hasTable($table) && is_array($rows)) {
+            \Illuminate\Support\Facades\DB::table($table)->truncate();
+            foreach (array_chunk($rows, 100) as $chunk) {
+                $insertData = array_map(function($item) {
+                    return (array) $item;
+                }, $chunk);
+                if (!empty($insertData)) {
+                    \Illuminate\Support\Facades\DB::table($table)->insert($insertData);
+                }
+            }
+        }
+    }
+    \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS = 1;');
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Database imported successfully',
+        'imported_at' => now()->toIso8601String(),
+    ]);
+});
+
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });

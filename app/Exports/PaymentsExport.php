@@ -23,20 +23,25 @@ class PaymentsExport implements FromArray, WithHeadings, WithEvents, WithTitle
 
     public function array(): array
     {
-        $query = BillPayment::with(['bill.room', 'tenant.room', 'receiver'])->latest();
+        $query = BillPayment::with(['bill.room', 'tenant.room', 'receiver'])
+            ->leftJoin('bills', 'bill_payments.bill_id', '=', 'bills.id')
+            ->leftJoin('rooms', 'bills.room_id', '=', 'rooms.id')
+            ->select('bill_payments.*')
+            ->orderByRaw('CAST(rooms.room_number AS UNSIGNED) ASC, rooms.room_number ASC, bill_payments.id DESC');
 
         if ($this->request->filled('tenant_id') && $this->request->tenant_id !== 'all') {
-            $query->where('tenant_id', $this->request->tenant_id);
+            $query->where('bill_payments.tenant_id', $this->request->tenant_id);
         }
         if ($this->request->filled('payment_method') && $this->request->payment_method !== 'all') {
-            $query->where('payment_method', $this->request->payment_method);
+            $query->where('bill_payments.payment_method', $this->request->payment_method);
         }
         if ($this->request->filled('search')) {
             $s = trim($this->request->search);
             $query->where(function ($q) use ($s) {
-                $q->where('payment_number', 'like', "%{$s}%")
-                    ->orWhere('transaction_id', 'like', "%{$s}%")
-                    ->orWhere('payment_method', 'like', "%{$s}%")
+                $q->where('bill_payments.payment_number', 'like', "%{$s}%")
+                    ->orWhere('bill_payments.transaction_id', 'like', "%{$s}%")
+                    ->orWhere('bill_payments.payment_method', 'like', "%{$s}%")
+                    ->orWhere('rooms.room_number', 'like', "%{$s}%")
                     ->orWhereHas('tenant', fn($tq) => $tq->where('name', 'like', "%{$s}%")->orWhere('phone', 'like', "%{$s}%"))
                     ->orWhereHas('bill', fn($bq) => $bq->where('bill_number', 'like', "%{$s}%"));
             });

@@ -224,7 +224,16 @@
                         <div class="tab-pane fade show active" id="billsTabPane" role="tabpanel" aria-labelledby="bills-tab">
                             <!-- Filters for Bills -->
                             <div class="row g-2 mb-3 align-items-end">
-                                <div class="col-md-3">
+                                <div class="col-md-2">
+                                    <label class="form-label small text-muted mb-1">Filter by Room</label>
+                                    <select id="filterBillRoom" class="form-select filter-select">
+                                        <option value="">All Rooms</option>
+                                        @foreach($rooms as $rm)
+                                            <option value="{{ $rm->id }}">Room {{ $rm->room_number }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-2">
                                     <label class="form-label small text-muted mb-1">Filter by Tenant</label>
                                     <select id="filterBillTenant" class="form-select filter-select">
                                         <option value="">All Tenants</option>
@@ -256,7 +265,7 @@
                                         <option value="overdue">Overdue</option>
                                     </select>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <label class="form-label small text-muted mb-1">Billing Month</label>
                                     <input type="text" id="filterBillMonth" class="form-control filter-select" placeholder="e.g. November 2026">
                                 </div>
@@ -298,8 +307,9 @@
                                                 <input type="checkbox" class="form-check-input bulk-select-all" id="bulkSelectAllBills">
                                             </th>
                                             <th style="width: 4%;">#</th>
+                                            <th style="min-width: 90px;" class="text-nowrap text-center">Room</th>
                                             <th style="min-width: 140px;" class="text-nowrap">Invoice No</th>
-                                            <th style="min-width: 180px;">Tenant & Room</th>
+                                            <th style="min-width: 180px;">Tenant</th>
                                             <th style="min-width: 150px;">Type & Month</th>
                                             <th style="min-width: 130px;" class="text-nowrap">Amount</th>
                                             <th style="min-width: 170px;" class="text-nowrap">Paid / Due Progress</th>
@@ -318,7 +328,16 @@
                         <div class="tab-pane fade" id="paymentsTabPane" role="tabpanel" aria-labelledby="payments-tab">
                             <!-- Filters for Payments -->
                             <div class="row g-2 mb-3 align-items-end">
-                                <div class="col-md-4">
+                                <div class="col-md-3">
+                                    <label class="form-label small text-muted mb-1">Filter by Room</label>
+                                    <select id="filterPayRoom" class="form-select filter-select">
+                                        <option value="">All Rooms</option>
+                                        @foreach($rooms as $rm)
+                                            <option value="{{ $rm->id }}">Room {{ $rm->room_number }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
                                     <label class="form-label small text-muted mb-1">Filter by Tenant</label>
                                     <select id="filterPayTenant" class="form-select filter-select">
                                         <option value="">All Tenants</option>
@@ -338,7 +357,7 @@
                                         <option value="Cheque">Cheque</option>
                                     </select>
                                 </div>
-                                <div class="col-md-5 text-end">
+                                <div class="col-md-3 text-end">
                                     <button type="button" id="btnResetPayFilters" class="btn btn-outline-secondary btn-sm">
                                         <i class="fas fa-undo me-1"></i> Reset Filters
                                     </button>
@@ -373,9 +392,10 @@
                                                 <input type="checkbox" class="form-check-input bulk-select-all" id="bulkSelectAllPayments">
                                             </th>
                                             <th style="width: 4%;">#</th>
+                                            <th style="min-width: 90px;" class="text-nowrap text-center">Room</th>
                                             <th style="min-width: 150px;" class="text-nowrap">Receipt No</th>
                                             <th style="min-width: 150px;" class="text-nowrap">Invoice Reference</th>
-                                            <th style="min-width: 180px;">Tenant & Room</th>
+                                            <th style="min-width: 180px;">Tenant</th>
                                             <th style="min-width: 130px;" class="text-nowrap">Amount Paid</th>
                                             <th style="min-width: 120px;" class="text-nowrap">Payment Date</th>
                                             <th style="min-width: 130px;" class="text-nowrap">Method</th>
@@ -414,7 +434,7 @@
                         <div id="createBillErrors" class="alert alert-danger d-none py-2 px-3 small"></div>
 
                         <div class="row g-3">
-                            <div class="col-md-5">
+                            <div class="col-md-4">
                                 <label class="form-label fw-semibold">Select Resident / Tenant <span class="text-danger">*</span></label>
                                 <select name="tenant_id" id="bill_tenant_id" class="form-select" required>
                                     <option value="" disabled selected>Select resident...</option>
@@ -428,18 +448,25 @@
                                             data-maint="{{ $t->maintenance_charges }}"
                                             data-other="{{ $t->other_charges }}"
                                             data-room="{{ $t->room_numbers_display }}">
-                                            {{ $t->name }} (Room {{ $t->room_numbers_display }}) - Rent ₹{{ number_format($t->monthly_rent) }}
+                                            {{ $t->name }} (Room {{ $t->room_numbers_display }})
                                         </option>
                                     @endforeach
                                 </select>
                             </div>
 
                             <div class="col-md-3">
+                                <label class="form-label fw-semibold">Select Room <span class="text-danger">*</span></label>
+                                <select name="room_id" id="bill_room_id" class="form-select" required>
+                                    <option value="" disabled selected>Select resident first</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-2">
                                 <label class="form-label fw-semibold">Billing Month <span class="text-danger">*</span></label>
                                 <input type="text" name="billing_month" class="form-control" value="{{ $currentMonth }}" placeholder="e.g. November 2026" required>
                             </div>
 
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label class="form-label fw-semibold">Invoice Type <span class="text-danger">*</span></label>
                                 <select name="bill_type" id="bill_type_select" class="form-select" required>
                                     <option value="Monthly Rent & Utilities" selected>Monthly Rent & Utilities</option>
@@ -1326,6 +1353,7 @@
                         url: "{{ url('/admin/billing/bills-data') }}",
                         data: function(d) {
                             d.tenant_id = $('#filterBillTenant').val();
+                            d.room_id = $('#filterBillRoom').val();
                             d.bill_type = $('#filterBillType').val();
                             d.status = $('#filterBillStatus').val();
                             d.billing_month = $('#filterBillMonth').val();
@@ -1334,6 +1362,7 @@
                     columns: [
                         { data: 'checkbox', name: 'checkbox', orderable: false, searchable: false, className: 'text-center' },
                         { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+                        { data: 'room_badge', name: 'room_badge', className: 'text-center' },
                         { data: 'bill_number_badge', name: 'bill_number' },
                         { data: 'tenant_room', name: 'tenant_id' },
                         { data: 'bill_type_badge', name: 'bill_type' },
@@ -1343,7 +1372,7 @@
                         { data: 'status_badge', name: 'status' },
                         { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-center' }
                     ],
-                    order: [[2, 'desc']],
+                    order: [[2, 'asc']],
                     language: {
                         search: "",
                         searchPlaceholder: "Search invoices...",
@@ -1359,13 +1388,14 @@
                 });
 
                 // Trigger reload on filter changes
-                $('#filterBillTenant, #filterBillType, #filterBillStatus').on('change', function() {
+                $('#filterBillRoom, #filterBillTenant, #filterBillType, #filterBillStatus').on('change', function() {
                     billsTable.ajax.reload();
                 });
                 $('#filterBillMonth').on('keyup change', function() {
                     billsTable.ajax.reload();
                 });
                 $('#btnResetBillFilters').on('click', function() {
+                    $('#filterBillRoom').val('');
                     $('#filterBillTenant').val('');
                     $('#filterBillType').val('');
                     $('#filterBillStatus').val('');
@@ -1375,6 +1405,7 @@
 
                 $('#btnExportBills').on('click', function() {
                     var params = {
+                        room_id: $('#filterBillRoom').val(),
                         tenant_id: $('#filterBillTenant').val(),
                         bill_type: $('#filterBillType').val(),
                         status: $('#filterBillStatus').val(),
@@ -1394,12 +1425,14 @@
                         url: "{{ url('/admin/billing/payments-data') }}",
                         data: function(d) {
                             d.tenant_id = $('#filterPayTenant').val();
+                            d.room_id = $('#filterPayRoom').val();
                             d.payment_method = $('#filterPayMethod').val();
                         }
                     },
                     columns: [
                         { data: 'checkbox', name: 'checkbox', orderable: false, searchable: false, className: 'text-center' },
                         { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+                        { data: 'room_badge', name: 'room_badge', className: 'text-center' },
                         { data: 'payment_number_badge', name: 'payment_number' },
                         { data: 'bill_reference', name: 'bill_id' },
                         { data: 'tenant_info', name: 'tenant_id' },
@@ -1408,7 +1441,7 @@
                         { data: 'payment_method_badge', name: 'payment_method' },
                         { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-center' }
                     ],
-                    order: [[2, 'desc']],
+                    order: [[2, 'asc']],
                     language: {
                         search: "",
                         searchPlaceholder: "Search payment records...",
@@ -1423,13 +1456,24 @@
                     }
                 });
 
-                $('#filterPayTenant, #filterPayMethod').on('change', function() {
+                $('#filterPayRoom, #filterPayTenant, #filterPayMethod').on('change', function() {
                     paymentsTable.ajax.reload();
                 });
                 $('#btnResetPayFilters').on('click', function() {
+                    $('#filterPayRoom').val('');
                     $('#filterPayTenant').val('');
                     $('#filterPayMethod').val('');
                     paymentsTable.search('').draw();
+                });
+
+                $('#btnExportPayments').on('click', function() {
+                    var params = {
+                        room_id: $('#filterPayRoom').val(),
+                        tenant_id: $('#filterPayTenant').val(),
+                        payment_method: $('#filterPayMethod').val(),
+                        search: paymentsTable.search()
+                    };
+                    window.location.href = "{{ route('billing.payments.export') }}?" + $.param(params);
                 });
 
                 $('#btnExportPayments').on('click', function() {
@@ -1610,6 +1654,7 @@
                     var $opt = $('#bill_tenant_id').find(':selected');
                     var tenantId = $opt.val();
                     if (!tenantId) {
+                        $('#bill_room_id').html('<option value="" disabled selected>Select resident first</option>');
                         $('#billItemsBody').html('<tr><td colspan="4" class="text-center text-muted py-3"><i class="fas fa-arrow-up me-1"></i> Select a resident above to auto-populate invoice line items.</td></tr>');
                         calculateInvoiceTotal();
                         return;
@@ -1634,7 +1679,7 @@
                     // Pre-populate line items (1. Rent, 2. Maintenance, 3. Other, 4. EB)
                     renderDefaultTenantItems(rent, maint, other, ebRate);
 
-                    // Also fetch live billing info via AJAX to guarantee 100% sync
+                    // Fetch live billing info via AJAX to populate assigned rooms
                     $.ajax({
                         url: "{{ url('/admin/billing/tenants') }}/" + tenantId + "/billing-info",
                         type: "GET",
@@ -1649,11 +1694,36 @@
                                     $('#bill_eb_unit_rate').val(parseFloat(t.eb_unit_rate).toFixed(2));
                                     $('#display_eb_rate').text('₹' + parseFloat(t.eb_unit_rate).toFixed(2));
                                 }
+
+                                // Populate Rooms dropdown
+                                if (t.rooms && t.rooms.length > 0) {
+                                    var roomOpts = '';
+                                    t.rooms.forEach(function(rm, idx) {
+                                        var selected = (idx === 0) ? 'selected' : '';
+                                        roomOpts += '<option value="' + rm.id + '" data-rent="' + rm.monthly_rent + '" data-maint="' + rm.maintenance_charges + '" data-other="' + rm.other_charges + '" ' + selected + '>Room ' + rm.room_number + ' (Rent ₹' + parseFloat(rm.monthly_rent).toLocaleString('en-IN') + ')</option>';
+                                    });
+                                    $('#bill_room_id').html(roomOpts);
+                                    var firstRm = t.rooms[0];
+                                    renderDefaultTenantItems(parseFloat(firstRm.monthly_rent), parseFloat(firstRm.maintenance_charges), parseFloat(firstRm.other_charges), parseFloat($('#bill_eb_unit_rate').val()) || 10.00);
+                                } else {
+                                    $('#bill_room_id').html('<option value="' + (t.room_id || '') + '" selected>Room ' + (t.room_number || '-') + '</option>');
+                                }
+
                                 calculateEbConsumption();
                             }
                         }
                     });
                 }
+
+                $(document).on('change', '#bill_room_id', function() {
+                    var $opt = $(this).find(':selected');
+                    var rRent = parseFloat($opt.data('rent')) || 0;
+                    var rMaint = parseFloat($opt.data('maint')) || 0;
+                    var rOther = parseFloat($opt.data('other')) || 0;
+                    var ebRate = parseFloat($('#bill_eb_unit_rate').val()) || 10.00;
+                    renderDefaultTenantItems(rRent, rMaint, rOther, ebRate);
+                    calculateEbConsumption();
+                });
 
                 // Event bindings for dynamic items & meter calculation
                 $(document).on('change', '#bill_tenant_id', populateTenantItems);

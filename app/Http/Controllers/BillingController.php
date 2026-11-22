@@ -113,28 +113,48 @@ class BillingController extends Controller
      */
     public function billsData(Request $request)
     {
-        $query = Bill::with(['tenant', 'room'])->latest();
+        $query = Bill::with(['tenant', 'room'])
+            ->leftJoin('rooms', 'bills.room_id', '=', 'rooms.id')
+            ->select('bills.*');
 
         if ($request->filled('tenant_id')) {
-            $query->where('tenant_id', $request->tenant_id);
+            $query->where('bills.tenant_id', $request->tenant_id);
         }
         if ($request->filled('room_id')) {
-            $query->where('room_id', $request->room_id);
+            $query->where('bills.room_id', $request->room_id);
         }
         if ($request->filled('bill_type')) {
-            $query->where('bill_type', $request->bill_type);
+            $query->where('bills.bill_type', $request->bill_type);
         }
         if ($request->filled('status')) {
-            $query->where('status', $request->status);
+            $query->where('bills.status', $request->status);
         }
         if ($request->filled('billing_month')) {
-            $query->where('billing_month', $request->billing_month);
+            $query->where('bills.billing_month', $request->billing_month);
+        }
+
+        // Natural numeric room-wise ordering by default
+        if (!$request->has('order')) {
+            $query->orderByRaw('CAST(rooms.room_number AS UNSIGNED) ASC, rooms.room_number ASC');
         }
 
         return DataTables::of($query)
             ->addIndexColumn()
             ->addColumn('checkbox', function ($row) {
                 return '<input type="checkbox" class="form-check-input bulk-select-row" value="' . $row->id . '">';
+            })
+            ->addColumn('room_badge', function ($row) {
+                $roomNo = $row->room ? $row->room->room_number : ($row->tenant->room_number ?? 'N/A');
+                $floor = $row->room ? $row->room->floor : '';
+                return '<div class="text-center">
+                    <span class="badge bg-primary-subtle text-primary border border-primary px-2 py-1 fw-bold font-12">
+                        <i class="fas fa-door-closed me-1"></i> Room ' . e($roomNo) . '
+                    </span>
+                    ' . ($floor ? '<small class="text-muted d-block font-10">' . e($floor) . '</small>' : '') . '
+                </div>';
+            })
+            ->orderColumn('room_badge', function ($q, $order) {
+                $q->orderByRaw('CAST(rooms.room_number AS UNSIGNED) ' . $order . ', rooms.room_number ' . $order);
             })
             ->addColumn('bill_number_badge', function ($row) {
                 return '<div class="d-flex align-items-center">
@@ -146,14 +166,10 @@ class BillingController extends Controller
             ->addColumn('tenant_room', function ($row) {
                 $tenantName = $row->tenant ? e($row->tenant->name) : 'Former Tenant';
                 $tenantPhone = $row->tenant && $row->tenant->phone ? e($row->tenant->phone) : '-';
-                $roomText = $row->room ? 'Room ' . e($row->room->room_number) . ' (' . e($row->room->floor) . ')' : 'Room ' . e($row->tenant->room_number ?? 'N/A');
 
                 return '<div>
                     <span class="fw-bold text-dark d-block">' . $tenantName . '</span>
                     <small class="text-muted d-block"><i class="fas fa-phone-alt me-1 font-10"></i>' . $tenantPhone . '</small>
-                    <span class="badge bg-info-subtle text-info border border-info px-1 py-0 mt-1 font-11">
-                        <i class="fas fa-door-closed me-1"></i> ' . $roomText . '
-                    </span>
                 </div>';
             })
             ->addColumn('bill_type_badge', function ($row) {
@@ -268,7 +284,7 @@ class BillingController extends Controller
 
                 return '<div class="d-inline-flex align-items-center justify-content-center gap-1">' . $payBtn . $viewBtn . $shareBtn . $editBtn . $delBtn . '</div>';
             })
-            ->rawColumns(['checkbox', 'bill_number_badge', 'tenant_room', 'bill_type_badge', 'amount_display', 'payment_progress', 'due_date_formatted', 'status_badge', 'action'])
+            ->rawColumns(['checkbox', 'room_badge', 'bill_number_badge', 'tenant_room', 'bill_type_badge', 'amount_display', 'payment_progress', 'due_date_formatted', 'status_badge', 'action'])
             ->make(true);
     }
 
@@ -277,19 +293,42 @@ class BillingController extends Controller
      */
     public function paymentsData(Request $request)
     {
-        $query = BillPayment::with(['bill.room', 'tenant', 'receiver'])->latest();
+        $query = BillPayment::with(['bill.room', 'tenant', 'receiver'])
+            ->leftJoin('bills', 'bill_payments.bill_id', '=', 'bills.id')
+            ->leftJoin('rooms', 'bills.room_id', '=', 'rooms.id')
+            ->select('bill_payments.*');
 
         if ($request->filled('tenant_id')) {
-            $query->where('tenant_id', $request->tenant_id);
+            $query->where('bill_payments.tenant_id', $request->tenant_id);
+        }
+        if ($request->filled('room_id')) {
+            $query->where('bills.room_id', $request->room_id);
         }
         if ($request->filled('payment_method')) {
-            $query->where('payment_method', $request->payment_method);
+            $query->where('bill_payments.payment_method', $request->payment_method);
+        }
+
+        if (!$request->has('order')) {
+            $query->orderByRaw('CAST(rooms.room_number AS UNSIGNED) ASC, rooms.room_number ASC, bill_payments.id DESC');
         }
 
         return DataTables::of($query)
             ->addIndexColumn()
             ->addColumn('checkbox', function ($row) {
                 return '<input type="checkbox" class="form-check-input bulk-select-row" value="' . $row->id . '">';
+            })
+            ->addColumn('room_badge', function ($row) {
+                $roomNo = $row->bill && $row->bill->room ? $row->bill->room->room_number : ($row->tenant->room_number ?? 'N/A');
+                $floor = $row->bill && $row->bill->room ? $row->bill->room->floor : '';
+                return '<div class="text-center">
+                    <span class="badge bg-primary-subtle text-primary border border-primary px-2 py-1 fw-bold font-12">
+                        <i class="fas fa-door-closed me-1"></i> Room ' . e($roomNo) . '
+                    </span>
+                    ' . ($floor ? '<small class="text-muted d-block font-10">' . e($floor) . '</small>' : '') . '
+                </div>';
+            })
+            ->orderColumn('room_badge', function ($q, $order) {
+                $q->orderByRaw('CAST(rooms.room_number AS UNSIGNED) ' . $order . ', rooms.room_number ' . $order);
             })
             ->addColumn('payment_number_badge', function ($row) {
                 return '<span class="badge bg-light text-dark border px-2 py-1 fw-bold font-12">
@@ -307,10 +346,10 @@ class BillingController extends Controller
             })
             ->addColumn('tenant_info', function ($row) {
                 $name = $row->tenant ? e($row->tenant->name) : 'Tenant';
-                $room = $row->bill && $row->bill->room ? 'Room ' . e($row->bill->room->room_number) : '';
+                $phone = $row->tenant && $row->tenant->phone ? e($row->tenant->phone) : '-';
                 return '<div>
                     <span class="fw-bold text-dark d-block">' . $name . '</span>
-                    <small class="text-muted">' . $room . '</small>
+                    <small class="text-muted d-block"><i class="fas fa-phone-alt me-1 font-10"></i>' . $phone . '</small>
                 </div>';
             })
             ->addColumn('amount_display', function ($row) {
@@ -371,6 +410,7 @@ class BillingController extends Controller
     {
         $validated = $request->validate([
             'tenant_id' => 'required|exists:tenants,id',
+            'room_id' => 'nullable|exists:rooms,id',
             'bill_type' => 'required|string|max:100',
             'billing_month' => 'required|string|max:50',
             'bill_date' => 'required|date',
@@ -403,8 +443,8 @@ class BillingController extends Controller
             'payment_amount.min' => 'Payment amount must be at least ₹1.00.',
         ]);
 
-        $tenant = Tenant::findOrFail($validated['tenant_id']);
-        $roomId = $tenant->room_id;
+        $tenant = Tenant::with('rooms')->findOrFail($validated['tenant_id']);
+        $roomId = !empty($validated['room_id']) ? (int) $validated['room_id'] : (int) $tenant->room_id;
 
         // Check EB current vs previous reading
         if ($request->filled('eb_current_reading') && $request->filled('eb_previous_reading')) {
@@ -419,17 +459,23 @@ class BillingController extends Controller
             }
         }
 
-        // Check duplicate invoice for the same resident, bill type, and month
-        $existingInvoice = Bill::where('tenant_id', $tenant->id)
+        // Check duplicate invoice for the same resident, specific room, bill type, and month
+        $duplicateQuery = Bill::where('tenant_id', $tenant->id)
             ->where('bill_type', $validated['bill_type'])
-            ->where('billing_month', $validated['billing_month'])
-            ->first();
+            ->where('billing_month', $validated['billing_month']);
+
+        if ($roomId) {
+            $duplicateQuery->where('room_id', $roomId);
+        }
+
+        $existingInvoice = $duplicateQuery->first();
 
         if ($existingInvoice) {
+            $roomLabel = $existingInvoice->room ? ' for Room ' . $existingInvoice->room->room_number : '';
             return response()->json([
                 'success' => false,
-                'message' => "An invoice for '{$validated['bill_type']}' for '{$validated['billing_month']}' already exists for {$tenant->name} ({$existingInvoice->bill_number}).",
-                'errors' => ['billing_month' => ["Invoice already exists for {$tenant->name} ({$existingInvoice->bill_number})."]]
+                'message' => "An invoice for '{$validated['bill_type']}' for '{$validated['billing_month']}'{$roomLabel} already exists for {$tenant->name} ({$existingInvoice->bill_number}).",
+                'errors' => ['billing_month' => ["Invoice already exists for {$tenant->name}{$roomLabel} ({$existingInvoice->bill_number})."]]
             ], 422);
         }
 
@@ -524,6 +570,7 @@ class BillingController extends Controller
 
     /**
      * Batch generate monthly rent bills for all active tenants
+     * Unbundles multi-room tenants so each individual room gets its own bill
      */
     public function quickGenerateMonthlyRent(Request $request)
     {
@@ -533,7 +580,7 @@ class BillingController extends Controller
             'due_date' => 'required|date|after_or_equal:bill_date',
         ]);
 
-        $tenants = Tenant::with('room')
+        $tenants = Tenant::with(['room', 'rooms'])
             ->where('status', 1)
             ->orderByRaw('CAST(room_number AS UNSIGNED) ASC, room_number ASC')
             ->get();
@@ -548,58 +595,75 @@ class BillingController extends Controller
         $skipped = 0;
 
         foreach ($tenants as $t) {
-            // Check if monthly rent bill already exists for this tenant & month
-            $exists = Bill::where('tenant_id', $t->id)
-                ->where('bill_type', 'Monthly Rent')
-                ->where('billing_month', $validated['billing_month'])
-                ->exists();
-
-            if ($exists) {
-                $skipped++;
-                continue;
+            $roomsToBill = $t->rooms->isNotEmpty() ? $t->rooms : collect([$t->room])->filter();
+            if ($roomsToBill->isEmpty() && $t->room_id) {
+                $roomsToBill = Room::where('id', $t->room_id)->get();
             }
 
-            $rent = (float) $t->monthly_rent + (float) $t->maintenance_charges + (float) $t->other_charges;
-            if ($rent <= 0 && $t->room) {
-                $rent = (float) $t->room->total_monthly;
-            }
-            if ($rent <= 0) {
-                $rent = 5000.00; // Default fallback
-            }
+            foreach ($roomsToBill as $r) {
+                // Check if monthly rent bill already exists for this tenant, specific room & month
+                $exists = Bill::where('tenant_id', $t->id)
+                    ->where('room_id', $r->id)
+                    ->where('bill_type', 'Monthly Rent')
+                    ->where('billing_month', $validated['billing_month'])
+                    ->exists();
 
-            $items = [
-                ['title' => 'Room Monthly Rent', 'type' => 'Rent', 'amount' => (float) $t->monthly_rent],
-            ];
-            if ((float) $t->maintenance_charges > 0) {
-                $items[] = ['title' => 'Maintenance Charges', 'type' => 'Maintenance', 'amount' => (float) $t->maintenance_charges];
-            }
-            if ((float) $t->other_charges > 0) {
-                $items[] = ['title' => 'Other Charges', 'type' => 'Other', 'amount' => (float) $t->other_charges];
-            }
+                if ($exists) {
+                    $skipped++;
+                    continue;
+                }
 
-            Bill::create([
-                'bill_number' => Bill::generateBillNumber(),
-                'tenant_id' => $t->id,
-                'room_id' => $t->room_id,
-                'bill_type' => 'Monthly Rent',
-                'billing_month' => $validated['billing_month'],
-                'bill_date' => $validated['bill_date'],
-                'due_date' => $validated['due_date'],
-                'amount' => $rent,
-                'items' => $items,
-                'paid_amount' => 0.00,
-                'due_amount' => $rent,
-                'status' => Carbon::parse($validated['due_date'])->isPast() ? 'overdue' : 'unpaid',
-                'notes' => 'Automated monthly rent invoice for ' . $validated['billing_month'],
-                'created_by' => Auth::id(),
-            ]);
+                $rent = (float) $r->monthly_rent;
+                $maint = (float) $r->maintenance_charges;
+                $other = (float) $r->other_charges;
 
-            $created++;
+                // If single room occupied and tenant has explicit overrides, use tenant amounts
+                if ($roomsToBill->count() === 1) {
+                    if ((float) $t->monthly_rent > 0) $rent = (float) $t->monthly_rent;
+                    if ((float) $t->maintenance_charges > 0) $maint = (float) $t->maintenance_charges;
+                    if ((float) $t->other_charges > 0) $other = (float) $t->other_charges;
+                }
+
+                $total = $rent + $maint + $other;
+                if ($total <= 0) {
+                    $total = 5000.00;
+                    $rent = 5000.00;
+                }
+
+                $items = [
+                    ['title' => 'Room Monthly Rent (Room ' . $r->room_number . ')', 'type' => 'Rent', 'amount' => $rent],
+                ];
+                if ($maint > 0) {
+                    $items[] = ['title' => 'Maintenance Charges', 'type' => 'Maintenance', 'amount' => $maint];
+                }
+                if ($other > 0) {
+                    $items[] = ['title' => 'Other Charges', 'type' => 'Other', 'amount' => $other];
+                }
+
+                Bill::create([
+                    'bill_number' => Bill::generateBillNumber(),
+                    'tenant_id' => $t->id,
+                    'room_id' => $r->id,
+                    'bill_type' => 'Monthly Rent',
+                    'billing_month' => $validated['billing_month'],
+                    'bill_date' => $validated['bill_date'],
+                    'due_date' => $validated['due_date'],
+                    'amount' => $total,
+                    'items' => $items,
+                    'paid_amount' => 0.00,
+                    'due_amount' => $total,
+                    'status' => Carbon::parse($validated['due_date'])->isPast() ? 'overdue' : 'unpaid',
+                    'notes' => 'Automated monthly rent invoice for Room ' . $r->room_number . ' (' . $validated['billing_month'] . ')',
+                    'created_by' => Auth::id(),
+                ]);
+
+                $created++;
+            }
         }
 
         return response()->json([
             'success' => true,
-            'message' => "Successfully generated {$created} rent invoice(s). " . ($skipped > 0 ? "({$skipped} tenant(s) already had invoices for this month)." : ""),
+            'message' => "Successfully generated {$created} room rent invoice(s). " . ($skipped > 0 ? "({$skipped} room invoice(s) already existed for this month)." : ""),
             'created_count' => $created,
             'skipped_count' => $skipped,
             'stats' => $this->getStatsData(),
@@ -707,7 +771,33 @@ class BillingController extends Controller
      */
     public function getTenantBillingInfo($tenantId)
     {
-        $tenant = Tenant::with('room')->findOrFail($tenantId);
+        $tenant = Tenant::with(['room', 'rooms'])->findOrFail($tenantId);
+
+        $assignedRooms = [];
+        if ($tenant->rooms && $tenant->rooms->count() > 0) {
+            foreach ($tenant->rooms as $r) {
+                $assignedRooms[] = [
+                    'id' => $r->id,
+                    'room_number' => $r->room_number,
+                    'floor' => $r->floor,
+                    'monthly_rent' => (float) $r->monthly_rent,
+                    'maintenance_charges' => (float) $r->maintenance_charges,
+                    'other_charges' => (float) $r->other_charges,
+                    'total_monthly' => (float) ($r->monthly_rent + $r->maintenance_charges + $r->other_charges),
+                ];
+            }
+        } elseif ($tenant->room) {
+            $r = $tenant->room;
+            $assignedRooms[] = [
+                'id' => $r->id,
+                'room_number' => $r->room_number,
+                'floor' => $r->floor,
+                'monthly_rent' => (float) ($tenant->monthly_rent ?: $r->monthly_rent),
+                'maintenance_charges' => (float) ($tenant->maintenance_charges ?: $r->maintenance_charges),
+                'other_charges' => (float) ($tenant->other_charges ?: $r->other_charges),
+                'total_monthly' => (float) ($tenant->total_monthly_due ?: ($r->monthly_rent + $r->maintenance_charges + $r->other_charges)),
+            ];
+        }
 
         return response()->json([
             'success' => true,
@@ -717,6 +807,7 @@ class BillingController extends Controller
                 'phone' => $tenant->phone,
                 'room_id' => $tenant->room_id,
                 'room_number' => $tenant->room ? $tenant->room->room_number : $tenant->room_number,
+                'rooms' => $assignedRooms,
                 'monthly_rent' => (float) $tenant->monthly_rent,
                 'maintenance_charges' => (float) $tenant->maintenance_charges,
                 'other_charges' => (float) $tenant->other_charges,

@@ -23,29 +23,33 @@ class BillsExport implements FromArray, WithHeadings, WithEvents, WithTitle
 
     public function array(): array
     {
-        $query = Bill::with(['tenant.room', 'room', 'creator'])->latest();
+        $query = Bill::with(['tenant.room', 'room', 'creator'])
+            ->leftJoin('rooms', 'bills.room_id', '=', 'rooms.id')
+            ->select('bills.*')
+            ->orderByRaw('CAST(rooms.room_number AS UNSIGNED) ASC, rooms.room_number ASC');
 
         if ($this->request->filled('tenant_id') && $this->request->tenant_id !== 'all') {
-            $query->where('tenant_id', $this->request->tenant_id);
+            $query->where('bills.tenant_id', $this->request->tenant_id);
         }
         if ($this->request->filled('room_id') && $this->request->room_id !== 'all') {
-            $query->where('room_id', $this->request->room_id);
+            $query->where('bills.room_id', $this->request->room_id);
         }
         if ($this->request->filled('bill_type') && $this->request->bill_type !== 'all') {
-            $query->where('bill_type', $this->request->bill_type);
+            $query->where('bills.bill_type', $this->request->bill_type);
         }
         if ($this->request->filled('status') && $this->request->status !== 'all') {
-            $query->where('status', $this->request->status);
+            $query->where('bills.status', $this->request->status);
         }
         if ($this->request->filled('billing_month') && $this->request->billing_month !== 'all') {
-            $query->where('billing_month', 'like', '%' . trim($this->request->billing_month) . '%');
+            $query->where('bills.billing_month', 'like', '%' . trim($this->request->billing_month) . '%');
         }
         if ($this->request->filled('search')) {
             $s = trim($this->request->search);
             $query->where(function ($q) use ($s) {
-                $q->where('bill_number', 'like', "%{$s}%")
-                    ->orWhere('bill_type', 'like', "%{$s}%")
-                    ->orWhere('billing_month', 'like', "%{$s}%")
+                $q->where('bills.bill_number', 'like', "%{$s}%")
+                    ->orWhere('bills.bill_type', 'like', "%{$s}%")
+                    ->orWhere('bills.billing_month', 'like', "%{$s}%")
+                    ->orWhere('rooms.room_number', 'like', "%{$s}%")
                     ->orWhereHas('tenant', fn($tq) => $tq->where('name', 'like', "%{$s}%")->orWhere('phone', 'like', "%{$s}%"));
             });
         }
