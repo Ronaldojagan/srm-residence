@@ -30,11 +30,20 @@ Auth::routes();
 Route::get('/ping', function () {
     $dbConnected = false;
     $dbError = null;
-    $loansTableExists = false;
+    $counts = [];
     try {
         \DB::connection()->getPdo();
         $dbConnected = true;
-        $loansTableExists = \Illuminate\Support\Facades\Schema::hasTable('loans');
+        $counts = [
+            'tenants' => \Illuminate\Support\Facades\Schema::hasTable('tenants') ? \App\Models\Tenant::count() : 0,
+            'rooms' => \Illuminate\Support\Facades\Schema::hasTable('rooms') ? \App\Models\Room::count() : 0,
+            'bills' => \Illuminate\Support\Facades\Schema::hasTable('bills') ? \App\Models\Bill::count() : 0,
+            'bill_payments' => \Illuminate\Support\Facades\Schema::hasTable('bill_payments') ? \App\Models\BillPayment::count() : 0,
+            'expenses' => \Illuminate\Support\Facades\Schema::hasTable('expenses') ? \App\Models\Expense::count() : 0,
+            'loans' => \Illuminate\Support\Facades\Schema::hasTable('loans') ? \App\Models\Loan::count() : 0,
+            'salaries' => \Illuminate\Support\Facades\Schema::hasTable('salaries') ? \App\Models\Salary::count() : 0,
+            'journal_entries' => \Illuminate\Support\Facades\Schema::hasTable('journal_entries') ? \App\Models\JournalEntry::count() : 0,
+        ];
     } catch (\Throwable $e) {
         $dbError = $e->getMessage();
     }
@@ -44,8 +53,81 @@ Route::get('/ping', function () {
         'app' => 'SRM RESIDENCE',
         'database' => $dbConnected ? 'connected' : 'error',
         'db_error' => $dbError,
-        'loans_table' => $loansTableExists,
+        'counts' => $counts,
         'timestamp' => now()->toIso8601String()
+    ]);
+});
+
+// Database Synchronization Endpoints (between Local and Live)
+Route::get('/api/sync/export-live-db', function (\Illuminate\Http\Request $request) {
+    $secret = env('SYNC_SECRET', 'srm_residence_sync_2026_secure');
+    if ($request->get('token') !== $secret) {
+        return response()->json(['error' => 'Unauthorized'], 401);
+    }
+
+    $tables = [
+        'users',
+        'tenants',
+        'rooms',
+        'tenant_rooms',
+        'bills',
+        'bill_payments',
+        'expenses',
+        'loans',
+        'loan_emis',
+        'salaries',
+        'journal_entries',
+        'settings',
+        'applications',
+        'banners'
+    ];
+
+    $data = [];
+    foreach ($tables as $table) {
+        if (\Illuminate\Support\Facades\Schema::hasTable($table)) {
+            $data[$table] = \Illuminate\Support\Facades\DB::table($table)->get()->toArray();
+        }
+    }
+
+    return response()->json([
+        'success' => true,
+        'environment' => config('app.env'),
+        'exported_at' => now()->toIso8601String(),
+        'tables' => $data
+    ]);
+});
+
+Route::post('/api/sync/import-live-db', function (\Illuminate\Http\Request $request) {
+    $secret = env('SYNC_SECRET', 'srm_residence_sync_2026_secure');
+    if ($request->get('token') !== $secret) {
+        return response()->json(['error' => 'Unauthorized'], 401);
+    }
+
+    $payload = $request->json()->all();
+    if (empty($payload['tables']) || !is_array($payload['tables'])) {
+        return response()->json(['error' => 'Invalid payload'], 400);
+    }
+
+    \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS = 0;');
+    foreach ($payload['tables'] as $table => $rows) {
+        if (\Illuminate\Support\Facades\Schema::hasTable($table) && is_array($rows)) {
+            \Illuminate\Support\Facades\DB::table($table)->truncate();
+            foreach (array_chunk($rows, 100) as $chunk) {
+                $insertData = array_map(function($item) {
+                    return (array) $item;
+                }, $chunk);
+                if (!empty($insertData)) {
+                    \Illuminate\Support\Facades\DB::table($table)->insert($insertData);
+                }
+            }
+        }
+    }
+    \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS = 1;');
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Database imported successfully',
+        'imported_at' => now()->toIso8601String(),
     ]);
 });
 Route::get('/', fn() => view('auth.login'));
