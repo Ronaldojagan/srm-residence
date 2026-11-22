@@ -28,6 +28,11 @@ php artisan storage:link --force || true
 (
     sleep 3
     php artisan migrate --force || true
+    TENANT_COUNT=$(php -r "require 'vendor/autoload.php'; \$app = require 'bootstrap/app.php'; \$app->make('Illuminate\Contracts\Console\Kernel')->bootstrap(); try { echo \App\Models\Tenant::count(); } catch (\Throwable \$e) { echo 0; }" 2>/dev/null || echo "0")
+    if [ "$TENANT_COUNT" = "0" ]; then
+        echo "Database has 0 tenants. Importing backup data..."
+        php artisan app:import-backup || true
+    fi
 ) &
 
 # Start Apache immediately so Render health check succeeds in seconds
