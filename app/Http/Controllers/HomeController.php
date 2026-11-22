@@ -7,6 +7,9 @@ use App\Models\User;
 use App\Models\Room;
 use App\Models\Tenant;
 use App\Models\Expense;
+use App\Models\Salary;
+use App\Models\Bill;
+use App\Models\BillPayment;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 use Carbon\Carbon;
@@ -60,19 +63,49 @@ class HomeController extends Controller
 
         $currentMonth = Carbon::now()->month;
         $currentYear = Carbon::now()->year;
+        $currentMonthStr = Carbon::now()->format('Y-m');
 
-        // Monthly Turnover (Collections this month)
-        $thisMonthTurnover = (float) \App\Models\BillPayment::whereMonth('payment_date', $currentMonth)
+        // Monthly Bill Collections this month
+        $thisMonthRentCollections = (float) BillPayment::whereMonth('payment_date', $currentMonth)
             ->whereYear('payment_date', $currentYear)
             ->sum('amount');
-        $totalTurnoverAllTime = (float) \App\Models\BillPayment::sum('amount');
+
+        // Monthly Credited Family Salary Income this month
+        $thisMonthSalary = (float) Salary::where('status', 'credited')
+            ->where(function ($q) use ($currentMonthStr, $currentMonth, $currentYear) {
+                $q->where('salary_month', $currentMonthStr)
+                  ->orWhere(function ($sq) use ($currentMonth, $currentYear) {
+                      $sq->whereMonth('credit_date', $currentMonth)
+                         ->whereYear('credit_date', $currentYear);
+                  });
+            })
+            ->sum('net_salary');
+
+        // Total Turnover This Month (Rent Collections + Family Salary)
+        $thisMonthTurnover = $thisMonthRentCollections + $thisMonthSalary;
         $monthlyTurnover = $thisMonthTurnover;
+
+        // Total Turnover All Time (All Bill Payments + All Credited Family Salaries)
+        $totalBillPaymentsAllTime = (float) BillPayment::sum('amount');
+        $totalSalaryAllTime = (float) Salary::where('status', 'credited')->sum('net_salary');
+        $totalTurnoverAllTime = $totalBillPaymentsAllTime + $totalSalaryAllTime;
 
         // Last month turnover for growth comparison
         $lastMonth = Carbon::now()->subMonth();
-        $lastMonthTurnover = (float) \App\Models\BillPayment::whereMonth('payment_date', $lastMonth->month)
+        $lastMonthStr = $lastMonth->format('Y-m');
+        $lastMonthRent = (float) BillPayment::whereMonth('payment_date', $lastMonth->month)
             ->whereYear('payment_date', $lastMonth->year)
             ->sum('amount');
+        $lastMonthSalary = (float) Salary::where('status', 'credited')
+            ->where(function ($q) use ($lastMonthStr, $lastMonth) {
+                $q->where('salary_month', $lastMonthStr)
+                  ->orWhere(function ($sq) use ($lastMonth) {
+                      $sq->whereMonth('credit_date', $lastMonth->month)
+                         ->whereYear('credit_date', $lastMonth->year);
+                  });
+            })
+            ->sum('net_salary');
+        $lastMonthTurnover = $lastMonthRent + $lastMonthSalary;
 
         if ($lastMonthTurnover > 0) {
             $diff = (($thisMonthTurnover - $lastMonthTurnover) / $lastMonthTurnover) * 100;
@@ -163,8 +196,19 @@ class HomeController extends Controller
             $trendMonths[] = $dt->format('M');
             $m = $dt->month;
             $y = $dt->year;
+            $mStr = $dt->format('Y-m');
 
-            $t = (float) \App\Models\BillPayment::whereMonth('payment_date', $m)->whereYear('payment_date', $y)->sum('amount');
+            $tRent = (float) BillPayment::whereMonth('payment_date', $m)->whereYear('payment_date', $y)->sum('amount');
+            $tSalary = (float) Salary::where('status', 'credited')
+                ->where(function ($q) use ($mStr, $m, $y) {
+                    $q->where('salary_month', $mStr)
+                      ->orWhere(function ($sq) use ($m, $y) {
+                          $sq->whereMonth('credit_date', $m)
+                             ->whereYear('credit_date', $y);
+                      });
+                })
+                ->sum('net_salary');
+            $t = $tRent + $tSalary;
             $e = (float) Expense::whereMonth('expense_date', $m)->whereYear('expense_date', $y)->sum('amount');
             $p = $t - $e;
 
@@ -280,6 +324,9 @@ class HomeController extends Controller
             'occupancyRate' => $occupancyRate,
             'monthlyTurnover' => $monthlyTurnover,
             'monthlyTurnoverGrowth' => $monthlyTurnoverGrowth,
+            'rentCollectionsThisMonth' => $thisMonthRentCollections,
+            'salaryIncomeThisMonth' => $thisMonthSalary,
+            'totalTurnoverAllTime' => $totalTurnoverAllTime,
             'monthlyExpenses' => $monthlyExpenses,
             'monthlyExpenseChange' => $monthlyExpenseChange,
             'netProfit' => $netProfit,

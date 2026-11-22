@@ -415,7 +415,9 @@
                     </div>
                     <div class="res-kpi-title">Monthly Turnover</div>
                     <div class="res-kpi-value">₹{{ number_format($residenceData['monthlyTurnover'] ?? 0) }}</div>
-                    <small class="text-muted"><i class="fas fa-calendar-check text-primary me-1"></i> This Month</small>
+                    <small class="text-muted text-truncate d-block" title="Rent Collections: ₹{{ number_format($residenceData['rentCollectionsThisMonth'] ?? 0) }} + Family Salary: ₹{{ number_format($residenceData['salaryIncomeThisMonth'] ?? 0) }}">
+                        <i class="fas fa-coins text-primary me-1"></i> Rent ₹{{ number_format($residenceData['rentCollectionsThisMonth'] ?? 0) }} + Sal ₹{{ number_format($residenceData['salaryIncomeThisMonth'] ?? 0) }}
+                    </small>
                 </div>
             </div>
 
