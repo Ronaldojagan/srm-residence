@@ -243,11 +243,11 @@ class AccountController extends Controller
             SELECT 
                 COALESCE(SUM(CASE WHEN flow_type = 'income' THEN amount ELSE 0 END), 0) AS total_inflow,
                 COALESCE(SUM(CASE WHEN flow_type = 'expense' THEN amount ELSE 0 END), 0) AS total_outflow,
-                COALESCE(SUM(CASE WHEN flow_type = 'income' AND LOWER(payment_method) = 'cash' THEN amount 
-                                  WHEN flow_type = 'expense' AND LOWER(payment_method) = 'cash' THEN -amount 
+                COALESCE(SUM(CASE WHEN flow_type = 'income' AND LOWER(COALESCE(payment_method, 'cash')) = 'cash' THEN amount 
+                                  WHEN flow_type = 'expense' AND LOWER(COALESCE(payment_method, 'cash')) = 'cash' THEN -amount 
                                   ELSE 0 END), 0) AS cash_in_hand,
-                COALESCE(SUM(CASE WHEN flow_type = 'income' AND LOWER(payment_method) != 'cash' THEN amount 
-                                  WHEN flow_type = 'expense' AND LOWER(payment_method) != 'cash' THEN -amount 
+                COALESCE(SUM(CASE WHEN flow_type = 'income' AND LOWER(COALESCE(payment_method, 'cash')) != 'cash' THEN amount 
+                                  WHEN flow_type = 'expense' AND LOWER(COALESCE(payment_method, 'cash')) != 'cash' THEN -amount 
                                   ELSE 0 END), 0) AS bank_balance
             FROM ({$sql}) AS ledger
         ")[0];
@@ -951,8 +951,8 @@ class AccountController extends Controller
         // 1. LIQUID ASSETS (Exact Cash & Bank balances up to asOfDate)
         $liquidityData = DB::select("
             SELECT 
-                COALESCE(SUM(CASE WHEN LOWER(payment_method) = 'cash' THEN (CASE WHEN flow_type = 'income' THEN amount ELSE -amount END) ELSE 0 END), 0) AS cash_in_hand,
-                COALESCE(SUM(CASE WHEN LOWER(payment_method) != 'cash' THEN (CASE WHEN flow_type = 'income' THEN amount ELSE -amount END) ELSE 0 END), 0) AS bank_balance,
+                COALESCE(SUM(CASE WHEN LOWER(COALESCE(payment_method, 'cash')) = 'cash' THEN (CASE WHEN flow_type = 'income' THEN amount ELSE -amount END) ELSE 0 END), 0) AS cash_in_hand,
+                COALESCE(SUM(CASE WHEN LOWER(COALESCE(payment_method, 'cash')) != 'cash' THEN (CASE WHEN flow_type = 'income' THEN amount ELSE -amount END) ELSE 0 END), 0) AS bank_balance,
                 COALESCE(SUM(CASE WHEN flow_type = 'income' THEN amount ELSE -amount END), 0) AS total_liquid
             FROM ({$sql}) AS ledger
             WHERE trans_date <= ?
@@ -966,7 +966,7 @@ class AccountController extends Controller
         $accountsReceivable = (float) DB::table('bills')
             ->whereNull('deleted_at')
             ->where('bill_date', '<=', $asOfDate)
-            ->where('status', '!=', 'Paid')
+            ->whereIn(DB::raw('LOWER(status)'), ['unpaid', 'partially_paid', 'overdue'])
             ->sum('due_amount');
 
         // Detailed receivables breakdown by tenant
@@ -974,7 +974,7 @@ class AccountController extends Controller
             ->leftJoin('tenants', 'bills.tenant_id', '=', 'tenants.id')
             ->whereNull('bills.deleted_at')
             ->where('bills.bill_date', '<=', $asOfDate)
-            ->where('bills.status', '!=', 'Paid')
+            ->whereIn(DB::raw('LOWER(bills.status)'), ['unpaid', 'partially_paid', 'overdue'])
             ->select('tenants.name', 'tenants.room_number', DB::raw('SUM(bills.due_amount) as total_due'))
             ->groupBy('tenants.id', 'tenants.name', 'tenants.room_number')
             ->having('total_due', '>', 0)
@@ -1003,9 +1003,43 @@ class AccountController extends Controller
         // ----------------------------------------------------
         // LIABILITIES (What SRM Residence owes)
         // ----------------------------------------------------
-        // 1. Current Liabilities: Tenant Caution / Security Deposits Held
-        // These are refundable when tenants vacate
+        // 1. Current Liabilities:
+        // A. Tenant Caution / Security Deposits Held (refundable upon vacate)
         $securityDepositsHeld = (float) Tenant::where('status', 1)->sum('security_deposit');
+
+        // B. Accounts Payable (Unpaid Expenses / Creditors)
+        $accountsPayable = (float) DB::table('expenses')
+            ->whereNull('deleted_at')
+            ->where('expense_date', '<=', $asOfDate)
+            ->where(function ($q) {
+                $q->whereIn(DB::raw('LOWER(payment_status)'), ['unpaid', 'partially_paid'])
+                  ->orWhere(DB::raw('amount - COALESCE(paid_amount, 0)'), '>', 0);
+            })
+            ->sum(DB::raw('amount - COALESCE(paid_amount, 0)'));
+
+        // Detailed payables breakdown by creditor / vendor
+        $payableCreditors = DB::table('expenses')
+            ->whereNull('deleted_at')
+            ->where('expense_date', '<=', $asOfDate)
+            ->where(function ($q) {
+                $q->whereIn(DB::raw('LOWER(payment_status)'), ['unpaid', 'partially_paid'])
+                  ->orWhere(DB::raw('amount - COALESCE(paid_amount, 0)'), '>', 0);
+            })
+            ->select(
+                'id',
+                'title',
+                'category',
+                'paid_to',
+                'expense_type',
+                'amount',
+                'paid_amount',
+                DB::raw('(amount - COALESCE(paid_amount, 0)) as due_amount')
+            )
+            ->having('due_amount', '>', 0)
+            ->orderByDesc('due_amount')
+            ->get();
+
+        $totalCurrentLiabilities = $securityDepositsHeld + $accountsPayable;
 
         // 2. Long-Term Debt: Outstanding Loans Balance
         $activeLoansQuery = DB::table('loans')
@@ -1019,7 +1053,7 @@ class AccountController extends Controller
             ->get();
 
         // TOTAL LIABILITIES
-        $totalLiabilities = $securityDepositsHeld + $loanDebtOutstanding;
+        $totalLiabilities = $totalCurrentLiabilities + $loanDebtOutstanding;
 
         // ----------------------------------------------------
         // EQUITY & NET WORTH
@@ -1063,6 +1097,11 @@ class AccountController extends Controller
             // Liabilities
             'securityDepositsHeld' => $securityDepositsHeld,
             'securityDepositsHeldFormatted' => '₹' . number_format($securityDepositsHeld, 2),
+            'accountsPayable' => $accountsPayable,
+            'accountsPayableFormatted' => '₹' . number_format($accountsPayable, 2),
+            'payableCreditors' => $payableCreditors,
+            'totalCurrentLiabilities' => $totalCurrentLiabilities,
+            'totalCurrentLiabilitiesFormatted' => '₹' . number_format($totalCurrentLiabilities, 2),
             'loanDebtOutstanding' => $loanDebtOutstanding,
             'loanDebtOutstandingFormatted' => '₹' . number_format($loanDebtOutstanding, 2),
             'activeLoansList' => $activeLoansList,
@@ -1117,6 +1156,8 @@ class AccountController extends Controller
             fputcsv($handle, ['LIABILITIES', 'AMOUNT (₹)']);
             fputcsv($handle, ['1. Current Liabilities:']);
             fputcsv($handle, ['   Tenant Security Deposits Held (Refundable)', number_format($bs['securityDepositsHeld'], 2)]);
+            fputcsv($handle, ['   Accounts Payable (Outstanding Expenses & Creditors)', number_format($bs['accountsPayable'], 2)]);
+            fputcsv($handle, ['   Total Current Liabilities', number_format($bs['totalCurrentLiabilities'], 2)]);
             fputcsv($handle, ['2. Long-Term Debt:']);
             fputcsv($handle, ['   Active Loans Outstanding Balance', number_format($bs['loanDebtOutstanding'], 2)]);
             fputcsv($handle, ['TOTAL LIABILITIES (B)', number_format($bs['totalLiabilities'], 2)]);
@@ -1149,7 +1190,7 @@ class AccountController extends Controller
                 'Rent & Collections' AS primary_category,
                 COALESCE(b.bill_type, 'Bill Payment') AS sub_category,
                 CONCAT(COALESCE(t.name, 'Tenant'), ' (Room ', COALESCE(t.room_number, 'N/A'), ')') AS party_name,
-                p.payment_method,
+                COALESCE(NULLIF(p.payment_method, ''), 'Cash') AS payment_method,
                 p.amount,
                 p.transaction_id AS ref_code,
                 p.notes,
@@ -1170,13 +1211,18 @@ class AccountController extends Controller
                 CASE WHEN e.expense_type = 'room' THEN 'Room Expense' ELSE 'Personal Expense' END AS primary_category,
                 e.category AS sub_category,
                 COALESCE(e.paid_to, e.title) AS party_name,
-                e.payment_method,
-                e.amount,
+                COALESCE(NULLIF(e.payment_method, ''), 'Cash') AS payment_method,
+                CASE 
+                    WHEN e.payment_status = 'paid' THEN e.amount
+                    WHEN e.paid_amount > 0 THEN e.paid_amount
+                    ELSE 0
+                END AS amount,
                 e.title AS ref_code,
                 e.notes,
                 e.created_at
             FROM expenses e
             WHERE e.deleted_at IS NULL
+              AND (e.paid_amount > 0 OR e.payment_status = 'paid')
 
             UNION ALL
 
@@ -1189,7 +1235,7 @@ class AccountController extends Controller
                 'Family Salary Income' AS primary_category,
                 s.salary_title AS sub_category,
                 CASE WHEN s.recipient_name LIKE '%Family%' THEN s.recipient_name ELSE CONCAT(s.recipient_name, ' (Family Earner)') END AS party_name,
-                s.payment_method,
+                COALESCE(NULLIF(s.payment_method, ''), 'Bank Transfer') AS payment_method,
                 s.net_salary AS amount,
                 s.transaction_reference AS ref_code,
                 s.notes,
@@ -1208,7 +1254,7 @@ class AccountController extends Controller
                 'Loan EMI' AS primary_category,
                 COALESCE(l.loan_title, 'Loan Repayment') AS sub_category,
                 COALESCE(l.lender_name, 'Financier') AS party_name,
-                le.payment_method,
+                COALESCE(NULLIF(le.payment_method, ''), 'Bank Transfer') AS payment_method,
                 le.amount,
                 le.transaction_id AS ref_code,
                 le.notes,
@@ -1228,7 +1274,7 @@ class AccountController extends Controller
                 'Journal Voucher' AS primary_category,
                 j.category AS sub_category,
                 j.title AS party_name,
-                j.payment_method,
+                COALESCE(NULLIF(j.payment_method, ''), 'Cash') AS payment_method,
                 j.amount,
                 j.reference_no AS ref_code,
                 j.notes,

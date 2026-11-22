@@ -230,7 +230,11 @@
                     <h3 class="mb-1 fw-bold text-danger" id="bs-card-liabilities">{{ $data['totalLiabilitiesFormatted'] }}</h3>
                     <div class="d-flex justify-content-between text-muted font-11 pt-1 border-top mt-2">
                         <span>Deposits: <strong>{{ $data['securityDepositsHeldFormatted'] }}</strong></span>
-                        <span>Loans: <strong>{{ $data['loanDebtOutstandingFormatted'] }}</strong></span>
+                        @if(($data['accountsPayable'] ?? 0) > 0)
+                            <span>Payables: <strong>{{ $data['accountsPayableFormatted'] }}</strong></span>
+                        @else
+                            <span>Loans: <strong>{{ $data['loanDebtOutstandingFormatted'] }}</strong></span>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -379,9 +383,18 @@
                                             </td>
                                             <td class="text-end fw-semibold text-danger">{{ $data['securityDepositsHeldFormatted'] }}</td>
                                         </tr>
+                                        @if(($data['accountsPayable'] ?? 0) > 0)
+                                            <tr>
+                                                <td class="ps-4">
+                                                    <div class="fw-semibold text-dark">Accounts Payable / Outstanding Expenses</div>
+                                                    <small class="text-muted">Unpaid vendor, grocery & creditor bills to be cleared</small>
+                                                </td>
+                                                <td class="text-end fw-semibold text-danger">{{ $data['accountsPayableFormatted'] }}</td>
+                                            </tr>
+                                        @endif
                                         <tr class="bs-subtotal-row">
                                             <td>Total Current Liabilities</td>
-                                            <td class="text-end fw-bold text-dark">{{ $data['securityDepositsHeldFormatted'] }}</td>
+                                            <td class="text-end fw-bold text-dark">{{ $data['totalCurrentLiabilitiesFormatted'] ?? $data['securityDepositsHeldFormatted'] }}</td>
                                         </tr>
 
                                         <!-- Long-Term Liabilities -->
@@ -490,6 +503,61 @@
                                         <td class="text-center">
                                             <a href="{{ url('/admin/billing') }}" class="btn btn-sm btn-outline-success font-11 px-2 py-0">
                                                 <i class="fas fa-money-bill-wave me-1"></i> Collect
+                                            </a>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        <!-- Accounts Payable Breakdown Table (Creditors & Unpaid Expenses) -->
+        @if(!empty($data['payableCreditors']) && count($data['payableCreditors']) > 0)
+            <div class="card shadow-sm border-0 rounded-3 mb-4 no-print">
+                <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between">
+                    <h5 class="card-title font-14 fw-bold mb-0 text-dark">
+                        <i class="fas fa-file-invoice text-danger me-2"></i>Accounts Payable: Outstanding Expenses & Creditors
+                    </h5>
+                    <a href="{{ url('/admin/expenses') }}" class="btn btn-sm btn-outline-danger font-12">
+                        <span>Manage Expenses & Pay</span> <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 font-13">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Expense Title / Creditor</th>
+                                    <th>Category</th>
+                                    <th>Total Billed (₹)</th>
+                                    <th>Paid So Far (₹)</th>
+                                    <th class="text-end">Balance To Pay (₹)</th>
+                                    <th class="text-center" style="width: 120px;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($data['payableCreditors'] as $c)
+                                    <tr>
+                                        <td class="fw-bold text-dark">
+                                            {{ $c->title }}
+                                            @if($c->paid_to)
+                                                <small class="text-muted d-block font-11">Paid to / Vendor: {{ $c->paid_to }}</small>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-danger-subtle text-danger border border-danger px-2 py-1 font-11">
+                                                {{ $c->category }}
+                                            </span>
+                                        </td>
+                                        <td>₹{{ number_format($c->amount, 2) }}</td>
+                                        <td class="text-success">₹{{ number_format($c->paid_amount, 2) }}</td>
+                                        <td class="text-end fw-bold text-danger">₹{{ number_format($c->due_amount, 2) }}</td>
+                                        <td class="text-center">
+                                            <a href="{{ url('/admin/expenses') }}" class="btn btn-sm btn-outline-success font-11 px-2 py-0">
+                                                <i class="fas fa-check-circle me-1"></i> Pay
                                             </a>
                                         </td>
                                     </tr>

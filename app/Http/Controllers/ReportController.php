@@ -285,10 +285,12 @@ class ReportController extends Controller
 
             $months[] = $monthLabel;
 
-            $inv = (float) Bill::where('billing_month', $monthName)
-                ->orWhere(function ($q) use ($year, $monthNum) {
-                    $q->whereYear('bill_date', $year)->whereMonth('bill_date', $monthNum);
-                })->sum('amount');
+            $inv = (float) Bill::where(function ($bQ) use ($monthName, $year, $monthNum) {
+                $bQ->where('billing_month', $monthName)
+                   ->orWhere(function ($q) use ($year, $monthNum) {
+                       $q->whereYear('bill_date', $year)->whereMonth('bill_date', $monthNum);
+                   });
+            })->sum('amount');
 
             $col = (float) BillPayment::whereYear('payment_date', $year)
                 ->whereMonth('payment_date', $monthNum)

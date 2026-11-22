@@ -443,12 +443,14 @@
                         <div class="res-icon-box res-icon-profit">
                             <i class="fas fa-chart-line"></i>
                         </div>
-                        <span class="res-badge-pill bg-warning-subtle text-dark">
-                            {{ $residenceData['profitMargin'] ?? '66.5%' }}
+                        <span class="res-badge-pill {{ ($residenceData['netProfit'] ?? 0) >= 0 ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' }}">
+                            {{ $residenceData['profitMargin'] ?? '0%' }}
                         </span>
                     </div>
                     <div class="res-kpi-title">Net Cashflow</div>
-                    <div class="res-kpi-value">₹{{ number_format($residenceData['netProfit'] ?? 0) }}</div>
+                    <div class="res-kpi-value {{ ($residenceData['netProfit'] ?? 0) >= 0 ? 'text-success' : 'text-danger' }}">
+                        {{ ($residenceData['netProfit'] ?? 0) >= 0 ? '₹' . number_format($residenceData['netProfit'] ?? 0) : '-₹' . number_format(abs($residenceData['netProfit'] ?? 0)) }}
+                    </div>
                     <small class="text-muted"><i class="fas fa-wallet text-success me-1"></i> Net Operating Margin</small>
                 </div>
             </div>

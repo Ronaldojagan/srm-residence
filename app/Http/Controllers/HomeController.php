@@ -41,7 +41,7 @@ class HomeController extends Controller
     private function getResidenceData()
     {
         // Update any overdue bills automatically
-        \App\Models\Bill::where('status', 'unpaid')
+        \App\Models\Bill::whereIn('status', ['unpaid', 'partially_paid'])
             ->whereDate('due_date', '<', Carbon::today())
             ->update(['status' => 'overdue']);
 
@@ -66,7 +66,7 @@ class HomeController extends Controller
             ->whereYear('payment_date', $currentYear)
             ->sum('amount');
         $totalTurnoverAllTime = (float) \App\Models\BillPayment::sum('amount');
-        $monthlyTurnover = $thisMonthTurnover > 0 ? $thisMonthTurnover : $totalTurnoverAllTime;
+        $monthlyTurnover = $thisMonthTurnover;
 
         // Last month turnover for growth comparison
         $lastMonth = Carbon::now()->subMonth();
@@ -88,7 +88,7 @@ class HomeController extends Controller
             ->whereYear('expense_date', $currentYear)
             ->sum('amount');
         $totalExpensesAllTime = (float) Expense::sum('amount');
-        $monthlyExpenses = $thisMonthExpenses > 0 ? $thisMonthExpenses : $totalExpensesAllTime;
+        $monthlyExpenses = $thisMonthExpenses;
 
         $lastMonthExpenses = (float) Expense::whereMonth('expense_date', $lastMonth->month)
             ->whereYear('expense_date', $lastMonth->year)
@@ -105,7 +105,7 @@ class HomeController extends Controller
 
         // Net Cashflow & Profit Margin
         $netProfit = $monthlyTurnover - $monthlyExpenses;
-        $profitMargin = $monthlyTurnover > 0 ? round(($netProfit / $monthlyTurnover) * 100, 1) . '%' : '0%';
+        $profitMargin = $monthlyTurnover > 0 ? round(($netProfit / $monthlyTurnover) * 100, 1) . '%' : ($monthlyExpenses > 0 ? '-100%' : '0%');
 
         $pendingDues = (float) \App\Models\Bill::whereIn('status', ['unpaid', 'partially_paid', 'overdue'])->sum('due_amount');
         $overdueTenantsCount = \App\Models\Bill::where('status', 'overdue')->count();
@@ -211,9 +211,15 @@ class HomeController extends Controller
             ->get();
         $recentTenants = [];
         foreach ($tenantsList as $t) {
-            $hasOverdue = $t->bills ? $t->bills->where('status', 'overdue')->count() > 0 : false;
-            $hasDue = $t->bills ? $t->bills->whereIn('status', ['unpaid', 'partially_paid'])->count() > 0 : false;
-            $rentStatus = $hasOverdue ? 'Overdue' : ($hasDue ? 'Due' : 'Paid');
+            if (!$t->bills || $t->bills->isEmpty()) {
+                $rentStatus = 'No Bills';
+            } elseif ($t->bills->where('status', 'overdue')->count() > 0) {
+                $rentStatus = 'Overdue';
+            } elseif ($t->bills->whereIn('status', ['unpaid', 'partially_paid'])->count() > 0) {
+                $rentStatus = 'Due';
+            } else {
+                $rentStatus = 'Paid';
+            }
 
             $roomDisplay = $t->room_numbers_display;
             $recentTenants[] = [
