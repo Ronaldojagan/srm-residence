@@ -676,7 +676,9 @@
                                     </td>
                                     <td>
                                         <span class="badge bg-info-subtle text-info fw-bold">{{ $tenant['room'] }}</span>
-                                        <div class="small text-muted">{{ $tenant['type'] }}</div>
+                                        @if(!empty($tenant['floor']) && $tenant['floor'] !== '-')
+                                            <div class="small text-muted">Floor: {{ $tenant['floor'] }}</div>
+                                        @endif
                                     </td>
                                     <td>
                                         <span class="text-secondary small"><i class="far fa-calendar-alt me-1"></i> {{ $tenant['date'] }}</span>
